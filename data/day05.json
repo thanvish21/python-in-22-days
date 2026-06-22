@@ -1,0 +1,118 @@
+{
+  "day": 5,
+  "emoji": "🎤",
+  "title": "Input & Conversion",
+  "subtitle": "Let your programs ASK questions and listen to the answer.",
+  "goal": "Use input() to talk with the person running your program, and turn their answers into numbers with int() and float() so you can do math with them.",
+  "estMinutes": 180,
+  "tags": ["basics", "input", "interactive"],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "Programs that talk back 🎤",
+      "html": "<p>So far your programs have done all the talking with <code class=\"inline\">print()</code>. Today they learn to <strong>listen</strong>. The magic word is <code class=\"inline\">input()</code> — it stops the program and waits for a human to type something.</p><p>In our browser, <code class=\"inline\">input()</code> shows a little <strong>popup box</strong>. You type your answer, press OK, and your program keeps going with whatever you typed. 🪄</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Ask for a name, then say hello",
+      "code": "name = input(\"What is your name? \")  # type your name in the popup\nprint(\"Hello, \" + name + \"! Nice to meet you. 👋\")",
+      "explain": "input(\"...\") shows the question in a popup, waits for you, and hands back whatever you typed. We saved it in a box called name so we can use it again."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>The popup is your friend!</strong> When you press Run and a box appears, that's <code class=\"inline\">input()</code> asking you something. Type your answer and press OK to keep going."
+    },
+    {
+      "type": "text",
+      "heading": "The big secret: input() is ALWAYS text 🧵",
+      "html": "<p>Here's the trick that surprises everyone: no matter what you type, <code class=\"inline\">input()</code> gives you back a <strong>string</strong> (text). Even if you type <code class=\"inline\">7</code>, Python sees the <em>text</em> <code class=\"inline\">\"7\"</code>, not the number 7.</p><p>That means you can't do math on it yet — adding two text answers just sticks them side by side!</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Watch what goes wrong with text",
+      "code": "a = input(\"First number: \")   # type 2\nb = input(\"Second number: \")  # type 3\nprint(a + b)  # surprise! this shows 23, not 5",
+      "explain": "Because a and b are TEXT, the + glues them together: \"2\" + \"3\" becomes \"23\". To add them like numbers, we first have to convert them."
+    },
+    {
+      "type": "tip",
+      "variant": "warn",
+      "html": "<strong>Heads up!</strong> Text + text = stuck-together text. <code class=\"inline\">\"2\" + \"3\"</code> is <code class=\"inline\">\"23\"</code>, not <code class=\"inline\">5</code>. To do real math, convert first!"
+    },
+    {
+      "type": "text",
+      "heading": "Turning text into numbers with int() and float()",
+      "html": "<p>To fix this we <strong>convert</strong> the text into a number:</p><ul><li><code class=\"inline\">int()</code> makes a whole number, like <code class=\"inline\">5</code> or <code class=\"inline\">42</code>.</li><li><code class=\"inline\">float()</code> makes a number with a dot, like <code class=\"inline\">3.5</code> or <code class=\"inline\">9.99</code>.</li></ul><p>A super common pattern is to wrap them together: <code class=\"inline\">int(input(\"...\"))</code> asks AND converts in one line.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "A tiny calculator that really adds",
+      "code": "a = int(input(\"First number: \"))   # type 2\nb = int(input(\"Second number: \"))  # type 3\nprint(f\"{a} + {b} = {a + b}\")  # now it really adds! 🎉",
+      "explain": "int(input(...)) asks the question AND turns the answer into a whole number. Now a + b does real math. We used an f-string from Day 3 to show it neatly."
+    },
+    {
+      "type": "quiz",
+      "question": "What kind of value does input() always give back?",
+      "options": [
+        "A whole number",
+        "A string (text)",
+        "A decimal number",
+        "Nothing"
+      ],
+      "answerIndex": 1,
+      "explain": "input() ALWAYS returns a string. Even if you type 7, Python sees the text \"7\" until you convert it."
+    },
+    {
+      "type": "quiz",
+      "question": "If you type 4 and 5 into input() and then print them with +, what shows up?",
+      "options": [
+        "9",
+        "45",
+        "An error",
+        "4 5"
+      ],
+      "answerIndex": 1,
+      "explain": "Since input() gives text, \"4\" + \"5\" glues into \"45\". You'd need int() to get 9."
+    },
+    {
+      "type": "quiz",
+      "question": "Which line asks a question AND turns the answer into a whole number?",
+      "options": [
+        "input(int(\"Age? \"))",
+        "int(input(\"Age? \"))",
+        "float(\"Age? \")",
+        "print(input(\"Age? \"))"
+      ],
+      "answerIndex": 1,
+      "explain": "int(input(\"...\")) runs input() first to get the text, then int() turns that text into a whole number."
+    },
+    {
+      "type": "tryit",
+      "title": "Friendly greeter",
+      "instructions": "Use input() to ask for the person's name, then print a warm hello that includes their name. (When the popup appears, type any name!) Keep the input() in your code.",
+      "starter": "name = input(\"What is your name? \")  # type your name in the popup\n# print a friendly hello that uses name\n",
+      "check": { "code_includes": "input" },
+      "solution": "name = input(\"What is your name? \")\nprint(f\"Hi {name}, welcome to Python! 🐍\")",
+      "passMsg": "Yay — your program now greets people by name!",
+      "failMsg": "Make sure you use input(\"...\") to ask for the name, then print a hello with it."
+    },
+    {
+      "type": "tryit",
+      "title": "Double it!",
+      "instructions": "Ask the user for a number, convert it with int(), then print that number doubled (the number times 2). Use int(input(...)) so the math works. (Type any number in the popup.)",
+      "starter": "n = int(input(\"Give me a number: \"))  # type a number in the popup\n# print n times 2\n",
+      "check": { "code_includes": "int(input" },
+      "solution": "n = int(input(\"Give me a number: \"))\nprint(f\"Double of {n} is {n * 2}!\")",
+      "passMsg": "Nice! You converted text to a number and did real math. ✨",
+      "failMsg": "Use int(input(\"...\")) to get a real number, then print n * 2."
+    }
+  ],
+  "challenge": {
+    "title": "Age in days machine 🎂",
+    "instructions": "Build a little program that asks the user how old they are, converts the answer with int(), and then tells them roughly how many DAYS old they are (age times 365). Use an f-string to show a friendly message. (When the popup appears, type your age!)",
+    "starter": "age = int(input(\"How old are you? \"))  # type your age in the popup\n# multiply age by 365 and print a friendly message with an f-string\n",
+    "check": { "code_includes": "int(input" },
+    "solution": "age = int(input(\"How old are you? \"))\ndays = age * 365\nprint(f\"Wow, you are about {days} days old! 🎉\")",
+    "hint": "First do age = int(input(\"...\")), then make days = age * 365, then print an f-string using {days}.",
+    "passMsg": "🏆 Incredible! Your program asks a question, does math, and answers back. That's Day 5 done — you're building real interactive programs now!"
+  }
+}

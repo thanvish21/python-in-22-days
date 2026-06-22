@@ -1,0 +1,145 @@
+{
+  "day": 20,
+  "emoji": "✨",
+  "title": "Comprehensions & Lambda",
+  "subtitle": "Turn long, clunky loops into short, beautiful one-liners — the Pythonic way.",
+  "goal": "Use list and dict comprehensions, write tiny lambda functions, and replace map/filter with clean comprehensions.",
+  "estMinutes": 180,
+  "tags": ["intermediate", "pythonic", "comprehensions", "lambda"],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "Welcome to pro-level Python ✨",
+      "html": "<p>You already know how to write loops. Today you learn how to write <strong>short, elegant</strong> loops that real Python pros use every day. We call this style <em>Pythonic</em> — code that is clean, clear, and just a little bit magic. 🪄</p><p>By the end of today you'll turn five-line loops into one beautiful line. Same result, way less typing.</p>"
+    },
+    {
+      "type": "text",
+      "heading": "The long way vs the short way",
+      "html": "<p>Say we have some numbers and we want to double each one. The <strong>old way</strong> uses a loop and an empty list:</p><p>That works! But Python has a shortcut called a <strong>list comprehension</strong> that does the same thing in one line. Watch. 👇</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Before (long) and after (Pythonic)",
+      "code": "nums = [1, 2, 3, 4]\n\n# The long way: loop + empty list + append\ndoubled_long = []\nfor x in nums:\n    doubled_long.append(x * 2)\nprint(\"long way: \", doubled_long)\n\n# The short way: a list comprehension\ndoubled_short = [x * 2 for x in nums]\nprint(\"short way:\", doubled_short)",
+      "explain": "Both print the same list [2, 4, 6, 8]. The comprehension [x * 2 for x in nums] reads almost like English: 'x times 2, for each x in nums'."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Read it out loud:</strong> <code class=\"inline\">[x * 2 for x in nums]</code> = \"do <em>x times 2</em> for every <em>x</em> in <em>nums</em>.\" The recipe comes first, the loop comes after."
+    },
+    {
+      "type": "text",
+      "heading": "Adding a condition (a filter) 🔎",
+      "html": "<p>You can add an <code class=\"inline\">if</code> at the end to keep only some items. This lets you <strong>filter</strong> a list while you build it.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Keep only the items you want",
+      "code": "nums = [-3, 5, -1, 8, 0, 2]\n\n# Keep only the positive numbers\npositives = [x for x in nums if x > 0]\nprint(\"positives:\", positives)\n\n# Square only the even numbers\neven_squares = [x * x for x in nums if x % 2 == 0]\nprint(\"even squares:\", even_squares)",
+      "explain": "The if at the end decides which items get in. positives keeps numbers > 0, and even_squares only squares the even ones."
+    },
+    {
+      "type": "quiz",
+      "question": "What does [n + 1 for n in [10, 20, 30]] create?",
+      "options": [
+        "[10, 20, 30]",
+        "[11, 21, 31]",
+        "[1, 1, 1]",
+        "An error"
+      ],
+      "answerIndex": 1,
+      "explain": "It does 'n + 1' for each n, so 10→11, 20→21, 30→31. The recipe is applied to every item."
+    },
+    {
+      "type": "text",
+      "heading": "Dict comprehensions 🗝️",
+      "html": "<p>Lists aren't the only thing you can build this way. With curly braces <code class=\"inline\">{ }</code> and a <code class=\"inline\">key: value</code> pair, you can build a whole <strong>dictionary</strong> in one line.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Build a dictionary in one line",
+      "code": "words = [\"cat\", \"tiger\", \"ox\"]\n\n# Map each word to its length\nlengths = {w: len(w) for w in words}\nprint(lengths)\n\n# Map numbers to their squares\nsquares = {n: n * n for n in range(1, 5)}\nprint(squares)",
+      "explain": "{w: len(w) for w in words} builds {'cat': 3, 'tiger': 5, 'ox': 2}. The part before the colon is the key, the part after is the value."
+    },
+    {
+      "type": "text",
+      "heading": "Lambda: a tiny throwaway function",
+      "html": "<p>A <strong>lambda</strong> is a mini function you write on one line, without a name. These two do exactly the same thing:</p><p><code class=\"inline\">def double(x): return x * 2</code><br><code class=\"inline\">double = lambda x: x * 2</code></p><p>Lambdas are handy when you need a quick little function for just one moment.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "lambda, and sorting with a key",
+      "code": "double = lambda x: x * 2\nprint(double(5))\n\n# Sort people by age using a lambda key\npeople = [(\"Sam\", 12), (\"Mia\", 9), (\"Leo\", 15)]\nby_age = sorted(people, key=lambda person: person[1])\nprint(by_age)",
+      "explain": "double(5) gives 10. In sorted(), key=lambda person: person[1] tells Python to sort by the second item (the age), so youngest comes first."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>When to reach for a comprehension:</strong> if your loop just builds a list or dict, a comprehension is cleaner. If it does lots of steps, a regular <code class=\"inline\">for</code> loop is easier to read. Pick clarity first. 💡",
+      "variant": "warn"
+    },
+    {
+      "type": "text",
+      "heading": "map() and filter() — and why comprehensions win",
+      "html": "<p>Python also has <code class=\"inline\">map()</code> (change every item) and <code class=\"inline\">filter()</code> (keep some items). They work, but most Python pros prefer comprehensions because they're easier to read. See for yourself. 👀</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Same result, cleaner code",
+      "code": "nums = [1, 2, 3, 4, 5]\n\n# Old style with map() and filter()\ndoubled_map = list(map(lambda x: x * 2, nums))\nevens_filter = list(filter(lambda x: x % 2 == 0, nums))\nprint(\"map:   \", doubled_map)\nprint(\"filter:\", evens_filter)\n\n# Pythonic style with comprehensions\ndoubled = [x * 2 for x in nums]\nevens = [x for x in nums if x % 2 == 0]\nprint(\"clean: \", doubled)\nprint(\"clean: \", evens)",
+      "explain": "All four print the same results. The comprehension versions are shorter and read like plain English — that's why they win."
+    },
+    {
+      "type": "quiz",
+      "question": "What is a lambda?",
+      "options": [
+        "A type of loop",
+        "A small function written on one line, often without a name",
+        "A way to print text",
+        "A kind of list"
+      ],
+      "answerIndex": 1,
+      "explain": "A lambda is a tiny anonymous function. lambda x: x * 2 is the same as a one-line def that doubles x."
+    },
+    {
+      "type": "quiz",
+      "question": "Which one keeps only the big numbers from nums?",
+      "options": [
+        "[x for x in nums]",
+        "[x * 2 for x in nums]",
+        "[x for x in nums if x > 100]",
+        "{x: x for x in nums}"
+      ],
+      "answerIndex": 2,
+      "explain": "The if x > 100 at the end is the filter — it only lets numbers bigger than 100 into the new list."
+    },
+    {
+      "type": "tryit",
+      "title": "Triple every number",
+      "instructions": "Use a list comprehension to make a new list where every number in nums is multiplied by 3. Print the result.",
+      "starter": "nums = [1, 2, 3, 4]\n# build 'tripled' with a comprehension\ntripled = [___ for x in nums]\nprint(tripled)",
+      "check": { "stdout_includes": "[3, 6, 9, 12]", "code_includes": "for x in nums" },
+      "solution": "nums = [1, 2, 3, 4]\ntripled = [x * 3 for x in nums]\nprint(tripled)",
+      "passMsg": "One clean line — that's Pythonic! 🎉",
+      "failMsg": "Inside the brackets put x * 3, like [x * 3 for x in nums]."
+    },
+    {
+      "type": "tryit",
+      "title": "Filter out the small ones",
+      "instructions": "Use a comprehension with an if to keep only the numbers greater than 10. Print the new list.",
+      "starter": "nums = [4, 15, 8, 23, 9, 42]\n# keep only numbers > 10\nbig = [x for x in nums if ___]\nprint(big)",
+      "check": { "stdout_includes": "[15, 23, 42]", "code_includes": "if" },
+      "solution": "nums = [4, 15, 8, 23, 9, 42]\nbig = [x for x in nums if x > 10]\nprint(big)",
+      "passMsg": "Nice filtering — you're writing pro-level code now! 💪",
+      "failMsg": "Add the condition after if, like: [x for x in nums if x > 10]."
+    }
+  ],
+  "challenge": {
+    "title": "Build a score report",
+    "instructions": "You have a list of (name, score) pairs. 1) Use a dict comprehension to make a dictionary of name -> score. 2) Use sorted() with a lambda key to print the names sorted from highest score to lowest. Print the dictionary first, then the sorted names.",
+    "starter": "scores = [(\"Ana\", 85), (\"Ben\", 92), (\"Cara\", 78)]\n# 1) make a dict: name -> score\nreport = {___}\nprint(report)\n# 2) sort names by score, highest first\nranked = sorted(scores, key=lambda pair: ___, reverse=True)\nprint([name for name, score in ranked])",
+    "check": { "stdout_includes": ["Ben", "Ana", "Cara"], "code_includes": "lambda" },
+    "solution": "scores = [(\"Ana\", 85), (\"Ben\", 92), (\"Cara\", 78)]\nreport = {name: score for name, score in scores}\nprint(report)\nranked = sorted(scores, key=lambda pair: pair[1], reverse=True)\nprint([name for name, score in ranked])",
+    "hint": "For the dict use {name: score for name, score in scores}. For sorting, the key is lambda pair: pair[1] and add reverse=True for highest first.",
+    "passMsg": "🏆 A dict comprehension AND a lambda sort — that's seriously Pythonic. Day 20 complete!"
+  }
+}

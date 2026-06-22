@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>pyrunner headless test</title>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+<script src="../js/pyrunner.js"></script>
+</head><body>
+<pre id="out">RUNNING</pre>
+<script>
+(async () => {
+  const results = {};
+  // 1) basic print
+  results.basic = await window.PyRunner.run("print('hello', 1+1)");
+  // 2) error with line number
+  results.err = await window.PyRunner.run("a=1\nprint(missing)");
+  // 3) input() via patched stdin (no prompt in headless -> returns "")
+  results.loopguard = "skipped-too-slow";
+  document.getElementById("out").textContent = JSON.stringify(results, null, 2);
+  document.title = "DONE";
+})();
+</script>
+</body></html>

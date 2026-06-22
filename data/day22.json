@@ -1,0 +1,106 @@
+{
+  "day": 22,
+  "emoji": "🏆",
+  "title": "Capstone Project & Pro Roadmap",
+  "subtitle": "Graduation day! Build a real program and step out as a Python programmer.",
+  "goal": "Recap everything you learned, build a full Quiz Game capstone using functions, lists, dicts, loops, and a class, and get a roadmap for what to learn next.",
+  "estMinutes": 180,
+  "tags": ["capstone", "review", "celebration"],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "You made it to Day 22! 🎉",
+      "html": "<p>Twenty-two days ago you printed your first <code class=\"inline\">Hello, world!</code>. Today you're going to build a complete program from scratch. That's a huge leap — be proud of it. 🏆</p><p>This is graduation day. We'll look back at the whole journey, build a real <strong>Quiz Game</strong>, and then point you toward the exciting road ahead.</p>"
+    },
+    {
+      "type": "text",
+      "heading": "Look how much you know now 🧠",
+      "html": "<p>You started with nothing and now you can do <em>all</em> of this:</p><ul><li><strong>print()</strong> and comments — talking to the screen</li><li><strong>Variables &amp; types</strong> — strings, numbers, booleans</li><li><strong>Strings</strong> — slicing, f-strings, methods like <code class=\"inline\">.upper()</code></li><li><strong>Lists, tuples &amp; dictionaries</strong> — storing lots of data</li><li><strong>if / elif / else</strong> — making decisions</li><li><strong>for &amp; while loops</strong> — repeating work</li><li><strong>Functions</strong> — packaging code you can reuse</li><li><strong>Files</strong> — reading and writing data</li><li><strong>Classes &amp; objects</strong> — designing your own types</li><li><strong>Errors</strong> — try/except to handle problems gracefully</li></ul><p>That is a <em>real</em> programmer's toolkit. Time to use all of it at once.</p>"
+    },
+    {
+      "type": "text",
+      "heading": "The Capstone: a Quiz Game 🎯",
+      "html": "<p>We'll build a quiz game that asks questions, keeps score, and grades you at the end. It uses <strong>dictionaries</strong> for questions, a <strong>list</strong> to hold them, a <strong>class</strong> to run the game, <strong>loops</strong> to go through questions, and <strong>conditionals</strong> to check answers.</p><p>We'll build it in three pieces. First, the data.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Piece 1 — the questions (a list of dictionaries)",
+      "code": "questions = [\n    {\n        \"q\": \"What keyword defines a function?\",\n        \"choices\": [\"func\", \"def\", \"function\"],\n        \"answer\": 1,\n    },\n    {\n        \"q\": \"Which one stores key-value pairs?\",\n        \"choices\": [\"list\", \"dict\", \"tuple\"],\n        \"answer\": 1,\n    },\n]\n\nprint(\"Loaded\", len(questions), \"questions!\")",
+      "explain": "Each question is a dictionary with the question text, a list of choices, and the index of the correct answer. We put all of them in one big list so we can loop over them."
+    },
+    {
+      "type": "code",
+      "caption": "Piece 2 — a class that runs the quiz",
+      "code": "class QuizGame:\n    def __init__(self, questions):\n        self.questions = questions\n        self.score = 0\n\n    def ask(self, item):\n        print(item[\"q\"])\n        for i, choice in enumerate(item[\"choices\"]):\n            print(f\"  {i}: {choice}\")\n        # pretend the player picked the correct answer for this demo\n        guess = item[\"answer\"]\n        if guess == item[\"answer\"]:\n            print(\"Correct! ✅\")\n            self.score += 1\n        else:\n            print(\"Nope. ❌\")\n\n    def play(self):\n        for item in self.questions:\n            self.ask(item)\n        total = len(self.questions)\n        print(f\"\\nFinal score: {self.score}/{total}\")\n\ngame = QuizGame([{\"q\": \"2+2?\", \"choices\": [\"3\", \"4\"], \"answer\": 1}])\ngame.play()",
+      "explain": "The class bundles the data (questions, score) with the actions (ask, play). __init__ sets things up, ask() shows one question and checks it, and play() loops through every question and prints the final score."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Why a class?</strong> A class keeps related data and behavior together. <code class=\"inline\">self.score</code> belongs to the game and follows it around — no messy global variables."
+    },
+    {
+      "type": "code",
+      "caption": "Piece 3 — put it all together",
+      "code": "class QuizGame:\n    def __init__(self, questions):\n        self.questions = questions\n        self.score = 0\n\n    def play(self):\n        for item in self.questions:\n            print(item[\"q\"])\n            for i, choice in enumerate(item[\"choices\"]):\n                print(f\"  {i}: {choice}\")\n            if item[\"answer\"] == item[\"answer\"]:\n                self.score += 1\n        total = len(self.questions)\n        print(f\"You scored {self.score}/{total}\")\n        if self.score == total:\n            print(\"Perfect! 🏆\")\n\nquestions = [\n    {\"q\": \"def is used for?\", \"choices\": [\"loops\", \"functions\"], \"answer\": 1},\n    {\"q\": \"[] makes a?\", \"choices\": [\"list\", \"dict\"], \"answer\": 0},\n]\nQuizGame(questions).play()",
+      "explain": "This is the whole capstone in one runnable block: data + class + a play() call. Lists, dicts, a class, a loop, an if-check, and f-strings — every Day-22 skill working together."
+    },
+    {
+      "type": "quiz",
+      "question": "In our quiz game, why did we store each question as a dictionary?",
+      "options": [
+        "Because dictionaries run faster than the computer",
+        "So we can label each part: the question, the choices, and the answer",
+        "Dictionaries are the only thing Python can loop over",
+        "To make the code longer"
+      ],
+      "answerIndex": 1,
+      "explain": "A dictionary lets us give each piece a clear name (key) like \"q\", \"choices\", and \"answer\" — much clearer than remembering positions."
+    },
+    {
+      "type": "quiz",
+      "question": "What does the play() method's for loop do?",
+      "options": [
+        "Deletes every question",
+        "Goes through each question one at a time",
+        "Runs only the first question",
+        "Prints the score before any questions"
+      ],
+      "answerIndex": 1,
+      "explain": "for item in self.questions: visits each question in the list, one after another, so every question gets asked."
+    },
+    {
+      "type": "tryit",
+      "title": "Add your own question",
+      "instructions": "Add a third dictionary to the questions list with a \"q\", a \"choices\" list, and an \"answer\" index. Keep using the dict shape we used.",
+      "starter": "questions = [\n    {\"q\": \"def is used for?\", \"choices\": [\"loops\", \"functions\"], \"answer\": 1},\n    # add your own question dictionary below\n]\nprint(\"Total questions:\", len(questions))",
+      "check": { "code_includes": "\"answer\"", "stdout_includes": "Total questions:" },
+      "solution": "questions = [\n    {\"q\": \"def is used for?\", \"choices\": [\"loops\", \"functions\"], \"answer\": 1},\n    {\"q\": \"What color is the sky?\", \"choices\": [\"green\", \"blue\"], \"answer\": 1},\n]\nprint(\"Total questions:\", len(questions))",
+      "passMsg": "Your quiz is growing — that's how real apps get built!",
+      "failMsg": "Make sure your new question is a dictionary with \"q\", \"choices\", and \"answer\" keys."
+    },
+    {
+      "type": "tryit",
+      "title": "Give the game a method",
+      "instructions": "Add a method called total_questions to the class that returns how many questions there are. Use len() on self.questions.",
+      "starter": "class QuizGame:\n    def __init__(self, questions):\n        self.questions = questions\n\n    # add a total_questions method here\n\ngame = QuizGame([{\"q\": \"?\", \"choices\": [\"a\"], \"answer\": 0}])\nprint(\"Count:\", game.total_questions())",
+      "check": { "code_includes": "def total_questions", "stdout_includes": "Count:" },
+      "solution": "class QuizGame:\n    def __init__(self, questions):\n        self.questions = questions\n\n    def total_questions(self):\n        return len(self.questions)\n\ngame = QuizGame([{\"q\": \"?\", \"choices\": [\"a\"], \"answer\": 0}])\nprint(\"Count:\", game.total_questions())",
+      "passMsg": "You added behavior to your own class — pro move!",
+      "failMsg": "Define def total_questions(self): inside the class and return len(self.questions)."
+    },
+    {
+      "type": "text",
+      "heading": "Where to go next 🚀",
+      "html": "<p>You've outgrown the browser sandbox — time to run Python for real! Here's your roadmap:</p><ul><li><strong>Install Python</strong> from <code class=\"inline\">python.org</code> so it lives on your own computer.</li><li><strong>Pick an editor:</strong> <strong>Thonny</strong> is perfect for beginners; <strong>VS Code</strong> is what the pros use.</li><li><strong>Build projects</strong> you actually care about — that's how learning sticks.</li><li><strong>Learn a library for your interest:</strong> websites → <strong>Flask</strong> or <strong>Django</strong>; data &amp; charts → <strong>pandas</strong>; games → <strong>pygame</strong>; automating boring tasks → plain scripts.</li><li><strong>Keep practicing</strong> on sites like Codewars, Exercism, or Advent of Code.</li><li><strong>Read other people's code</strong> on GitHub — you learn tons by seeing how others solve problems.</li></ul><p>🎓 <strong>You did it.</strong> Twenty-two days ago Python was a mystery. Now you can store data, make decisions, repeat work, write functions, design classes, and build a whole program. You are a <strong>Python programmer</strong> now — go build something amazing. 🐍🏆</p>"
+    }
+  ],
+  "challenge": {
+    "title": "Finish the Quiz Game 🏆",
+    "instructions": "Complete the QuizGame so it really works! Inside play(), loop through self.questions, add 1 to self.score for each correct answer (treat the first choice, index 0, as correct for this challenge), then print the final score as 'Score: X'. Finish with a print that celebrates finishing the course.",
+    "starter": "class QuizGame:\n    def __init__(self, questions):\n        self.questions = questions\n        self.score = 0\n\n    def play(self):\n        # loop through self.questions and update self.score\n        # then print the final score\n        pass\n\nquestions = [\n    {\"q\": \"Q1\", \"choices\": [\"right\", \"wrong\"], \"answer\": 0},\n    {\"q\": \"Q2\", \"choices\": [\"right\", \"wrong\"], \"answer\": 0},\n]\nQuizGame(questions).play()",
+    "check": { "code_includes": ["def play", "self.score"], "stdout_includes": "Score:" },
+    "solution": "class QuizGame:\n    def __init__(self, questions):\n        self.questions = questions\n        self.score = 0\n\n    def play(self):\n        for item in self.questions:\n            if item[\"answer\"] == 0:\n                self.score += 1\n        print(f\"Score: {self.score}\")\n        print(\"I finished Python in 22 Days! 🏆\")\n\nquestions = [\n    {\"q\": \"Q1\", \"choices\": [\"right\", \"wrong\"], \"answer\": 0},\n    {\"q\": \"Q2\", \"choices\": [\"right\", \"wrong\"], \"answer\": 0},\n]\nQuizGame(questions).play()",
+    "hint": "Use a for loop over self.questions, an if to check the answer, self.score += 1 to count points, and an f-string to print 'Score:' with the total.",
+    "passMsg": "🏆🎓 INCREDIBLE! You built a complete program AND finished all 22 days. You are officially a Python programmer. Now go build the world!"
+  }
+}

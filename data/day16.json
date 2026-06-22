@@ -1,0 +1,123 @@
+{
+  "day": 16,
+  "emoji": "📁",
+  "title": "Files",
+  "subtitle": "Teach Python to save your work so it remembers things even after the program stops.",
+  "goal": "Use the with open(...) as f: pattern to write, append, and read text files, and build a tiny notes saver and score logger.",
+  "estMinutes": 180,
+  "tags": ["files", "intermediate"],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "Why files? 📁",
+      "html": "<p>So far, everything your programs made disappeared the second they stopped running. Variables live in memory, and memory gets wiped clean each time. 😴</p><p>A <strong>file</strong> is how Python <em>remembers</em>. You can save a high score, a to-do list, or a diary entry into a file, and it will still be there tomorrow. Today you'll teach Python to write things down and read them back. ✍️</p>"
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Heads up about this website!</strong> The Python here runs inside your browser, and its file storage resets every time you press Run. So in every example we <em>write</em> a file and <em>read</em> it back in the <strong>same</strong> program. On your own computer, the file stays saved for real! 💾"
+    },
+    {
+      "type": "text",
+      "heading": "The magic words: with open(...) as f",
+      "html": "<p>To use a file, you <strong>open</strong> it. The friendliest way is:</p><p><code class=\"inline\">with open(\"notes.txt\", \"w\") as f:</code></p><p>This opens a file called <code class=\"inline\">notes.txt</code>, gives it the nickname <code class=\"inline\">f</code>, and — best of all — automatically <strong>closes</strong> it for you when the indented block ends. Closing matters: it makes sure your words are really saved. The <code class=\"inline\">with</code> word does that cleanup so you never forget. 🧹</p>"
+    },
+    {
+      "type": "text",
+      "heading": "Three modes: w, a, r",
+      "html": "<p>That little letter after the filename is the <strong>mode</strong> — it tells Python what you want to do:</p><ul><li><code class=\"inline\">\"w\"</code> = <strong>write</strong> (start fresh — erases anything already there!)</li><li><code class=\"inline\">\"a\"</code> = <strong>append</strong> (add to the end, keep what's there)</li><li><code class=\"inline\">\"r\"</code> = <strong>read</strong> (look at what's inside)</li></ul>"
+    },
+    {
+      "type": "code",
+      "caption": "Write a file, then read it back",
+      "code": "# Write some text into a file (mode \"w\")\nwith open(\"hello.txt\", \"w\") as f:\n    f.write(\"Hello from a file!\\n\")\n    f.write(\"Python saved this for me.\\n\")\n\n# Now read the whole file back (mode \"r\")\nwith open(\"hello.txt\", \"r\") as f:\n    contents = f.read()\n\nprint(contents)",
+      "explain": "f.write() puts text into the file. The \\n means 'new line' so each line sits on its own row. f.read() gives back EVERYTHING in the file as one big string."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Watch out!</strong> Mode <code class=\"inline\">\"w\"</code> wipes the file clean before writing. If the file had old notes, they're gone! Use <code class=\"inline\">\"a\"</code> when you want to keep the old stuff and just add more.",
+      "variant": "warn"
+    },
+    {
+      "type": "code",
+      "caption": "Append adds to the end (it keeps the old lines)",
+      "code": "# Start fresh with one line\nwith open(\"diary.txt\", \"w\") as f:\n    f.write(\"Monday: learned about files.\\n\")\n\n# Append two more days (mode \"a\" keeps the Monday line)\nwith open(\"diary.txt\", \"a\") as f:\n    f.write(\"Tuesday: wrote a notes saver.\\n\")\n    f.write(\"Wednesday: read files back.\\n\")\n\n# Read it all and show it\nwith open(\"diary.txt\", \"r\") as f:\n    print(f.read())",
+      "explain": "First we wrote Monday with \"w\". Then \"a\" added Tuesday and Wednesday to the END without erasing Monday. If we had used \"w\" again, Monday would have vanished!"
+    },
+    {
+      "type": "text",
+      "heading": "Reading line by line 📜",
+      "html": "<p><code class=\"inline\">f.read()</code> grabs everything at once. But sometimes you want the lines one at a time — like reading a list. Two handy ways:</p><ul><li><code class=\"inline\">f.readlines()</code> gives you a <strong>list</strong> of lines.</li><li>Looping <code class=\"inline\">for line in f:</code> walks through one line at a time.</li></ul>"
+    },
+    {
+      "type": "code",
+      "caption": "Loop through a file one line at a time",
+      "code": "# Save a little shopping list\nwith open(\"list.txt\", \"w\") as f:\n    f.write(\"apples\\n\")\n    f.write(\"bananas\\n\")\n    f.write(\"cookies\\n\")\n\n# Read it back line by line and number each item\nwith open(\"list.txt\", \"r\") as f:\n    number = 1\n    for line in f:\n        item = line.strip()\n        print(str(number) + \". \" + item)\n        number = number + 1",
+      "explain": "Looping over f gives each line in turn. line.strip() removes the leftover newline (\\n) so things print neatly. We add a number in front of each item."
+    },
+    {
+      "type": "quiz",
+      "question": "What does the mode \"w\" do when you open a file that already has text in it?",
+      "options": [
+        "Adds your new text to the end",
+        "Erases the old text and starts fresh",
+        "Reads the file out loud",
+        "Refuses to open the file"
+      ],
+      "answerIndex": 1,
+      "explain": "\"w\" means write-from-scratch. It clears the file first, so any old text is erased. Use \"a\" to keep the old text and add more."
+    },
+    {
+      "type": "quiz",
+      "question": "Why do people like using 'with open(...) as f:' instead of just open()?",
+      "options": [
+        "It makes the file bigger",
+        "It automatically closes the file when the block ends",
+        "It changes the file's color",
+        "It prints the file to the screen"
+      ],
+      "answerIndex": 1,
+      "explain": "The 'with' block closes the file for you automatically, which makes sure everything is saved safely. One less thing to forget!"
+    },
+    {
+      "type": "quiz",
+      "question": "Which method gives you back ALL the text in the file as one big string?",
+      "options": [
+        "f.write()",
+        "f.append()",
+        "f.read()",
+        "f.delete()"
+      ],
+      "answerIndex": 2,
+      "explain": "f.read() returns everything in the file as a single string. f.readlines() gives a list of lines instead."
+    },
+    {
+      "type": "tryit",
+      "title": "Save and show a secret message",
+      "instructions": "Write your own secret message into secret.txt using mode \"w\", then read it back and print it. Make the message say the word 'treasure' somewhere!",
+      "starter": "with open(\"secret.txt\", \"w\") as f:\n    f.write(\"___\\n\")\n\nwith open(\"secret.txt\", \"r\") as f:\n    print(f.read())",
+      "check": { "stdout_includes": "treasure", "code_includes": "f.write" },
+      "solution": "with open(\"secret.txt\", \"w\") as f:\n    f.write(\"The treasure is under the old oak tree.\\n\")\n\nwith open(\"secret.txt\", \"r\") as f:\n    print(f.read())",
+      "passMsg": "Secret saved and read back — you're a file wizard! 🪄",
+      "failMsg": "Make sure you use f.write(\"...\") and include the word treasure in your message."
+    },
+    {
+      "type": "tryit",
+      "title": "A tiny notes saver",
+      "instructions": "Write the first note with mode \"w\", then APPEND two more notes with mode \"a\" so none get erased. Finally read the whole file and print it. You should end up with three notes.",
+      "starter": "with open(\"notes.txt\", \"w\") as f:\n    f.write(\"Note 1: ___\\n\")\n\n# append two more notes below using mode \"a\"\n\n\nwith open(\"notes.txt\", \"r\") as f:\n    print(f.read())",
+      "check": { "code_includes": "\"a\"", "regex": ".*\\n.*\\n.*" },
+      "solution": "with open(\"notes.txt\", \"w\") as f:\n    f.write(\"Note 1: feed the cat\\n\")\n\nwith open(\"notes.txt\", \"a\") as f:\n    f.write(\"Note 2: do homework\\n\")\n    f.write(\"Note 3: play outside\\n\")\n\nwith open(\"notes.txt\", \"r\") as f:\n    print(f.read())",
+      "passMsg": "Three notes saved without erasing any — that's exactly how append works! 📝",
+      "failMsg": "Open the file a second time with mode \"a\" to add more notes without erasing the first one."
+    }
+  ],
+  "challenge": {
+    "title": "Build a score logger 🏆",
+    "instructions": "Pretend you just played three rounds of a game. Save each score on its own line in scores.txt (use \"w\" for the first, then \"a\" for the rest, OR write all three in one \"w\" block). Then read the file back, add up all the scores, and print the total. Hint: turn each line into a number with int(line.strip()).",
+    "starter": "# Save three scores, one per line\nwith open(\"scores.txt\", \"w\") as f:\n    f.write(\"___\\n\")\n\n# Read them back, add them up, and print the total\ntotal = 0\nwith open(\"scores.txt\", \"r\") as f:\n    for line in f:\n        total = total + int(line.strip())\n\nprint(\"Total score:\", total)",
+    "check": { "stdout_includes": "Total score:", "code_includes": "int(" },
+    "solution": "with open(\"scores.txt\", \"w\") as f:\n    f.write(\"10\\n\")\n    f.write(\"25\\n\")\n    f.write(\"7\\n\")\n\ntotal = 0\nwith open(\"scores.txt\", \"r\") as f:\n    for line in f:\n        total = total + int(line.strip())\n\nprint(\"Total score:\", total)",
+    "hint": "Each line in the file is text like \"10\\n\". Use int(line.strip()) to turn it into a number you can add.",
+    "passMsg": "🏆 You saved scores AND added them back up — that's a real save system! Day 16 complete. You can make programs that remember things now. 💾"
+  }
+}

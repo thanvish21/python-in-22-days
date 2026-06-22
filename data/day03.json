@@ -1,0 +1,159 @@
+{
+  "day": 3,
+  "emoji": "✨",
+  "title": "Strings & f-strings",
+  "subtitle": "Learn to play with text like a word wizard — and meet the magic of f-strings.",
+  "goal": "Make, join, slice, and change text, then use f-strings to mix words and variables together cleanly.",
+  "estMinutes": 180,
+  "tags": [
+    "strings",
+    "beginner"
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "What is a string? 📝",
+      "html": "<p>A <strong>string</strong> is just text — letters, spaces, emojis, anything you can type. We wrap text in quotes so Python knows it's a string.</p><p>You can use <strong>single quotes</strong> <code class=\"inline\">'like this'</code> or <strong>double quotes</strong> <code class=\"inline\">\"like this\"</code>. They both work the same way — pick whichever you like!</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Single quotes and double quotes both make strings",
+      "code": "print('Hello with single quotes')\nprint(\"Hello with double quotes\")",
+      "explain": "Both lines are strings. Single and double quotes do the same job — just keep them matched at the start and end."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Handy trick:</strong> if your text has an apostrophe like <code class=\"inline\">It's fun</code>, use double quotes around it: <code class=\"inline\">\"It's fun\"</code>. That way the apostrophe doesn't confuse Python."
+    },
+    {
+      "type": "text",
+      "heading": "Joining and repeating text ➕✖️",
+      "html": "<p>You can glue strings together with <code class=\"inline\">+</code> (we call this <strong>concatenation</strong>), and repeat a string with <code class=\"inline\">*</code>. Watch this:</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Glue with + and repeat with *",
+      "code": "first = \"Lego\"\nsecond = \"Master\"\nprint(first + second)\nprint(first + \" \" + second)\nprint(\"ha\" * 5)\nprint(\"-\" * 20)",
+      "explain": "+ joins strings end to end (it does NOT add a space — you add that yourself with \" \"). * repeats a string. \"ha\" * 5 gives you a big laugh, and \"-\" * 20 makes a quick line."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Watch out!</strong> <code class=\"inline\">+</code> only glues string to string. You can't do <code class=\"inline\">\"Age: \" + 9</code> — Python will complain. We'll fix that with f-strings in a moment! 🪄",
+      "variant": "warn"
+    },
+    {
+      "type": "text",
+      "heading": "How long? Counting and peeking inside 🔢",
+      "html": "<p><code class=\"inline\">len()</code> tells you how many characters are in a string. And every character has a position number called an <strong>index</strong>, starting at <strong>0</strong>.</p><p>So in <code class=\"inline\">\"cat\"</code>: <code class=\"inline\">c</code> is index 0, <code class=\"inline\">a</code> is index 1, <code class=\"inline\">t</code> is index 2. You can also count from the end with <strong>negative</strong> numbers: <code class=\"inline\">-1</code> is the last character.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "len(), indexing, and slicing",
+      "code": "word = \"Python\"\nprint(len(word))\nprint(word[0])\nprint(word[-1])\nprint(word[0:3])",
+      "explain": "len(word) is 6 letters. word[0] is the first letter 'P'. word[-1] is the last letter 'n'. word[0:3] is a SLICE — it grabs letters 0, 1, 2 ('Pyt') but stops just before 3."
+    },
+    {
+      "type": "quiz",
+      "question": "In the string \"Hello\", what does Hello[0] give you?",
+      "options": [
+        "The whole word Hello",
+        "The letter H",
+        "The letter o",
+        "An error"
+      ],
+      "answerIndex": 1,
+      "explain": "Indexing starts at 0, so position 0 is the very first character — the letter H."
+    },
+    {
+      "type": "text",
+      "heading": "String superpowers: handy methods 🦸",
+      "html": "<p>Strings come with built-in <strong>methods</strong> — little tools you call with a dot. Here are some favorites:</p><ul><li><code class=\"inline\">.upper()</code> → SHOUTING</li><li><code class=\"inline\">.lower()</code> → quiet</li><li><code class=\"inline\">.title()</code> → Capitalizes Each Word</li><li><code class=\"inline\">.strip()</code> → removes extra spaces at the ends</li><li><code class=\"inline\">.replace(a, b)</code> → swaps one bit of text for another</li><li><code class=\"inline\">.count(x)</code> → counts how many times x appears</li></ul>"
+    },
+    {
+      "type": "code",
+      "caption": "Trying out string methods",
+      "code": "name = \"  charlie brown  \"\nprint(name.strip())\nprint(name.strip().title())\nprint(\"WHISPER\".lower())\nprint(\"banana\".count(\"a\"))\nprint(\"I like cats\".replace(\"cats\", \"dogs\"))",
+      "explain": "Methods don't change the original string — they hand you back a NEW one. Notice you can chain them: .strip().title() cleans the spaces AND capitalizes each word."
+    },
+    {
+      "type": "quiz",
+      "question": "What does \"hello\".upper() give you?",
+      "options": [
+        "hello",
+        "HELLO",
+        "Hello",
+        "An error"
+      ],
+      "answerIndex": 1,
+      "explain": ".upper() turns every letter into a capital, so you get HELLO."
+    },
+    {
+      "type": "text",
+      "heading": "The star of the show: f-strings 🌟",
+      "html": "<p>Mixing words and variables with <code class=\"inline\">+</code> gets messy fast — extra quotes, missing spaces, and errors when you try to glue numbers.</p><p><strong>f-strings</strong> fix all of that. Put the letter <code class=\"inline\">f</code> right before the opening quote, then drop any variable inside curly braces <code class=\"inline\">{ }</code>. Python fills in the values for you!</p>"
+    },
+    {
+      "type": "code",
+      "caption": "The messy old way vs the clean f-string way",
+      "code": "name = \"Maya\"\nage = 9\n\n# Old way with + (clunky, and you must turn age into a string)\nprint(\"Hi \" + name + \", you are \" + str(age))\n\n# New way with an f-string (so clean!)\nprint(f\"Hi {name}, you are {age}\")",
+      "explain": "With +, you needed str(age) to glue a number, plus careful spaces and quotes. The f-string just drops {name} and {age} right where you want them. Same result, way easier to read."
+    },
+    {
+      "type": "code",
+      "caption": "f-strings can do little calculations too",
+      "code": "name = \"Alex\"\napples = 3\nfriends = 2\nprint(f\"We have {apples} apples and {friends} friends.\")\nprint(f\"That is {apples + friends} things in total!\")\nprint(f\"In CAPS: {name.upper()}\")",
+      "explain": "Inside the curly braces you can put math like apples + friends, or even call methods like name.upper(). Python figures it out and slots the answer right in."
+    },
+    {
+      "type": "quiz",
+      "question": "If name = \"Sam\", what does f\"Hi {name}!\" print?",
+      "options": [
+        "Hi {name}!",
+        "Hi Sam!",
+        "Hi name!",
+        "An error"
+      ],
+      "answerIndex": 1,
+      "explain": "The f before the quote tells Python to replace {name} with its value, Sam. So you get: Hi Sam!"
+    },
+    {
+      "type": "tryit",
+      "title": "Make a friendly greeting with an f-string",
+      "instructions": "Fill in the name and age, then use an f-string to print a greeting. Press Check when it prints a sentence that includes the name.",
+      "starter": "name = \"___\"\nage = 10\nprint(f\"Hello {name}, you are {age} years old!\")",
+      "check": {
+        "stdout_includes": "you are",
+        "code_includes": "f\""
+      },
+      "solution": "name = \"Zoe\"\nage = 10\nprint(f\"Hello {name}, you are {age} years old!\")",
+      "passMsg": "Nice! You just used an f-string like a pro. 🌟",
+      "failMsg": "Keep the f-string (the f before the quotes) and make sure you print a name and age inside the { } braces."
+    },
+    {
+      "type": "tryit",
+      "title": "Shout your name",
+      "instructions": "Make a variable with your name, then print it in ALL CAPS using .upper(). Try doing it inside an f-string!",
+      "starter": "name = \"___\"\nprint(f\"My name in caps is {name.upper()}\")",
+      "check": {
+        "code_includes": ".upper()",
+        "stdout_includes": "My name in caps is"
+      },
+      "solution": "name = \"riley\"\nprint(f\"My name in caps is {name.upper()}\")",
+      "passMsg": "LOUD AND PROUD — great work! 📣",
+      "failMsg": "Use .upper() on your name. You can call it right inside the { } of the f-string."
+    }
+  ],
+  "challenge": {
+    "title": "Build a superhero name card",
+    "instructions": "Create variables for a hero name, a power, and a power level (a number). Then use f-strings to print a little card: a top border, a line introducing the hero, a line about their power, and a bottom border. Make it cool!",
+    "starter": "hero = \"___\"\npower = \"___\"\nlevel = 100\nprint(\"=\" * 25)\n# print a line with the hero name using an f-string\n# print a line with the power and level using an f-string\nprint(\"=\" * 25)",
+    "check": {
+      "code_includes": "f\"",
+      "stdout_includes": "=",
+      "regex": ".*\\n.*\\n.*\\n.*"
+    },
+    "solution": "hero = \"Captain Comet\"\npower = \"super speed\"\nlevel = 100\nprint(\"=\" * 25)\nprint(f\"Hero: {hero}\")\nprint(f\"Power: {power} (level {level})\")\nprint(\"=\" * 25)",
+    "hint": "Use \"=\" * 25 for the borders, and f-strings like f\"Hero: {hero}\" for the middle lines. You need at least four print() lines.",
+    "passMsg": "🏆 Epic card! You've mastered strings and f-strings — Day 3 complete, word wizard!"
+  }
+}

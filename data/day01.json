@@ -1,0 +1,101 @@
+{
+  "day": 1,
+  "emoji": "🐍",
+  "title": "Meet Python",
+  "subtitle": "Say hello to the friendliest programming language on Earth.",
+  "goal": "Write and run your very first Python program, and understand what print() and comments do.",
+  "estMinutes": 180,
+  "tags": ["basics", "beginner"],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "What is Python? 🐍",
+      "html": "<p>Python is a way of giving a computer instructions using words that look almost like English. People use it to build games, websites, robots, and even the apps on your phone.</p><p>The best part? You don't need to install anything today. Every code box on this page runs <strong>real Python</strong> right inside your browser. You type, you press <strong>Run</strong>, the snake does the work. 🎉</p>"
+    },
+    {
+      "type": "text",
+      "heading": "Your first command: print()",
+      "html": "<p>The word <code class=\"inline\">print</code> tells Python: <em>“show this on the screen.”</em> Whatever you put inside the quotes is what shows up.</p><p>Press <strong>▶ Run</strong> on the box below and watch what happens.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Your first Python program",
+      "code": "print(\"Hello, world!\")",
+      "explain": "print() shows whatever is inside the parentheses. The quotes \"...\" tell Python this is text (we call text a 'string')."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Quotes matter!</strong> Text always goes inside quotes: <code class=\"inline\">\"like this\"</code>. Forget them and Python gets confused."
+    },
+    {
+      "type": "code",
+      "caption": "You can print more than once",
+      "code": "print(\"I am learning Python.\")\nprint(\"This is line two!\")\nprint(\"🐍 is fun.\")",
+      "explain": "Each print() makes its own new line. Python runs your lines from top to bottom, in order."
+    },
+    {
+      "type": "text",
+      "heading": "Comments: notes for humans 📝",
+      "html": "<p>Anything after a <code class=\"inline\">#</code> is a <strong>comment</strong>. Python completely ignores it — comments are little notes for you and other people, not for the computer.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "The # parts are ignored by Python",
+      "code": "# This is a note to myself. Python skips it.\nprint(\"Python ignores the line above\")  # you can comment at the end too",
+      "explain": "Comments help you remember WHY you wrote something. Good coders leave helpful notes."
+    },
+    {
+      "type": "quiz",
+      "question": "What does print(\"Hi\") do?",
+      "options": [
+        "Prints the word Hi on the screen",
+        "Deletes the file",
+        "Prints the word print",
+        "Nothing at all"
+      ],
+      "answerIndex": 0,
+      "explain": "print() shows whatever is inside the quotes — here, the text Hi."
+    },
+    {
+      "type": "quiz",
+      "question": "What happens to text after a # symbol?",
+      "options": [
+        "It turns red",
+        "Python ignores it (it's a comment)",
+        "It runs twice",
+        "It causes an error"
+      ],
+      "answerIndex": 1,
+      "explain": "The # starts a comment. Python skips everything after it on that line."
+    },
+    {
+      "type": "tryit",
+      "title": "Print your own name",
+      "instructions": "Change the text inside the quotes so the program prints YOUR name. Then press Check.",
+      "starter": "print(\"My name is ___\")",
+      "check": { "stdout_includes": "My name is", "code_includes": "print" },
+      "solution": "print(\"My name is Thanvish\")",
+      "passMsg": "Awesome — you just made the computer talk!",
+      "failMsg": "Make sure you keep print(\"...\") and put your name inside the quotes."
+    },
+    {
+      "type": "tryit",
+      "title": "Three facts about you",
+      "instructions": "Use three print() lines to show three fun facts about yourself (your age, favorite food, favorite color — anything!).",
+      "starter": "print(\"Fact 1: ...\")\n# add two more print lines below\n",
+      "check": { "regex": ".*\\n.*\\n.*" },
+      "solution": "print(\"Fact 1: I am 12 years old\")\nprint(\"Fact 2: I love pizza\")\nprint(\"Fact 3: My favorite color is blue\")",
+      "passMsg": "Three lines, three facts — nicely done!",
+      "failMsg": "Add at least three print() lines, each on its own line."
+    }
+  ],
+  "challenge": {
+    "title": "Make an ASCII greeting card",
+    "instructions": "Use print() lines to draw a little greeting on screen. Print a top border, a message in the middle, and a bottom border. Make it say hello to someone you like!",
+    "starter": "print(\"*****************\")\n# print a greeting line in the middle\nprint(\"*****************\")",
+    "check": { "stdout_includes": ["*"], "regex": ".*\\n.*\\n.*" },
+    "solution": "print(\"*****************\")\nprint(\"*  Hi Grandma!  *\")\nprint(\"*****************\")",
+    "hint": "You need at least three print() lines: a border, your message, and another border.",
+    "passMsg": "🏆 Beautiful card! You've finished Day 1 — you're officially a programmer now."
+  }
+}

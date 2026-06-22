@@ -1,0 +1,161 @@
+{
+  "day": 21,
+  "emoji": "📦",
+  "title": "pip & Real Libraries (Mini-Project)",
+  "subtitle": "Meet the giant toolbox of Python — then build a real game with what you already know.",
+  "goal": "Understand pip, PyPI, and famous libraries, then build a complete Number Guessing Game using only the standard library.",
+  "estMinutes": 180,
+  "tags": [
+    "libraries",
+    "pip",
+    "project",
+    "intermediate"
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "The whole Python world 🌍",
+      "html": "<p>So far you've used Python's built-in tools and the <strong>standard library</strong> (handy modules like <code class=\"inline\">random</code> and <code class=\"inline\">math</code> that come free with Python). But there's a HUGE world beyond that.</p><p>All over the planet, people write Python code and share it for free. You can grab their code and use it in your own programs — no need to build everything from scratch. Today you learn how that works, then you build a real game! 🎉</p>"
+    },
+    {
+      "type": "text",
+      "heading": "What is pip? 📦",
+      "html": "<p><strong>pip</strong> is Python's package installer. A <em>package</em> (also called a <em>library</em>) is a bundle of code someone else wrote so you don't have to. With one short command you download it and start using it.</p><p>On a real computer (not this browser) you'd open a terminal and type something like <code class=\"inline\">pip install requests</code>. That fetches the package and gets it ready to <code class=\"inline\">import</code>.</p>"
+    },
+    {
+      "type": "tip",
+      "variant": "warn",
+      "html": "<strong>Heads up:</strong> <code class=\"inline\">pip install</code> only works in a real terminal on your computer — it can't run inside this browser. So in this lesson, pip commands are shown as <em>text to read</em>, and every box you can press <strong>Run</strong> on uses only the standard library. 🙂"
+    },
+    {
+      "type": "text",
+      "heading": "What is PyPI? 🏬",
+      "html": "<p><strong>PyPI</strong> (say it \"pie-pee-eye\") stands for the <em>Python Package Index</em>. Think of it as a giant free app store for Python code, living at <code class=\"inline\">pypi.org</code>. When you run <code class=\"inline\">pip install something</code>, pip goes to PyPI, finds that package, and downloads it for you. There are hundreds of thousands of packages waiting there!</p>"
+    },
+    {
+      "type": "text",
+      "heading": "Famous libraries (and what they do) ⭐",
+      "html": "<p>Here are some superstar libraries people install with pip:</p><ul><li><strong>requests</strong> — grabs pages and data from the internet, like a friendly web fetcher.</li><li><strong>pandas</strong> — works with tables of data, like a super-powered spreadsheet.</li><li><strong>numpy</strong> — does fast math on big lists of numbers.</li><li><strong>flask</strong> and <strong>django</strong> — build websites and web apps.</li><li><strong>pygame</strong> — make games with pictures, sound, and movement.</li><li><strong>matplotlib</strong> — draw charts and graphs from your data.</li></ul><p>You'd install any of them like this:</p><p><code class=\"inline\">pip install pandas</code></p>"
+    },
+    {
+      "type": "tip",
+      "html": "You don't have to memorize these! Just know the <em>kind</em> of thing each does, so when you need it later you'll remember \"oh, there's a library for that.\" 🔎"
+    },
+    {
+      "type": "text",
+      "heading": "Virtual environments (keeping projects tidy) 🧹",
+      "html": "<p>Imagine each project living in its own clean box, with its very own set of libraries. That box is called a <strong>virtual environment</strong>. It stops one project's libraries from clashing with another's — like keeping your LEGO sets in separate bins so the pieces don't get mixed up.</p><p>On a real computer you'd make one with <code class=\"inline\">python -m venv myenv</code> and turn it on before installing packages. You don't need it today, but now you know the word when you see it later. 👍</p>"
+    },
+    {
+      "type": "text",
+      "heading": "Mini-Project time: a Number Guessing Game! 🎯",
+      "html": "<p>Now the fun part. We'll build a real <strong>Number Guessing Game</strong> using only the standard library — so it runs right here in your browser. The computer picks a secret number, and we guess until we get it.</p><p>We'll use everything you've learned: the <code class=\"inline\">random</code> module, variables, <code class=\"inline\">if</code>/<code class=\"inline\">elif</code>/<code class=\"inline\">else</code>, loops, and functions. Let's build it piece by piece. 🛠️</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Piece 1: pick a secret number with random",
+      "code": "import random\n\nsecret = random.randint(1, 10)\nprint(\"I picked a secret number between 1 and 10.\")\nprint(\"(Shhh, it is:\", secret, \")\")",
+      "explain": "import random gives us the random module from the standard library. random.randint(1, 10) picks a whole number from 1 to 10 (both ends included). Right now we print the secret just so we can see it works — in the real game we'll keep it hidden!"
+    },
+    {
+      "type": "code",
+      "caption": "Piece 2: compare a guess to the secret",
+      "code": "secret = 7\nguess = 4\n\nif guess == secret:\n    print(\"You got it! 🎉\")\nelif guess < secret:\n    print(\"Too low! Try higher.\")\nelse:\n    print(\"Too high! Try lower.\")",
+      "explain": "This is the brain of the game. We compare the guess to the secret with ==, < and >. Change the value of guess to 7 and press Run again — you'll get the winning message!"
+    },
+    {
+      "type": "code",
+      "caption": "Piece 3: loop through several guesses",
+      "code": "import random\n\nsecret = random.randint(1, 10)\nguesses = [5, 8, 3, secret]\n\nfor guess in guesses:\n    if guess == secret:\n        print(\"Guess\", guess, \"-> correct! 🎉\")\n    elif guess < secret:\n        print(\"Guess\", guess, \"-> too low\")\n    else:\n        print(\"Guess\", guess, \"-> too high\")",
+      "explain": "A for loop checks each guess in our list one by one. We put secret as the last item so the game always ends with a win. In a real game the guesses would come from a player typing them in!"
+    },
+    {
+      "type": "tip",
+      "html": "In a real terminal you'd use <code class=\"inline\">input()</code> to ask the player for a guess. The browser runner can't pause for typing, so here we use lists of guesses to test our logic. The thinking is exactly the same! 🧠"
+    },
+    {
+      "type": "quiz",
+      "question": "What does pip do?",
+      "options": [
+        "Deletes Python from your computer",
+        "Installs packages (libraries) other people wrote",
+        "Makes your code run faster automatically",
+        "Draws pictures on the screen"
+      ],
+      "answerIndex": 1,
+      "explain": "pip is Python's package installer. pip install <name> downloads a library from PyPI so you can use it."
+    },
+    {
+      "type": "quiz",
+      "question": "Which library would you reach for to build a game with pictures and sound?",
+      "options": [
+        "pandas",
+        "requests",
+        "pygame",
+        "matplotlib"
+      ],
+      "answerIndex": 2,
+      "explain": "pygame is made for games with graphics, sound, and movement. pandas is for data tables, requests is for the web, and matplotlib draws charts."
+    },
+    {
+      "type": "quiz",
+      "question": "Why do people use a virtual environment?",
+      "options": [
+        "To keep each project's libraries in their own tidy box so they don't clash",
+        "To make the computer turn off faster",
+        "To delete old packages from PyPI",
+        "To turn Python code into a website"
+      ],
+      "answerIndex": 0,
+      "explain": "A virtual environment keeps one project's libraries separate from another's — like separate bins for separate LEGO sets."
+    },
+    {
+      "type": "tryit",
+      "title": "Pick your own secret number",
+      "instructions": "Use the random module to pick a secret number between 1 and 100, then print it. Make sure you import random and use random.randint.",
+      "starter": "import random\n\n# TODO: use random.randint(1, 100) to pick the secret\nsecret = 0\nprint(\"My secret number is\", secret)\n",
+      "check": {
+        "code_includes": [
+          "import random",
+          "random.randint"
+        ]
+      },
+      "solution": "import random\n\nsecret = random.randint(1, 100)\nprint(\"My secret number is\", secret)",
+      "passMsg": "Nice — random.randint is now in your toolbox! 🎲",
+      "failMsg": "Make sure you have 'import random' and use random.randint(1, 100)."
+    },
+    {
+      "type": "tryit",
+      "title": "Write the guess-checker",
+      "instructions": "Finish the if/elif/else so it prints 'Too low!' when the guess is smaller than secret, 'Too high!' when it's bigger, and 'Correct!' when they match.",
+      "starter": "secret = 42\nguess = 30\n\nif guess == secret:\n    print(\"Correct!\")\n# add elif and else below\n",
+      "check": {
+        "code_includes": [
+          "if",
+          "elif",
+          "else"
+        ]
+      },
+      "solution": "secret = 42\nguess = 30\n\nif guess == secret:\n    print(\"Correct!\")\nelif guess < secret:\n    print(\"Too low!\")\nelse:\n    print(\"Too high!\")",
+      "passMsg": "That's the heart of the game beating! ❤️",
+      "failMsg": "You need all three: if, elif, and else, to cover correct / too low / too high."
+    }
+  ],
+  "challenge": {
+    "title": "Build the full Number Guessing Game 🏆",
+    "instructions": "Put the pieces together into one program. Write a function play_game() that: picks a secret number with random.randint, loops through a list of guesses, and for each guess prints 'too low', 'too high', or 'you win'. Then call play_game(). Use import random, a function (def), a loop (for), and if/elif/else.",
+    "starter": "import random\n\ndef play_game():\n    secret = random.randint(1, 10)\n    guesses = [3, 7, 5, secret]\n    # loop through guesses and check each one\n\nplay_game()",
+    "check": {
+      "code_includes": [
+        "import random",
+        "def play_game",
+        "random.randint",
+        "for",
+        "elif"
+      ]
+    },
+    "solution": "import random\n\ndef play_game():\n    secret = random.randint(1, 10)\n    guesses = [3, 7, 5, secret]\n    for guess in guesses:\n        if guess == secret:\n            print(\"Guess\", guess, \"-> you win! 🎉\")\n        elif guess < secret:\n            print(\"Guess\", guess, \"-> too low\")\n        else:\n            print(\"Guess\", guess, \"-> too high\")\n\nplay_game()",
+    "hint": "Inside the loop, use 'if guess == secret' for the win, 'elif guess < secret' for too low, and 'else' for too high.",
+    "passMsg": "🏆 You built a real game from scratch! You now know pip, PyPI, and the giant world of Python libraries — you can build real things now. Incredible work finishing Day 21!"
+  }
+}

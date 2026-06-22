@@ -1,0 +1,13 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Python verifier cruft
+__pycache__/
+*.pyc
+
+# Vercel
+.vercel

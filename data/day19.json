@@ -1,0 +1,139 @@
+{
+  "day": 19,
+  "emoji": "🧬",
+  "title": "Inheritance & Dunder Methods",
+  "subtitle": "Let your classes share superpowers and learn Python's secret magic methods.",
+  "goal": "Build child classes that reuse a parent class, override methods, and use dunder methods like __str__, __eq__, and __len__ to make your objects feel like real Python.",
+  "estMinutes": 180,
+  "tags": ["classes", "inheritance", "dunder", "intermediate"],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "Classes can have family trees 🌳",
+      "html": "<p>On Day 18 you built classes — blueprints for making objects. Today those blueprints learn to <strong>share</strong>. A <strong>child class</strong> can take everything a <strong>parent class</strong> already knows, then add its own twist.</p><p>Think about animals. A dog <em>is an</em> animal. A cat <em>is an</em> animal. They all eat and sleep like animals — but each one makes its own sound. We call this the <strong>\"is-a\" relationship</strong>, and Python calls it <strong>inheritance</strong>. 🧬</p>"
+    },
+    {
+      "type": "text",
+      "heading": "Making a child class",
+      "html": "<p>To say \"Dog is an Animal\", you write the parent's name in parentheses: <code class=\"inline\">class Dog(Animal):</code>. Now <code class=\"inline\">Dog</code> gets every method and attribute <code class=\"inline\">Animal</code> has — for free!</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Dog and Cat both inherit from Animal",
+      "code": "class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def eat(self):\n        print(self.name + \" is eating. 🍽️\")\n\n    def speak(self):\n        print(self.name + \" makes a sound.\")\n\nclass Dog(Animal):\n    def speak(self):\n        print(self.name + \" says Woof! 🐶\")\n\nclass Cat(Animal):\n    def speak(self):\n        print(self.name + \" says Meow! 🐱\")\n\nrex = Dog(\"Rex\")\nwhiskers = Cat(\"Whiskers\")\n\nrex.eat()\nrex.speak()\nwhiskers.eat()\nwhiskers.speak()",
+      "explain": "Dog and Cat never wrote their own __init__ or eat() — they borrowed them from Animal. But each one wrote its OWN speak(). Replacing a parent's method like this is called 'overriding'."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>DRY = Don't Repeat Yourself.</strong> Inheritance means you write shared code <em>once</em> in the parent. Fix a bug there, and every child is fixed too. 🎉"
+    },
+    {
+      "type": "text",
+      "heading": "Calling the parent with super() 🦸",
+      "html": "<p>Sometimes a child wants to <em>add</em> to the parent instead of fully replacing it. Use <code class=\"inline\">super()</code> to run the parent's version first, then do your own extra step.</p><p>This is super handy in <code class=\"inline\">__init__</code> when the child needs extra info the parent doesn't know about.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "super() lets the child build on the parent",
+      "code": "class Animal:\n    def __init__(self, name):\n        self.name = name\n\nclass Dog(Animal):\n    def __init__(self, name, breed):\n        super().__init__(name)   # let Animal set self.name\n        self.breed = breed       # then add our own extra\n\n    def describe(self):\n        print(self.name + \" is a \" + self.breed + \". 🐕\")\n\nbuddy = Dog(\"Buddy\", \"Beagle\")\nbuddy.describe()",
+      "explain": "super().__init__(name) runs Animal's __init__, so self.name gets set without copy-pasting that code. Then Dog adds self.breed on top."
+    },
+    {
+      "type": "quiz",
+      "question": "What does class Cat(Animal): mean?",
+      "options": [
+        "Cat is the parent of Animal",
+        "Cat inherits everything from Animal (Cat is-an Animal)",
+        "Cat and Animal are the exact same class",
+        "Cat deletes the Animal class"
+      ],
+      "answerIndex": 1,
+      "explain": "Writing the parent in parentheses makes Cat a child of Animal. Cat gets all of Animal's methods and attributes, and can add or override its own."
+    },
+    {
+      "type": "quiz",
+      "question": "Why would a child class call super().__init__()?",
+      "options": [
+        "To delete the parent class",
+        "To run the parent's setup code so you don't repeat it",
+        "To make the program run faster",
+        "It is required in every method"
+      ],
+      "answerIndex": 1,
+      "explain": "super().__init__() runs the parent's __init__, reusing its setup. Then the child can add its own extra attributes afterward."
+    },
+    {
+      "type": "tryit",
+      "title": "Add a Bird that speaks",
+      "instructions": "A parent Animal class is ready. Finish the Bird child class so it inherits from Animal and overrides speak() to print a tweet. Then make a Bird and call speak(). Make sure the output contains the word Tweet.",
+      "starter": "class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        print(self.name + \" makes a sound.\")\n\n# Make Bird inherit from Animal and override speak()\nclass Bird(___):\n    def speak(self):\n        print(self.name + \" says ___\")\n\n# create a Bird and call speak()\n",
+      "check": { "stdout_includes": "Tweet", "code_includes": "class Bird(Animal)" },
+      "solution": "class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        print(self.name + \" makes a sound.\")\n\nclass Bird(Animal):\n    def speak(self):\n        print(self.name + \" says Tweet! 🐦\")\n\nrobin = Bird(\"Robin\")\nrobin.speak()",
+      "passMsg": "Tweet tweet! Your Bird inherited from Animal and got its own voice. 🐦",
+      "failMsg": "Make Bird inherit with class Bird(Animal):, override speak() to print 'Tweet', then create a Bird and call speak()."
+    },
+    {
+      "type": "text",
+      "heading": "Dunder methods: Python's magic ✨",
+      "html": "<p>Some method names start and end with <strong>two underscores</strong>, like <code class=\"inline\">__init__</code>. Coders call these <strong>dunder</strong> methods (\"double underscore\"). They're magic hooks Python calls automatically at the right moment.</p><p>You already met <code class=\"inline\">__init__</code> — it runs when you create an object. There are many more, and they let your objects behave like Python's built-in types.</p>"
+    },
+    {
+      "type": "text",
+      "heading": "__str__ makes print() friendly 🖨️",
+      "html": "<p>By default, printing an object shows something ugly like <code class=\"inline\">&lt;__main__.Circle object at 0x...&gt;</code>. Add a <code class=\"inline\">__str__</code> method that <strong>returns</strong> a string, and <code class=\"inline\">print()</code> will use it instead. There's also <code class=\"inline\">__repr__</code>, a more technical \"for programmers\" version Python shows in places like lists.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Shapes with __str__, __repr__, and __eq__",
+      "code": "class Circle:\n    def __init__(self, radius):\n        self.radius = radius\n\n    def area(self):\n        return 3.14 * self.radius * self.radius\n\n    def __str__(self):\n        return \"Circle with radius \" + str(self.radius)\n\n    def __repr__(self):\n        return \"Circle(\" + str(self.radius) + \")\"\n\n    def __eq__(self, other):\n        return self.radius == other.radius\n\nc1 = Circle(5)\nc2 = Circle(5)\nc3 = Circle(9)\n\nprint(c1)              # uses __str__\nprint(c1.area())\nprint(c1 == c2)        # uses __eq__ -> True\nprint(c1 == c3)        # uses __eq__ -> False\nprint([c1, c3])        # lists use __repr__",
+      "explain": "__str__ gives a friendly message for print(). __eq__ lets you compare two objects with ==, deciding what 'equal' means (here: same radius). __repr__ is the developer-friendly version Python shows inside a list."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Watch out!</strong> <code class=\"inline\">__str__</code> and <code class=\"inline\">__repr__</code> must <em>return</em> a string, not <code class=\"inline\">print</code> it. Use <code class=\"inline\">return</code>, and wrap numbers in <code class=\"inline\">str(...)</code> before joining them with <code class=\"inline\">+</code>.",
+      "variant": "warn"
+    },
+    {
+      "type": "text",
+      "heading": "__len__ teaches len() about your object 📏",
+      "html": "<p>Ever used <code class=\"inline\">len(\"hello\")</code> to get 5? You can teach <code class=\"inline\">len()</code> to work on YOUR objects too by adding a <code class=\"inline\">__len__</code> method that returns a number.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "A Team object that knows its own length",
+      "code": "class Team:\n    def __init__(self, name, players):\n        self.name = name\n        self.players = players\n\n    def __str__(self):\n        return \"Team \" + self.name + \" with \" + str(len(self.players)) + \" players\"\n\n    def __len__(self):\n        return len(self.players)\n\nlions = Team(\"Lions\", [\"Sam\", \"Ava\", \"Leo\"])\n\nprint(lions)          # uses __str__\nprint(len(lions))     # uses __len__ -> 3",
+      "explain": "Because Team has __len__, calling len(lions) returns 3. Python's built-in len() looks for a __len__ method on the object and uses it."
+    },
+    {
+      "type": "quiz",
+      "question": "Which dunder method does print(my_object) use to show a friendly message?",
+      "options": [
+        "__len__",
+        "__init__",
+        "__str__",
+        "__area__"
+      ],
+      "answerIndex": 2,
+      "explain": "print() calls __str__ if you defined it. Without it, you get the ugly default like <__main__.Circle object at 0x...>."
+    },
+    {
+      "type": "tryit",
+      "title": "Give Book a nice printout and a length",
+      "instructions": "Add a __str__ method to Book that returns a string like 'Matilda by Roald Dahl', and a __len__ method that returns the number of pages. Then print the book and print its length.",
+      "starter": "class Book:\n    def __init__(self, title, author, pages):\n        self.title = title\n        self.author = author\n        self.pages = pages\n\n    # add __str__ here (must return a string)\n\n    # add __len__ here (must return self.pages)\n\nb = Book(\"Matilda\", \"Roald Dahl\", 240)\nprint(b)\nprint(len(b))\n",
+      "check": { "stdout_includes": "Matilda by Roald Dahl", "code_includes": "def __len__" },
+      "solution": "class Book:\n    def __init__(self, title, author, pages):\n        self.title = title\n        self.author = author\n        self.pages = pages\n\n    def __str__(self):\n        return self.title + \" by \" + self.author\n\n    def __len__(self):\n        return self.pages\n\nb = Book(\"Matilda\", \"Roald Dahl\", 240)\nprint(b)\nprint(len(b))",
+      "passMsg": "Your Book prints beautifully and len() works on it. That's dunder magic! 📚",
+      "failMsg": "Make __str__ return self.title + ' by ' + self.author, and make __len__ return self.pages. Both must use return, not print."
+    }
+  ],
+  "challenge": {
+    "title": "Build a Shape family with super() and dunders",
+    "instructions": "Create a parent class Shape that stores a name in __init__. Then make two children: Square(side) and Rectangle(width, height). Each should call super().__init__() with its name, have an area() method, and a __str__ that says the name and its area. Create one of each, print them, and print their areas. Your output should contain the words Square and Rectangle.",
+    "starter": "class Shape:\n    def __init__(self, name):\n        self.name = name\n\n# class Square(Shape): use super().__init__(\"Square\"), store side, add area() and __str__\n\n# class Rectangle(Shape): use super().__init__(\"Rectangle\"), store width/height, add area() and __str__\n\n# create a Square and a Rectangle, print each one, print each area\n",
+    "check": { "stdout_includes": ["Square", "Rectangle"], "code_includes": "super().__init__" },
+    "solution": "class Shape:\n    def __init__(self, name):\n        self.name = name\n\nclass Square(Shape):\n    def __init__(self, side):\n        super().__init__(\"Square\")\n        self.side = side\n\n    def area(self):\n        return self.side * self.side\n\n    def __str__(self):\n        return self.name + \" with area \" + str(self.area())\n\nclass Rectangle(Shape):\n    def __init__(self, width, height):\n        super().__init__(\"Rectangle\")\n        self.width = width\n        self.height = height\n\n    def area(self):\n        return self.width * self.height\n\n    def __str__(self):\n        return self.name + \" with area \" + str(self.area())\n\nsq = Square(4)\nrect = Rectangle(3, 5)\nprint(sq)\nprint(rect)\nprint(sq.area())\nprint(rect.area())",
+    "hint": "Each child's __init__ should call super().__init__(\"Square\") or super().__init__(\"Rectangle\") first, then store its own sizes. __str__ must return a string, so wrap area() in str().",
+    "passMsg": "🏆 Incredible! You built a class family that shares code with super() AND speaks Python's magic dunder language. Day 19 conquered!"
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "day": 14,
+  "emoji": "🎒",
+  "title": "Scope & Arguments",
+  "subtitle": "Where variables live, and clever ways to hand information to your functions.",
+  "goal": "Understand local vs global scope, use default and keyword arguments, collect extras with *args and **kwargs, and return more than one value at once.",
+  "estMinutes": 180,
+  "tags": ["functions", "intermediate"],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "Variables have a home 🏠",
+      "html": "<p>On Day 13 you built functions. Today we go a level deeper into how they work.</p><p>When you make a variable <strong>inside</strong> a function, it lives in a private room. Code outside the function can't see it. We call this its <strong>scope</strong> — the area where a name actually exists.</p><p>A variable made inside a function is <strong>local</strong>. A variable made out in the open, at the top of your program, is <strong>global</strong> and can be seen everywhere.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Local variables stay inside",
+      "code": "def make_snack():\n    treat = \"cookie\"\n    print(\"Inside the function, treat is a\", treat)\n\nmake_snack()\nprint(\"Outside, the function did its job!\")",
+      "explain": "The variable 'treat' only exists inside make_snack(). It is local. If you tried to print(treat) outside the function, Python would say it doesn't know that name."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Think of it like a backpack 🎒.</strong> What a function packs inside its own backpack stays there. When the function finishes, the backpack is emptied — those local variables are gone."
+    },
+    {
+      "type": "code",
+      "caption": "A global variable can be seen inside",
+      "code": "player_name = \"Sam\"\n\ndef greet_player():\n    print(\"Welcome back,\", player_name)\n\ngreet_player()\nprint(\"player_name still works out here too:\", player_name)",
+      "explain": "player_name is created at the top level, so it is global. The function can read it, and so can code outside. To CHANGE a global from inside a function you'd need the 'global' keyword, but most of the time it's cleaner to pass values in and return them out."
+    },
+    {
+      "type": "text",
+      "heading": "Default values: a backup plan 🛟",
+      "html": "<p>Sometimes you want a parameter to have a sensible value when the caller doesn't give one. You set a <strong>default value</strong> with an equals sign in the function definition.</p><p>If the caller provides the argument, theirs wins. If they leave it out, the default kicks in.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Default parameter values",
+      "code": "def greet(name, greeting=\"Hi\"):\n    print(greeting + \",\", name + \"!\")\n\ngreet(\"Sam\")\ngreet(\"Sam\", \"Yo\")",
+      "explain": "greeting=\"Hi\" sets the default. The first call leaves greeting out, so it uses \"Hi\". The second call passes \"Yo\", which overrides the default. Parameters with defaults must come AFTER parameters without them."
+    },
+    {
+      "type": "text",
+      "heading": "Keyword arguments: name your gifts 🎁",
+      "html": "<p>Normally Python matches arguments by <strong>position</strong> — the first value goes to the first parameter, and so on. But you can also pass arguments by <strong>name</strong>, which are called <strong>keyword arguments</strong>.</p><p>With keywords, the order doesn't matter, because you've labelled each value. This makes calls easier to read.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Positional vs keyword arguments",
+      "code": "def greet(name, greeting=\"Hi\"):\n    print(greeting + \",\", name + \"!\")\n\ngreet(\"Sam\", \"Hello\")\ngreet(greeting=\"Yo\", name=\"Sam\")",
+      "explain": "The first call is positional: \"Sam\" goes to name, \"Hello\" goes to greeting. The second call uses keywords, so the order can flip and Python still gets it right. Positional arguments must always come before keyword ones."
+    },
+    {
+      "type": "quiz",
+      "question": "What does greet(\"Sam\") print if the function is def greet(name, greeting=\"Hi\")?",
+      "options": [
+        "Hi, Sam!",
+        "Sam, Hi!",
+        "An error, because greeting is missing",
+        "Hi, Hi!"
+      ],
+      "answerIndex": 0,
+      "explain": "greeting wasn't given, so it falls back to its default \"Hi\". name is \"Sam\". The function prints \"Hi, Sam!\"."
+    },
+    {
+      "type": "quiz",
+      "question": "Why might you call a function using keyword arguments like greet(greeting=\"Yo\", name=\"Sam\")?",
+      "options": [
+        "Because keywords run faster",
+        "So the order of arguments doesn't matter and the call is clearer",
+        "Because positional arguments are not allowed in Python",
+        "To delete the default values"
+      ],
+      "answerIndex": 1,
+      "explain": "Naming each argument means Python matches by label, not position — so the order is flexible and the call reads clearly."
+    },
+    {
+      "type": "tryit",
+      "title": "Give it a default",
+      "instructions": "Finish the function so it has a parameter 'times' with a default value of 2. Then call cheer(\"Go\") so it prints the word twice.",
+      "starter": "def cheer(word, times=___):\n    for i in range(times):\n        print(word)\n\ncheer(\"Go\")",
+      "check": { "stdout_equals": "Go\nGo", "code_includes": "times=2" },
+      "solution": "def cheer(word, times=2):\n    for i in range(times):\n        print(word)\n\ncheer(\"Go\")",
+      "passMsg": "Nice — the default value did its job, no extra argument needed!",
+      "failMsg": "Set the default to 2 with times=2, and make sure you call cheer(\"Go\") with no second argument."
+    },
+    {
+      "type": "text",
+      "heading": "*args — catch any number of values ✨",
+      "html": "<p>What if you don't know how many things someone will pass in? Put a <code class=\"inline\">*</code> before a parameter name and Python gathers all the extra <strong>positional</strong> arguments into a tuple for you.</p><p>By tradition this parameter is named <code class=\"inline\">*args</code>, but the star is the important part, not the name.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Adding up however many numbers you get",
+      "code": "def add_all(*numbers):\n    total = 0\n    for n in numbers:\n        total += n\n    return total\n\nprint(add_all(2, 3))\nprint(add_all(1, 2, 3, 4, 5))",
+      "explain": "The * in *numbers scoops up every positional argument into a tuple called numbers. The same function works with two numbers or with five — you don't have to know how many ahead of time."
+    },
+    {
+      "type": "text",
+      "heading": "**kwargs — catch named values 🏷️",
+      "html": "<p>Two stars <code class=\"inline\">**</code> do the same trick for <strong>keyword</strong> arguments. Python collects all the extra named arguments into a dictionary (remember those from Day 12).</p><p>The traditional name is <code class=\"inline\">**kwargs</code>, short for \"keyword arguments.\"</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Collecting named details into a dictionary",
+      "code": "def describe(**facts):\n    for key in facts:\n        print(key, \"->\", facts[key])\n\ndescribe(name=\"Sam\", age=11, pet=\"dog\")",
+      "explain": "Each name=value pair becomes an entry in the dictionary called facts. We loop over the keys and print each detail. **kwargs is handy when you want to accept flexible, labelled information."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Watch the stars.</strong> One star <code class=\"inline\">*args</code> gathers positional values into a tuple; two stars <code class=\"inline\">**kwargs</code> gather named values into a dictionary. Mixing them up is a common mistake!",
+      "variant": "warn"
+    },
+    {
+      "type": "text",
+      "heading": "Returning more than one value 📦",
+      "html": "<p>Back on Day 11 you met <strong>tuples</strong> — a little bundle of values. Functions can return a tuple to hand back several results at once. Just separate the values with commas after <code class=\"inline\">return</code>.</p><p>You can then unpack them into separate variables in one clean line.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Returning a min and a max together",
+      "code": "def smallest_and_largest(numbers):\n    return min(numbers), max(numbers)\n\nlow, high = smallest_and_largest([4, 9, 1, 7])\nprint(\"Smallest:\", low)\nprint(\"Largest:\", high)",
+      "explain": "return min(numbers), max(numbers) hands back a tuple of two values. The line low, high = ... unpacks that tuple into two variables in one go. Returning a tuple is the easy way to give back more than one answer."
+    },
+    {
+      "type": "quiz",
+      "question": "Inside a function, what does *args collect the extra arguments into?",
+      "options": [
+        "A dictionary",
+        "A tuple",
+        "A single string",
+        "A global variable"
+      ],
+      "answerIndex": 1,
+      "explain": "A single star (*args) gathers extra positional arguments into a tuple. Two stars (**kwargs) would make a dictionary."
+    },
+    {
+      "type": "tryit",
+      "title": "Multiply them all",
+      "instructions": "Write a function product(*nums) that multiplies every number it receives together and returns the result. Call it with 2, 3, and 4 and print the answer (it should be 24).",
+      "starter": "def product(*nums):\n    result = 1\n    # multiply every number in nums into result, then return it\n    return result\n\nprint(product(2, 3, 4))",
+      "check": { "stdout_includes": "24", "code_includes": "*nums" },
+      "solution": "def product(*nums):\n    result = 1\n    for n in nums:\n        result *= n\n    return result\n\nprint(product(2, 3, 4))",
+      "passMsg": "Excellent — *nums caught all three numbers and you multiplied them perfectly!",
+      "failMsg": "Start result at 1, loop over nums multiplying each into result, then return result. The answer should be 24."
+    }
+  ],
+  "challenge": {
+    "title": "Build a flexible profile maker",
+    "instructions": "Write a function make_profile(name, greeting=\"Hello\", **details) that prints a greeting line like 'Hello, Sam!' and then prints each extra detail on its own line as 'key: value'. Call it with a name, a custom greeting, and at least two extra details (like age and city).",
+    "starter": "def make_profile(name, greeting=\"Hello\", **details):\n    print(greeting + \",\", name + \"!\")\n    # loop over details and print each one as 'key: value'\n\nmake_profile(\"Sam\", greeting=\"Hi\", age=11, city=\"Austin\")",
+    "check": { "stdout_includes": ["Hi, Sam!", "age", "city"], "code_includes": "**details" },
+    "solution": "def make_profile(name, greeting=\"Hello\", **details):\n    print(greeting + \",\", name + \"!\")\n    for key in details:\n        print(key + \":\", details[key])\n\nmake_profile(\"Sam\", greeting=\"Hi\", age=11, city=\"Austin\")",
+    "hint": "The greeting has a default, so it's optional. **details collects age and city into a dictionary — loop over it with 'for key in details' and print key and details[key].",
+    "passMsg": "🏆 Brilliant! Defaults, keywords, and **kwargs all working together — that's real intermediate Python. Day 14 complete!"
+  }
+}

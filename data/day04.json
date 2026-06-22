@@ -1,0 +1,180 @@
+{
+  "day": 4,
+  "emoji": "🔢",
+  "title": "Numbers & Math",
+  "subtitle": "Turn Python into the smartest calculator you've ever owned.",
+  "goal": "Use Python to do arithmetic with ints and floats, master //, %, and **, follow order of operations, and round, abs, and convert numbers like a pro.",
+  "estMinutes": 180,
+  "tags": [
+    "numbers",
+    "math",
+    "beginner"
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "Two kinds of numbers 🔢",
+      "html": "<p>Python has two main number types. <strong>Integers</strong> (ints) are whole numbers with no decimal point: <code class=\"inline\">3</code>, <code class=\"inline\">0</code>, <code class=\"inline\">-7</code>. <strong>Floats</strong> are numbers <em>with</em> a decimal point: <code class=\"inline\">3.5</code>, <code class=\"inline\">0.1</code>, <code class=\"inline\">-2.0</code>.</p><p>You can ask Python what type a number is with <code class=\"inline\">type()</code>. Press <strong>▶ Run</strong> and see!</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Ints vs floats",
+      "code": "print(type(7))\nprint(type(7.0))\nprint(7 + 7.0)",
+      "explain": "7 is an int and 7.0 is a float. Notice that when you mix an int with a float, Python gives you back a float (14.0). A decimal point sneaks in!"
+    },
+    {
+      "type": "text",
+      "heading": "The basic four: + - * /",
+      "html": "<p>Python does math with symbols you already know: <code class=\"inline\">+</code> add, <code class=\"inline\">-</code> subtract, <code class=\"inline\">*</code> multiply, and <code class=\"inline\">/</code> divide. The only surprise is that we use <code class=\"inline\">*</code> for times (not <code class=\"inline\">x</code>) because <code class=\"inline\">x</code> looks like a letter.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Sharing a pizza 🍕",
+      "code": "slices = 8\nfriends = 4\nprint(\"Total slices:\", slices)\nprint(\"Each person gets:\", slices / friends)\nprint(\"Two pizzas would be:\", slices * 2)",
+      "explain": "Math works inside print() too. Notice that 8 / 4 gives 2.0, a float — regular division ALWAYS gives a float, even when it divides evenly."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Always a float:</strong> The <code class=\"inline\">/</code> sign always gives a float answer. So <code class=\"inline\">10 / 2</code> is <code class=\"inline\">5.0</code>, not <code class=\"inline\">5</code>. If you want a clean whole number, keep reading about <code class=\"inline\">//</code>!"
+    },
+    {
+      "type": "text",
+      "heading": "Whole answers with // and leftovers with %",
+      "html": "<p>Sometimes you only care about the whole part. <code class=\"inline\">//</code> is <strong>integer division</strong> — it divides and throws away the leftover. Then <code class=\"inline\">%</code> (called <strong>modulo</strong>) gives you just the <strong>remainder</strong>, the part left over.</p><p>Imagine 7 cookies shared by 2 kids: each gets <code class=\"inline\">7 // 2 = 3</code> cookies, and <code class=\"inline\">7 % 2 = 1</code> cookie is left over. 🍪</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Counting change with // and %",
+      "code": "cents = 47\ndimes = cents // 10\nleftover = cents % 10\nprint(\"47 cents =\", dimes, \"dimes and\", leftover, \"cents left\")\n\nprint(\"Is 10 even?\", 10 % 2 == 0)\nprint(\"Is 7 even?\", 7 % 2 == 0)",
+      "explain": "47 // 10 is 4 (whole dimes) and 47 % 10 is 7 (cents left over). The even/odd trick: if a number % 2 equals 0, it's even. If it equals 1, it's odd!"
+    },
+    {
+      "type": "tip",
+      "variant": "warn",
+      "html": "<strong>Watch out:</strong> <code class=\"inline\">//</code> rounds DOWN, not toward zero. So <code class=\"inline\">7 // 2</code> is <code class=\"inline\">3</code> (good), but with negatives <code class=\"inline\">-7 // 2</code> is <code class=\"inline\">-4</code>, not -3. Surprising, but it's because Python always rounds down to the next lower whole number."
+    },
+    {
+      "type": "text",
+      "heading": "Powers with ** 💥",
+      "html": "<p>Two stars <code class=\"inline\">**</code> means <strong>exponent</strong> — a number multiplied by itself. So <code class=\"inline\">2 ** 3</code> is 2 times 2 times 2 = 8. It's perfect for areas and big numbers.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Squares, cubes, and area",
+      "code": "print(\"5 squared:\", 5 ** 2)\nprint(\"2 cubed:\", 2 ** 3)\n\nside = 4\narea = side ** 2\nprint(\"A square with side 4 has area\", area)",
+      "explain": "5 ** 2 means 5 times 5 = 25. The area of a square is the side times itself, which is exactly side ** 2!"
+    },
+    {
+      "type": "text",
+      "heading": "Order of operations (PEMDAS) 🧮",
+      "html": "<p>Python does math in a special order, just like in school: <strong>P</strong>arentheses first, then <strong>E</strong>xponents, then <strong>M</strong>ultiply/<strong>D</strong>ivide, then <strong>A</strong>dd/<strong>S</strong>ubtract. If you want something to happen first, wrap it in <code class=\"inline\">( )</code>.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Parentheses change the answer",
+      "code": "print(\"Without parentheses:\", 2 + 3 * 4)\nprint(\"With parentheses:\", (2 + 3) * 4)",
+      "explain": "2 + 3 * 4 does the 3 * 4 first (= 12) then adds 2, giving 14. But (2 + 3) * 4 does the 2 + 3 first (= 5) then times 4, giving 20. Parentheses are your superpower!"
+    },
+    {
+      "type": "text",
+      "heading": "Helpful helpers: round() and abs()",
+      "html": "<p><code class=\"inline\">round()</code> rounds a number to the nearest whole number (or to a number of decimal places). <code class=\"inline\">abs()</code> gives the <strong>absolute value</strong> — the distance from zero, so it makes negatives positive.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Rounding and absolute value",
+      "code": "print(round(3.7))\nprint(round(3.14159, 2))\nprint(abs(-8))\nprint(abs(8))",
+      "explain": "round(3.7) gives 4, and round(3.14159, 2) keeps 2 decimal places (3.14). abs(-8) and abs(8) both give 8 — the distance from zero is always positive."
+    },
+    {
+      "type": "text",
+      "heading": "Switching types: int() and float()",
+      "html": "<p><code class=\"inline\">float(5)</code> turns the int 5 into <code class=\"inline\">5.0</code>. Going the other way, <code class=\"inline\">int(5.9)</code> gives <code class=\"inline\">5</code> — it <strong>chops off</strong> the decimal part (this is called truncating). It does NOT round! So <code class=\"inline\">int(5.9)</code> is 5, not 6.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "int() chops, round() rounds",
+      "code": "print(float(5))\nprint(int(5.9))\nprint(round(5.9))",
+      "explain": "float(5) gives 5.0. int(5.9) throws away the .9 and gives 5 (truncation). If you actually want the nearest whole number, use round(5.9), which gives 6."
+    },
+    {
+      "type": "quiz",
+      "question": "What does 17 % 5 give you?",
+      "options": [
+        "3",
+        "2",
+        "3.4",
+        "12"
+      ],
+      "answerIndex": 1,
+      "explain": "% gives the remainder. 5 goes into 17 three times (15), leaving 2 left over. So 17 % 5 is 2."
+    },
+    {
+      "type": "quiz",
+      "question": "Which one tells you if a number is EVEN?",
+      "options": [
+        "number // 2 == 0",
+        "number ** 2 == 0",
+        "number % 2 == 0",
+        "number / 2 == 0"
+      ],
+      "answerIndex": 2,
+      "explain": "A number is even when dividing by 2 leaves no remainder, so number % 2 == 0 is the even test."
+    },
+    {
+      "type": "quiz",
+      "question": "What is 2 + 3 * 4 in Python?",
+      "options": [
+        "20",
+        "14",
+        "24",
+        "9"
+      ],
+      "answerIndex": 1,
+      "explain": "Multiplication happens before addition (PEMDAS), so 3 * 4 = 12 first, then + 2 = 14. Use parentheses if you want the adding to go first."
+    },
+    {
+      "type": "tryit",
+      "title": "Find the leftover",
+      "instructions": "You have 23 candies to share among 4 friends. Use // to print how many each friend gets, and % to print how many candies are left over. Then press Check.",
+      "starter": "candies = 23\nfriends = 4\n# TODO: change the first + to //  and the second + to %\nprint(\"Each gets:\", candies + friends)\nprint(\"Leftover:\", candies + friends)\n",
+      "check": {
+        "stdout_includes": [
+          "Each gets: 5",
+          "Leftover: 3"
+        ]
+      },
+      "solution": "candies = 23\nfriends = 4\nprint(\"Each gets:\", candies // friends)\nprint(\"Leftover:\", candies % friends)\n",
+      "passMsg": "Perfect — each friend gets 5 candies and 3 are left for you! 🍬",
+      "failMsg": "Use // for whole pieces each friend gets, and % for the leftover. 23 // 4 is 5 and 23 % 4 is 3."
+    },
+    {
+      "type": "tryit",
+      "title": "Area of a rectangle",
+      "instructions": "A rectangle is 6 wide and 4 tall. Multiply width by height and print the area. Bonus: the answer should say 24.",
+      "starter": "width = 6\nheight = 4\narea = ___\nprint(\"The area is\", area)\n",
+      "check": {
+        "stdout_includes": "The area is 24",
+        "code_includes": "*"
+      },
+      "solution": "width = 6\nheight = 4\narea = width * height\nprint(\"The area is\", area)\n",
+      "passMsg": "Nice! Area = width times height. You just did real geometry. 📐",
+      "failMsg": "Set area to width * height (use the * sign for multiply). 6 * 4 should print 24."
+    }
+  ],
+  "challenge": {
+    "title": "Build a tiny change-maker",
+    "instructions": "You have 287 cents. Print how many whole dollars that is (use // 100), and then how many cents are left over (use % 100). Show both on screen so the change-maker tells you, for example, '2 dollars and 87 cents'.",
+    "starter": "cents = 287\ndollars = cents // 100\n# TODO: use  % 100  to find the leftover cents\nleftover = cents\nprint(dollars, \"dollars and\", leftover, \"cents\")\n",
+    "check": {
+      "stdout_includes": [
+        "2 dollars",
+        "87 cents"
+      ],
+      "code_includes": "%"
+    },
+    "solution": "cents = 287\ndollars = cents // 100\nleftover = cents % 100\nprint(dollars, \"dollars and\", leftover, \"cents\")\n",
+    "hint": "There are 100 cents in a dollar. Use // 100 for whole dollars and % 100 for the cents left over.",
+    "passMsg": "🏆 Cha-ching! You built a real change-maker. Day 4 done — you've turned Python into a calculator wizard!"
+  }
+}

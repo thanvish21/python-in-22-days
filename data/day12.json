@@ -1,0 +1,129 @@
+{
+  "day": 12,
+  "emoji": "📒",
+  "title": "Dictionaries",
+  "subtitle": "Look things up by name, just like a real dictionary.",
+  "goal": "Use dictionaries to store key→value pairs, then add, update, look up, remove, and loop through them safely.",
+  "estMinutes": 180,
+  "tags": ["dictionaries", "data", "beginner"],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "What is a dictionary? 📒",
+      "html": "<p>A <strong>dictionary</strong> stores pairs: a <strong>key</strong> and the <strong>value</strong> that goes with it. Think of a real dictionary — you look up a <em>word</em> (the key) to find its <em>meaning</em> (the value).</p><p>Or a phone book: each <em>name</em> (key) points to a <em>phone number</em> (value). Lists keep things in order by number; dictionaries let you find things by <strong>name</strong>. 🔑</p>"
+    },
+    {
+      "type": "text",
+      "heading": "Making one with { } ",
+      "html": "<p>You build a dictionary with curly braces <code class=\"inline\">{ }</code>. Each pair looks like <code class=\"inline\">\"key\": value</code>, and pairs are separated by commas.</p><p>To look up a value, put the key in square brackets: <code class=\"inline\">d[\"key\"]</code>.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "A tiny phone book",
+      "code": "phone_book = {\"Mom\": \"555-1234\", \"Best Friend\": \"555-7777\"}\n\nprint(phone_book[\"Mom\"])\nprint(phone_book[\"Best Friend\"])",
+      "explain": "phone_book has two pairs. We look up a value by its key: phone_book[\"Mom\"] gives back \"555-1234\"."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Keys go in quotes</strong> when they are text: <code class=\"inline\">d[\"Mom\"]</code>, not <code class=\"inline\">d[Mom]</code>. Without quotes Python thinks Mom is a variable!"
+    },
+    {
+      "type": "text",
+      "heading": "Add and change things ✏️",
+      "html": "<p>Want to add a new pair or change an old one? Just give a key a value: <code class=\"inline\">d[\"key\"] = something</code>. If the key is new, it gets added. If it already exists, the value is updated.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "A game character's stats",
+      "code": "hero = {\"name\": \"Pixel\", \"hp\": 100, \"coins\": 0}\n\nhero[\"coins\"] = 50      # change a value\nhero[\"level\"] = 1       # add a brand new key\n\nprint(hero[\"name\"], \"has\", hero[\"coins\"], \"coins\")\nprint(\"Level:\", hero[\"level\"])",
+      "explain": "Setting hero[\"coins\"] changed an existing value. Setting hero[\"level\"] added a new pair because that key did not exist yet."
+    },
+    {
+      "type": "tip",
+      "variant": "warn",
+      "html": "Looking up a key that does <strong>not</strong> exist crashes with a <code class=\"inline\">KeyError</code>. To stay safe, use <code class=\"inline\">.get()</code> — it returns <code class=\"inline\">None</code> (or a default you pick) instead of crashing."
+    },
+    {
+      "type": "code",
+      "caption": "Safe lookups, removing, and checking with 'in'",
+      "code": "hero = {\"name\": \"Pixel\", \"hp\": 100}\n\nprint(hero.get(\"hp\"))            # 100\nprint(hero.get(\"magic\", 0))     # missing key, so we get 0\n\nprint(\"hp\" in hero)             # True\ndel hero[\"hp\"]                  # remove the hp pair\nprint(\"hp\" in hero)             # False now",
+      "explain": ".get(\"magic\", 0) returns 0 because there is no magic key — no crash. The word 'in' checks if a key exists. del removes a pair."
+    },
+    {
+      "type": "text",
+      "heading": "Looping through a dictionary 🔁",
+      "html": "<p>Dictionaries have three handy helpers for loops:</p><ul><li><code class=\"inline\">.keys()</code> — all the keys</li><li><code class=\"inline\">.values()</code> — all the values</li><li><code class=\"inline\">.items()</code> — both together, as key and value</li></ul>"
+    },
+    {
+      "type": "code",
+      "caption": "Word counter using .items()",
+      "code": "counts = {}\nwords = [\"cat\", \"dog\", \"cat\", \"cat\", \"dog\"]\n\nfor w in words:\n    counts[w] = counts.get(w, 0) + 1\n\nfor word, total in counts.items():\n    print(word, \"appears\", total, \"times\")",
+      "explain": "counts.get(w, 0) + 1 means 'whatever we had before, plus one' (starting at 0). Then .items() lets us loop over each key and value together."
+    },
+    {
+      "type": "quiz",
+      "question": "How do you get the value stored under the key \"name\" in a dictionary called d?",
+      "options": [
+        "d(\"name\")",
+        "d[\"name\"]",
+        "d.name()",
+        "name[d]"
+      ],
+      "answerIndex": 1,
+      "explain": "You look up a value with square brackets and the key: d[\"name\"]."
+    },
+    {
+      "type": "quiz",
+      "question": "What does scores.get(\"Sam\", 0) do if \"Sam\" is NOT in the dictionary?",
+      "options": [
+        "Crashes with a KeyError",
+        "Returns 0 without crashing",
+        "Adds Sam with the value 0",
+        "Returns the whole dictionary"
+      ],
+      "answerIndex": 1,
+      "explain": ".get() returns the default you give (here 0) when the key is missing, instead of crashing."
+    },
+    {
+      "type": "quiz",
+      "question": "Which helper lets you loop over both keys AND values at the same time?",
+      "options": [
+        ".keys()",
+        ".values()",
+        ".items()",
+        ".pairs()"
+      ],
+      "answerIndex": 2,
+      "explain": ".items() gives you each key and its value together, perfect for 'for key, value in d.items():'."
+    },
+    {
+      "type": "tryit",
+      "title": "Look up a favorite food",
+      "instructions": "The dictionary 'favorites' maps people to their favorite food. Print Maya's favorite food using favorites[\"Maya\"].",
+      "starter": "favorites = {\"Maya\": \"pizza\", \"Leo\": \"tacos\"}\n# print Maya's favorite food below\n",
+      "check": { "stdout_includes": "pizza", "code_includes": "favorites[" },
+      "solution": "favorites = {\"Maya\": \"pizza\", \"Leo\": \"tacos\"}\nprint(favorites[\"Maya\"])",
+      "passMsg": "Nice lookup — you found Maya's favorite in a snap!",
+      "failMsg": "Use favorites[\"Maya\"] inside a print() to show the value."
+    },
+    {
+      "type": "tryit",
+      "title": "Add a new stat",
+      "instructions": "The hero dictionary needs a 'shield' stat. Add shield with the value 10, then print the whole hero dictionary.",
+      "starter": "hero = {\"name\": \"Nova\", \"hp\": 80}\n# add a shield stat of 10, then print hero\n",
+      "check": { "stdout_includes": "shield", "code_includes": "hero[" },
+      "solution": "hero = {\"name\": \"Nova\", \"hp\": 80}\nhero[\"shield\"] = 10\nprint(hero)",
+      "passMsg": "Shield equipped! You added a new key→value pair.",
+      "failMsg": "Set hero[\"shield\"] = 10, then print(hero) so 'shield' shows up."
+    }
+  ],
+  "challenge": {
+    "title": "Build a mini contact book",
+    "instructions": "Make a dictionary called contacts with at least two names mapped to phone numbers. Then use a loop with .items() to print each contact like: Mom: 555-1234. Use .get() to safely look up someone who might not be there too!",
+    "starter": "contacts = {\"Mom\": \"555-1234\"}\n# add another contact, then loop and print each one\n",
+    "check": { "code_includes": ".items()", "regex": ".*:.*\\n.*" },
+    "solution": "contacts = {\"Mom\": \"555-1234\", \"Coach\": \"555-9090\"}\ncontacts[\"Dentist\"] = \"555-3030\"\n\nfor name, number in contacts.items():\n    print(name + \": \" + number)\n\nprint(\"Pizza place:\", contacts.get(\"Pizza\", \"not saved yet\"))",
+    "hint": "Loop with 'for name, number in contacts.items():' and print(name + \": \" + number) inside the loop.",
+    "passMsg": "🏆 Your contact book works! You can now store, find, and loop through key→value data like a pro."
+  }
+}

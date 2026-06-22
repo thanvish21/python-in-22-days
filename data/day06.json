@@ -1,0 +1,131 @@
+{
+  "day": 6,
+  "emoji": "✅",
+  "title": "Booleans & Logic",
+  "subtitle": "Teach the computer to answer yes-or-no questions.",
+  "goal": "Understand True and False, compare values with == != < > <= >=, and combine yes/no questions using and, or, and not.",
+  "estMinutes": 180,
+  "tags": [
+    "booleans",
+    "logic",
+    "beginner"
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "Yes or No? 🤔",
+      "html": "<p>Lots of questions in life have only two answers: <strong>yes</strong> or <strong>no</strong>. Is it raining? Are you 10 years old? Is 5 bigger than 3?</p><p>Python has a special way to say yes and no. It uses two magic words: <code class=\"inline\">True</code> (yes) and <code class=\"inline\">False</code> (no). We call these <strong>booleans</strong>. Notice the capital letters — <code class=\"inline\">True</code> and <code class=\"inline\">False</code> always start big!</p>"
+    },
+    {
+      "type": "code",
+      "caption": "True and False are real values",
+      "code": "is_raining = True\nis_sunny = False\nprint(is_raining)\nprint(is_sunny)",
+      "explain": "True means yes, False means no. They are values you can store in a variable, just like numbers and text. Always capital T and capital F."
+    },
+    {
+      "type": "text",
+      "heading": "Asking comparison questions",
+      "html": "<p>You can make Python answer questions by <strong>comparing</strong> two things. Each question gives back <code class=\"inline\">True</code> or <code class=\"inline\">False</code>.</p><ul><li><code class=\"inline\">==</code> are they equal?</li><li><code class=\"inline\">!=</code> are they NOT equal?</li><li><code class=\"inline\">&lt;</code> less than &nbsp; <code class=\"inline\">&gt;</code> greater than</li><li><code class=\"inline\">&lt;=</code> less or equal &nbsp; <code class=\"inline\">&gt;=</code> greater or equal</li></ul>"
+    },
+    {
+      "type": "tip",
+      "variant": "warn",
+      "html": "<strong>Super important!</strong> One equals sign <code class=\"inline\">=</code> means <em>assign</em> (put this value in the box). Two equals signs <code class=\"inline\">==</code> means <em>compare</em> (are these the same?). Mixing them up is the most common beginner mistake!"
+    },
+    {
+      "type": "code",
+      "caption": "Let Python answer some questions",
+      "code": "print(5 > 3)\nprint(2 == 2)\nprint(7 != 7)\nprint(10 <= 4)\nage = 10\nprint(age >= 10)",
+      "explain": "Each comparison prints True or False. 5 > 3 is True. 7 != 7 is False because 7 IS equal to 7. age >= 10 is True because 10 is 'greater than or equal to' 10."
+    },
+    {
+      "type": "text",
+      "heading": "Combining questions: and, or, not 🔗",
+      "html": "<p>Real life questions are often bigger: <em>Is it raining AND cold?</em> Python lets you join questions together.</p><ul><li><code class=\"inline\">and</code> &rarr; True only when <strong>both</strong> sides are True</li><li><code class=\"inline\">or</code> &rarr; True when <strong>at least one</strong> side is True</li><li><code class=\"inline\">not</code> &rarr; flips it: <code class=\"inline\">not True</code> becomes False</li></ul><p>Here is a tiny <strong>truth table</strong> for <code class=\"inline\">and</code>. Think of it like needing BOTH a ticket AND a snack to enjoy the movie:</p><table><tr><th>Left</th><th>Right</th><th>Left and Right</th></tr><tr><td>True</td><td>True</td><td>True ✅</td></tr><tr><td>True</td><td>False</td><td>False</td></tr><tr><td>False</td><td>True</td><td>False</td></tr><tr><td>False</td><td>False</td><td>False</td></tr></table><p>With <code class=\"inline\">or</code> you only need ONE side to be True — like getting ice cream if it's hot OR if it's your birthday. 🍦</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Joining yes/no questions",
+      "code": "is_raining = True\nis_cold = False\nprint(is_raining and is_cold)\nprint(is_raining or is_cold)\nprint(not is_raining)\ntemperature = 30\nprint(temperature > 25 and temperature < 40)",
+      "explain": "is_raining and is_cold is False because is_cold is False (and needs BOTH). is_raining or is_cold is True because one side is True. not is_raining flips True into False. The last line is True because 30 is between 25 and 40."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Sneaky truthiness:</strong> Python treats some empty things as 'no'. The number <code class=\"inline\">0</code>, empty text <code class=\"inline\">\"\"</code>, and an empty list count as <em>falsy</em> (like False). Almost everything else counts as <em>truthy</em> (like True). You'll use this more in later lessons!"
+    },
+    {
+      "type": "quiz",
+      "question": "What does 4 == 4 print?",
+      "options": [
+        "True",
+        "False",
+        "4",
+        "An error"
+      ],
+      "answerIndex": 0,
+      "explain": "== asks 'are these equal?'. 4 really does equal 4, so the answer is True."
+    },
+    {
+      "type": "quiz",
+      "question": "You want to check if two things are the SAME. Which symbol do you use?",
+      "options": [
+        "= (one equals sign)",
+        "== (two equals signs)",
+        "!= (not equals)",
+        "> (greater than)"
+      ],
+      "answerIndex": 1,
+      "explain": "Use == to compare. One = is for assigning a value to a variable, not for asking a question."
+    },
+    {
+      "type": "quiz",
+      "question": "If it is raining is True and it is cold is False, what is (raining and cold)?",
+      "options": [
+        "True, because raining is True",
+        "False, because 'and' needs BOTH to be True",
+        "True, because one is True",
+        "It causes an error"
+      ],
+      "answerIndex": 1,
+      "explain": "The word 'and' only gives True when both sides are True. Since cold is False, the whole thing is False."
+    },
+    {
+      "type": "tryit",
+      "title": "Compare two numbers",
+      "instructions": "Make Python print whether 12 is greater than 7. Use the > symbol so it prints True. Then press Check.",
+      "starter": "# TODO: use > so this prints True\nprint(12 < 7)",
+      "check": {
+        "stdout_includes": "True",
+        "code_includes": ">"
+      },
+      "solution": "print(12 > 7)",
+      "passMsg": "Yes! 12 really is bigger than 7. 🎉",
+      "failMsg": "Replace the blank with > so the line reads print(12 > 7)."
+    },
+    {
+      "type": "tryit",
+      "title": "Is it picnic weather?",
+      "instructions": "We have it as sunny (True) and warm (True). Print whether it is sunny AND warm using the word 'and'. It should print True.",
+      "starter": "is_sunny = True\nis_warm = True\n# TODO: combine the two with the word  and\nprint(is_sunny)",
+      "check": {
+        "stdout_includes": "True",
+        "code_includes": "and"
+      },
+      "solution": "is_sunny = True\nis_warm = True\nprint(is_sunny and is_warm)",
+      "passMsg": "Perfect picnic weather — both questions were True!",
+      "failMsg": "Use the word 'and' between is_sunny and is_warm."
+    }
+  ],
+  "challenge": {
+    "title": "Can I ride the roller coaster?",
+    "instructions": "A roller coaster has a rule: you can ride if you are AT LEAST 8 years old AND your height is MORE THAN 120 cm. Set age = 10 and height = 130, then print True or False for whether this person can ride. Use 'and' to join the two checks!",
+    "starter": "age = 10\nheight = 130\n# TODO: use  and  to check age >= 8 AND height > 120\nprint(age >= 8)",
+    "check": {
+      "stdout_includes": "True",
+      "code_includes": "and"
+    },
+    "solution": "age = 10\nheight = 130\nprint(age >= 8 and height > 120)",
+    "hint": "Use >= for 'at least 8', use > for 'more than 120', and join them with the word 'and'.",
+    "passMsg": "🏆 You did it! Both rules were True, so they can ride. You've mastered booleans and logic — perfect timing, because Day 7 uses these to make REAL decisions with if-statements!"
+  }
+}

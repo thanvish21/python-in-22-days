@@ -1,0 +1,140 @@
+{
+  "day": 13,
+  "emoji": "🤖",
+  "title": "Functions",
+  "subtitle": "Build your own little machines that do a job whenever you call them.",
+  "goal": "Learn to define functions with def, give them inputs (parameters), call them, and use return to send a value back — and understand how return is different from print.",
+  "estMinutes": 180,
+  "tags": ["functions", "beginner"],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "What is a function? 🤖",
+      "html": "<p>A <strong>function</strong> is like a little machine or a recipe. You give it a name, teach it a job once, and then you can use it again and again just by calling its name.</p><p>Think of a microwave: you press the button (call it), it does its job (heats food), and out comes the result. You don't rebuild the microwave every time you want popcorn! 🍿</p>"
+    },
+    {
+      "type": "text",
+      "heading": "Defining a function with def",
+      "html": "<p>To make a function we use the word <code class=\"inline\">def</code> (short for <em>define</em>), then a name, then <code class=\"inline\">()</code> and a colon <code class=\"inline\">:</code>. The lines that belong to the function are <strong>indented</strong> underneath.</p><p>Defining a function doesn't run it yet — it just teaches Python the recipe. To actually use it, you <strong>call</strong> it by writing its name with <code class=\"inline\">()</code>.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Define a function, then call it",
+      "code": "def say_hello():\n    print(\"Hello there! 👋\")\n\nsay_hello()\nsay_hello()",
+      "explain": "def say_hello(): teaches Python the recipe. The indented line is the job. say_hello() actually runs it — and we call it twice, so we get two greetings!"
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Define first, call later.</strong> Writing <code class=\"inline\">def</code> only creates the machine. Nothing happens on screen until you <em>call</em> it with <code class=\"inline\">name()</code>."
+    },
+    {
+      "type": "text",
+      "heading": "Inputs: parameters and arguments 🎁",
+      "html": "<p>Most machines need something to work on. The names inside the parentheses are <strong>parameters</strong> — little boxes that wait to be filled. The real values you hand over when you call the function are the <strong>arguments</strong>.</p><p>In <code class=\"inline\">greet(\"Sam\")</code>, the parameter is <code class=\"inline\">name</code> and the argument is <code class=\"inline\">\"Sam\"</code>.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "A function with one input",
+      "code": "def greet(name):\n    print(\"Hi \" + name + \"! Nice to see you. 😊\")\n\ngreet(\"Sam\")\ngreet(\"Maya\")",
+      "explain": "name is the parameter. When we call greet(\"Sam\"), the value \"Sam\" gets put into name. Same machine, different inputs, different greetings!"
+    },
+    {
+      "type": "quiz",
+      "question": "Which word do we use to create a function?",
+      "options": [
+        "def",
+        "print",
+        "func",
+        "make"
+      ],
+      "answerIndex": 0,
+      "explain": "We use def (short for define) to create a function, like def say_hello():."
+    },
+    {
+      "type": "text",
+      "heading": "return: sending a value back 📦",
+      "html": "<p>Here's the big idea of the day. <code class=\"inline\">return</code> sends a value <strong>back out</strong> of the function so the rest of your program can use it — store it, do math with it, print it later.</p><p><code class=\"inline\">print</code> just <strong>shows</strong> something on the screen and then it's gone. <code class=\"inline\">return</code> hands you a real value you can keep. Big difference!</p>"
+    },
+    {
+      "type": "code",
+      "caption": "return gives you a value to keep",
+      "code": "def add(a, b):\n    return a + b\n\nresult = add(3, 5)\nprint(\"3 + 5 =\", result)\nprint(\"Double that is\", add(3, 5) * 2)",
+      "explain": "add() takes two inputs and RETURNS their sum. Because it returns a value, we can save it in result AND even do more math with it (× 2). print could never do that — it only shows things."
+    },
+    {
+      "type": "tip",
+      "variant": "warn",
+      "html": "<strong>return is not print!</strong> A function that only does <code class=\"inline\">print()</code> shows text but hands back nothing you can use. If you want to keep or reuse the answer, you need <code class=\"inline\">return</code>."
+    },
+    {
+      "type": "code",
+      "caption": "A docstring describes what the function does",
+      "code": "def area_of_circle(r):\n    \"\"\"Return the area of a circle with radius r.\"\"\"\n    return 3.14159 * r * r\n\nprint(\"Area for radius 2:\", area_of_circle(2))\nprint(\"Area for radius 5:\", area_of_circle(5))",
+      "explain": "The triple-quoted line right under def is a docstring — a friendly note that explains what the function does. Python ignores it when running, but it helps humans understand your machine."
+    },
+    {
+      "type": "text",
+      "heading": "Why functions? Less repeating! ♻️",
+      "html": "<p>Imagine writing the same 5 lines 10 times. Yuck! With a function you write the recipe <strong>once</strong> and call it whenever you need it. Coders call this <strong>DRY</strong> — <em>Don't Repeat Yourself</em>.</p><p>Functions make your code shorter, tidier, and way easier to fix — change the recipe in one place and every call gets the update. ✨</p>"
+    },
+    {
+      "type": "code",
+      "caption": "A function that returns True or False",
+      "code": "def is_even(n):\n    \"\"\"Return True if n is an even number.\"\"\"\n    return n % 2 == 0\n\nprint(\"Is 4 even?\", is_even(4))\nprint(\"Is 7 even?\", is_even(7))",
+      "explain": "is_even returns True or False. The % gives the remainder; if dividing by 2 leaves 0, the number is even. We reuse the same check for any number we want!"
+    },
+    {
+      "type": "quiz",
+      "question": "What is the difference between return and print?",
+      "options": [
+        "There is no difference, they are the same",
+        "print shows a value on screen; return hands a value back so you can keep and reuse it",
+        "return is faster than print",
+        "print can only be used inside functions"
+      ],
+      "answerIndex": 1,
+      "explain": "print just displays something. return sends a real value back out of the function so you can store it, do math with it, or print it later."
+    },
+    {
+      "type": "quiz",
+      "question": "In greet(\"Maya\"), what is \"Maya\" called?",
+      "options": [
+        "A parameter",
+        "A docstring",
+        "An argument (the value you pass in)",
+        "A return value"
+      ],
+      "answerIndex": 2,
+      "explain": "The value you actually pass in when calling is the argument. The name waiting inside the def (like name) is the parameter."
+    },
+    {
+      "type": "tryit",
+      "title": "Make a greet function",
+      "instructions": "Finish the function so it greets the name it is given, then call it with your own name. Press Check when the output greets someone.",
+      "starter": "def greet(name):\n    print(\"Hello \" + name + \"!\")\n\n# call greet with a name below\n",
+      "check": { "stdout_includes": "Hello", "code_includes": "def greet" },
+      "solution": "def greet(name):\n    print(\"Hello \" + name + \"!\")\n\ngreet(\"Thanvish\")",
+      "passMsg": "Your machine works — one recipe, any name you like!",
+      "failMsg": "Keep the def greet(name): line and add a call like greet(\"Sam\") at the bottom."
+    },
+    {
+      "type": "tryit",
+      "title": "Add with return",
+      "instructions": "Write a function called add that takes two numbers and RETURNS their sum (not print!). Then print the result of adding 10 and 4.",
+      "starter": "def add(a, b):\n    # use return to send back the sum\n    return ___\n\nprint(add(10, 4))\n",
+      "check": { "stdout_includes": "14", "code_includes": "return" },
+      "solution": "def add(a, b):\n    return a + b\n\nprint(add(10, 4))",
+      "passMsg": "Nice — you returned a real value and printed it. That's the power of return!",
+      "failMsg": "Make sure you use return a + b inside the function, then print(add(10, 4))."
+    }
+  ],
+  "challenge": {
+    "title": "Build a square machine",
+    "instructions": "Write a function called square that takes one number and RETURNS that number multiplied by itself. Give it a docstring. Then print the square of 6 and the square of 9 so we can see it works.",
+    "starter": "def square(n):\n    \"\"\"Return n multiplied by itself.\"\"\"\n    # return the answer here\n    return ___\n\nprint(\"6 squared is\", square(6))\nprint(\"9 squared is\", square(9))",
+    "check": { "stdout_includes": ["36", "81"], "code_includes": "return" },
+    "solution": "def square(n):\n    \"\"\"Return n multiplied by itself.\"\"\"\n    return n * n\n\nprint(\"6 squared is\", square(6))\nprint(\"9 squared is\", square(9))",
+    "hint": "Squaring means multiplying a number by itself: n * n. Use return so the answer comes back out.",
+    "passMsg": "🏆 You built a real number machine! Day 13 done — functions are now in your toolbox."
+  }
+}
