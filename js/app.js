@@ -190,12 +190,29 @@
     toastTimer = setTimeout(() => t.classList.remove("show"), 3200);
   }
 
+  // ---- expose state for the course/sidebar module ----
+  const listeners = [];
+  window.Py22 = {
+    TOTAL_DAYS,
+    isDone, isUnlocked, completedCount,
+    lastDay: () => progress.lastDay,
+    getManifest, getLesson,
+    onChange: (fn) => listeners.push(fn),
+    notify: () => listeners.forEach((fn) => { try { fn(); } catch (e) {} }),
+  };
+  const origMarkDone = markDone;
+  markDone = function (d) { origMarkDone(d); window.Py22.notify(); };
+
   // ---- router ----
   function route() {
     const hash = location.hash || "#/";
-    const m = hash.match(/^#\/day\/(\d+)/);
-    if (m) viewDay(m[1]);
+    let m;
+    if ((m = hash.match(/^#\/day\/(\d+)/))) viewDay(m[1]);
+    else if ((m = hash.match(/^#\/test\/(\d+)/)) && window.Course) window.Course.viewModuleTest(app, Number(m[1]));
+    else if (hash.startsWith("#/modules") && window.Course) window.Course.viewModules(app);
+    else if (hash.startsWith("#/exam") && window.Course) window.Course.viewExam(app);
     else viewHome();
+    if (window.Course) window.Course.syncSidebar();
   }
 
   // ---- reset ----

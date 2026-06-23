@@ -13,16 +13,24 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#/">
-      <span class="brand-logo">🐍</span>
-      <span class="brand-name">Python in 22 Days</span>
-    </a>
+    <div class="topbar-left">
+      <button id="outlineToggle" class="icon-btn" title="Course outline" aria-label="Toggle course outline">☰</button>
+      <a class="brand" href="#/">
+        <span class="brand-logo">🐍</span>
+        <span class="brand-name">Python in 22 Days</span>
+      </a>
+    </div>
     <nav class="topnav">
       <a href="#/" class="nav-link">Home</a>
-      <button id="resetBtn" class="nav-link ghost" title="Reset all progress">Reset progress</button>
+      <a href="#/modules" class="nav-link">Modules</a>
+      <a href="#/exam" class="nav-link">PCEP Exam</a>
+      <button id="resetBtn" class="nav-link ghost" title="Reset all progress">Reset</button>
       <div class="streak" id="streakBadge" title="Days completed">⭐ <span id="streakCount">0</span>/22</div>
     </nav>
   </header>
+
+  <div id="backdrop" class="backdrop"></div>
+  <aside id="sidebar" class="sidebar" aria-label="Course outline"><!-- outline renders here --></aside>
 
   <main id="app" class="app">
     <!-- Views render here -->
@@ -36,6 +44,7 @@
   <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
   <script src="js/pyrunner.js"></script>
   <script src="js/render.js"></script>
+  <script src="js/course.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
