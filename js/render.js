@@ -58,8 +58,15 @@
     card.appendChild(toolbar);
 
     const out = el("div", "run-out");
+    out.setAttribute("role", "status");
+    out.setAttribute("aria-live", "polite");
     card.appendChild(out);
-    if (opts.check) { feedback = el("div", "feedback"); card.appendChild(feedback); }
+    if (opts.check) {
+      feedback = el("div", "feedback");
+      feedback.setAttribute("role", "status");
+      feedback.setAttribute("aria-live", "polite");
+      card.appendChild(feedback);
+    }
 
     const getCode = () => (input ? input.value : code);
 
@@ -184,9 +191,10 @@
         answered = true;
         const correct = i === b.answerIndex;
         btn.classList.add(correct ? "correct" : "wrong");
+        btn.appendChild(el("span", "quiz-mark", correct ? " ✓" : " ✗"));
         if (!correct) {
           const right = opts.children[b.answerIndex];
-          if (right) right.classList.add("correct");
+          if (right) { right.classList.add("correct"); right.appendChild(el("span", "quiz-mark", " ✓")); }
         }
         explain.classList.add("show");
       });

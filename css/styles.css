@@ -45,6 +45,8 @@ h1, h2, h3, .brand-name { font-family: "Fredoka", sans-serif; font-weight: 600; 
 a { color: var(--brand); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
+:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+
 /* ===== Top bar ===== */
 .topbar {
   position: sticky;
@@ -179,11 +181,12 @@ a:hover { text-decoration: underline; }
 .code-card { background: var(--code-bg); border-radius: var(--radius-sm); overflow: hidden; box-shadow: var(--shadow-sm); }
 .code-card .code-caption { font-size: 13px; font-weight: 700; color: #c9c1f0; padding: 10px 14px 0; }
 .code-area {
-  width: 100%; border: none; resize: vertical; min-height: 64px;
+  width: 100%; border: 2px solid transparent; resize: vertical; min-height: 64px;
   background: transparent; color: var(--code-ink);
   font-family: "JetBrains Mono", monospace; font-size: 15px; line-height: 1.55;
-  padding: 12px 14px; outline: none; tab-size: 4;
+  padding: 12px 14px; tab-size: 4;
 }
+.code-area:focus { outline: none; border-color: var(--brand-2); }
 pre.code-static { margin: 0; padding: 12px 14px; color: var(--code-ink); font-family: "JetBrains Mono", monospace; font-size: 15px; line-height: 1.55; overflow-x: auto; white-space: pre; }
 .code-toolbar { display: flex; gap: 8px; align-items: center; padding: 8px 12px; background: rgba(255,255,255,.05); flex-wrap: wrap; }
 .btn {
@@ -191,9 +194,10 @@ pre.code-static { margin: 0; padding: 12px 14px; color: var(--code-ink); font-fa
   border: none; border-radius: 999px; padding: 8px 16px; cursor: pointer;
   display: inline-flex; align-items: center; gap: 6px;
 }
-.btn-run { background: var(--green); color: #fff; }
-.btn-run:hover { background: var(--green-deep); }
-.btn-check { background: var(--blue); color: #fff; }
+.btn-run { background: #0a8f6f; color: #fff; }
+.btn-run:hover { background: #097e62; }
+.btn-check { background: #2f6f9e; color: #fff; }
+.btn-check:hover { background: #285f87; }
 .btn-soft { background: rgba(255,255,255,.14); color: #efeaff; }
 .btn-soft:hover { background: rgba(255,255,255,.24); }
 .btn:disabled { opacity: .6; cursor: wait; }
@@ -286,8 +290,8 @@ pre.code-static { margin: 0; padding: 12px 14px; color: var(--code-ink); font-fa
 .sidebar.open { transform: translateX(0); }
 .sb-inner { display: flex; flex-direction: column; gap: 12px; }
 .sb-title { font-family: "Fredoka", sans-serif; font-size: 20px; color: var(--brand); }
-.sb-search { border: 2px solid #e8e2ff; border-radius: 12px; padding: 9px 12px; font-size: 14px; font-family: "Nunito", sans-serif; outline: none; }
-.sb-search:focus { border-color: var(--brand); }
+.sb-search { border: 2px solid #e8e2ff; border-radius: 12px; padding: 9px 12px; font-size: 14px; font-family: "Nunito", sans-serif; }
+.sb-search:focus { outline: none; border-color: var(--brand); }
 .sb-modules { display: flex; flex-direction: column; gap: 6px; }
 .sb-mod-head {
   width: 100%; text-align: left; background: #f7f4ff; border: none; border-radius: 12px;
@@ -362,4 +366,6 @@ pre.code-static { margin: 0; padding: 12px 14px; color: var(--code-ink); font-fa
   body { font-size: 16px; }
   .brand-name { display: none; }
   .lesson-nav { flex-direction: column-reverse; }
+  .topbar { flex-wrap: wrap; }
+  .nav-secondary { display: none; }
 }

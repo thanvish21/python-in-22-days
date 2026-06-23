@@ -10,12 +10,21 @@
   function loadProgress() {
     try {
       const raw = localStorage.getItem(STORE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const p = JSON.parse(raw);
+        const completed = (p && typeof p.completed === "object" && p.completed) ? p.completed : {};
+        const lastDay = (p && Number.isFinite(p.lastDay)) ? p.lastDay : 1;
+        return { completed, lastDay };
+      }
     } catch (e) { /* ignore */ }
     return { completed: {}, lastDay: 1 };
   }
-  function saveProgress(p) { localStorage.setItem(STORE_KEY, JSON.stringify(p)); }
+  function saveProgress(p) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(p)); }
+    catch (e) { /* private mode / quota: progress just won't persist */ }
+  }
   let progress = loadProgress();
+  let autoAdvanceTimer = null;
 
   const isDone = (d) => !!progress.completed[d];
   const completedCount = () => Object.keys(progress.completed).filter((k) => progress.completed[k]).length;
@@ -44,7 +53,11 @@
 
   async function getLesson(day) {
     const res = await fetch("data/day" + String(day).padStart(2, "0") + ".json");
-    if (!res.ok) throw new Error("Lesson not found");
+    if (!res.ok) {
+      const err = new Error("Lesson not found");
+      err.status = res.status;
+      throw err;
+    }
     return res.json();
   }
 
@@ -63,7 +76,7 @@
       '<section class="hero">' +
         "<h1>Learn <span class=\"accent\">Python</span> in 22 Days 🐍</h1>" +
         "<p>Friendly bite-sized lessons with real code you run right here. Simple enough for a curious kid, deep enough to take you from zero to pro.</p>" +
-        '<button class="hero-cta" id="startBtn">' + (done > 0 ? "▶ Continue Day " + progress.lastDay : "🚀 Start Day 1") + "</button>" +
+        '<button class="hero-cta" id="startBtn">' + (done > 0 ? "▶ Continue Day " + (Number(progress.lastDay) || 1) : "🚀 Start Day 1") + "</button>" +
         '<div class="progress-wrap">' +
           '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
           '<div class="progress-label">' + done + " of 22 days done · " + pct + "% to pro</div>" +
@@ -112,12 +125,20 @@
     let data;
     try { data = await getLesson(day); }
     catch (e) {
-      app.innerHTML = '<div class="center-msg">📝 Day ' + day + " is being written! Check back soon." +
-        '<br><br><a class="hero-cta" href="#/">🏠 Back home</a></div>';
+      if (e && e.status === 404) {
+        app.innerHTML = '<div class="center-msg">📝 Day ' + day + " is being written! Check back soon." +
+          '<br><br><a class="hero-cta" href="#/">🏠 Back home</a></div>';
+      } else {
+        app.innerHTML = '<div class="center-msg">😕 Couldn\'t load this lesson — if you opened the file directly, run it on a server (see README).' +
+          '<br><br><a class="hero-cta" href="#/">🏠 Back home</a></div>';
+      }
       return;
     }
 
     const view = window.Render.renderLesson(data);
+
+    // Warm up Pyodide in the background so the first Run feels instant.
+    if (window.PyRunner) { try { window.PyRunner.getPyodide(); } catch (e) { /* ignore */ } }
 
     // lesson footer: prev / complete / next
     const nav = document.createElement("div");
@@ -139,7 +160,7 @@
       if (!wasDone) {
         celebrate(day);
         if (day < TOTAL_DAYS) {
-          setTimeout(() => { location.hash = "#/day/" + (day + 1); }, 1400);
+          autoAdvanceTimer = setTimeout(() => { location.hash = "#/day/" + (day + 1); }, 1400);
         }
       }
     });
@@ -205,6 +226,7 @@
 
   // ---- router ----
   function route() {
+    if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
     const hash = location.hash || "#/";
     let m;
     if ((m = hash.match(/^#\/day\/(\d+)/))) viewDay(m[1]);

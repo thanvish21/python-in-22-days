@@ -15,17 +15,32 @@
     return n;
   }
 
+  function escapeHtml(s) {
+    return String(s).replace(/[<>]/g, (c) => ({ "<": "&lt;", ">": "&gt;" }[c]));
+  }
+
   async function getCourse() {
     if (course) return course;
-    course = await (await fetch("data/modules.json")).json();
-    return course;
+    try {
+      const res = await fetch("data/modules.json");
+      if (!res.ok) throw new Error("modules.json " + res.status);
+      course = await res.json();
+      return course;
+    } catch (e) {
+      throw new Error("Could not load course modules. Run this on a server (see README).");
+    }
   }
   async function getDayTitles() {
     if (dayTitles) return dayTitles;
-    const list = await window.Py22.getManifest();
-    dayTitles = {};
-    list.forEach((d) => { dayTitles[d.day] = d; });
-    return dayTitles;
+    try {
+      const list = await window.Py22.getManifest();
+      const titles = {};
+      list.forEach((d) => { titles[d.day] = d; });
+      dayTitles = titles;
+      return dayTitles;
+    } catch (e) {
+      throw new Error("Could not load lesson list. Run this on a server (see README).");
+    }
   }
 
   // status of a single day: done | current | open | locked
@@ -39,7 +54,8 @@
 
   function moduleProgress(mod) {
     const done = mod.days.filter((d) => window.Py22.isDone(d)).length;
-    return { done, total: mod.days.length, pct: Math.round((done / mod.days.length) * 100) };
+    const total = mod.days.length;
+    return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
   }
 
   // ---------- Sidebar ----------
@@ -59,7 +75,7 @@
     const list = el("div", "sb-modules");
     c.modules.forEach((mod) => {
       const prog = moduleProgress(mod);
-      const isOpen = expanded[mod.id] !== undefined ? expanded[mod.id] : prog.done > 0 && prog.pct < 100 || mod.id === 1;
+      const isOpen = expanded[mod.id] !== undefined ? expanded[mod.id] : (prog.done > 0 && prog.pct < 100) || mod.id === 1;
 
       const modBox = el("div", "sb-mod");
       const head = el("button", "sb-mod-head" + (isOpen ? " open" : ""));
@@ -130,6 +146,8 @@
   function setSidebarOpen(open) {
     document.getElementById("sidebar").classList.toggle("open", open);
     document.getElementById("backdrop").classList.toggle("show", open);
+    const toggle = document.getElementById("outlineToggle");
+    if (toggle) toggle.setAttribute("aria-expanded", open ? "true" : "false");
   }
   function syncSidebar() {
     buildSidebar(); // rebuild to reflect progress + active lesson
@@ -138,7 +156,9 @@
   // ---------- Modules overview view ----------
   async function viewModules(app) {
     app.innerHTML = '<div class="center-msg">Loading modules…</div>';
-    const [c, titles] = [await getCourse(), await getDayTitles()];
+    let c, titles;
+    try { [c, titles] = [await getCourse(), await getDayTitles()]; }
+    catch (e) { app.innerHTML = '<div class="center-msg">' + escapeHtml(e.message) + '</div>'; return; }
 
     const root = el("div", "modules-view");
     root.appendChild(el("div", "crumbs", '<a href="#/">🏠 Home</a> &nbsp;›&nbsp; Course Modules'));
@@ -187,7 +207,9 @@
   // ---------- Module test (aggregates quizzes from the module's days) ----------
   async function viewModuleTest(app, moduleId) {
     app.innerHTML = '<div class="center-msg">Building your test…</div>';
-    const c = await getCourse();
+    let c;
+    try { c = await getCourse(); }
+    catch (e) { app.innerHTML = '<div class="center-msg">' + escapeHtml(e.message) + '</div>'; return; }
     const mod = c.modules.find((m) => m.id === moduleId);
     if (!mod) { app.innerHTML = '<div class="center-msg">Test not found. <a href="#/modules">Back to modules</a></div>'; return; }
 
@@ -197,7 +219,9 @@
       try {
         const lesson = await window.Py22.getLesson(day);
         (lesson.blocks || []).filter((b) => b.type === "quiz").forEach((q) => {
-          questions.push({ day, question: q.question, options: q.options, answerIndex: q.answerIndex, explain: q.explain });
+          const options = q.options || [];
+          if (!Number.isInteger(q.answerIndex) || q.answerIndex < 0 || q.answerIndex >= options.length) return;
+          questions.push({ day, question: q.question, options, answerIndex: q.answerIndex, explain: q.explain });
         });
       } catch (e) { /* day not written yet */ }
     }
@@ -216,10 +240,10 @@
     const picked = new Array(questions.length).fill(-1);
     questions.forEach((q, qi) => {
       const card = el("div", "quiz");
-      card.appendChild(el("h3", null, "Q" + (qi + 1) + ". " + q.question + ' <span class="q-src">(Day ' + q.day + ")</span>"));
+      card.appendChild(el("h3", null, "Q" + (qi + 1) + ". " + escapeHtml(q.question) + ' <span class="q-src">(Day ' + q.day + ")</span>"));
       const opts = el("div", "quiz-opts");
       q.options.forEach((text, oi) => {
-        const b = el("button", "quiz-opt", text.replace(/[<>]/g, (c2) => ({ "<": "&lt;", ">": "&gt;" }[c2])));
+        const b = el("button", "quiz-opt", escapeHtml(text));
         b.addEventListener("click", () => {
           picked[qi] = oi;
           opts.querySelectorAll(".quiz-opt").forEach((x) => x.classList.remove("chosen"));
@@ -315,6 +339,11 @@
       setSidebarOpen(!sb.classList.contains("open"));
     });
     if (backdrop) backdrop.addEventListener("click", () => setSidebarOpen(false));
+    // Escape closes the drawer when it's open
+    document.addEventListener("keydown", (e) => {
+      const sb = document.getElementById("sidebar");
+      if (e.key === "Escape" && sb && sb.classList.contains("open")) setSidebarOpen(false);
+    });
     // close drawer when a lesson link is clicked (mobile)
     document.getElementById("sidebar").addEventListener("click", (e) => {
       if (e.target.closest("a") && window.innerWidth < 900) setSidebarOpen(false);

@@ -11,7 +11,7 @@
     if (typeof loadPyodide !== "function") {
       return Promise.reject(new Error("Pyodide script not loaded yet. Check your connection."));
     }
-    if (onStatus) onStatus("Waking up the Python snake… (first run only, ~5s)");
+    if (onStatus) onStatus("Waking up the Python snake… (first time can take 10-20s)");
     pyodidePromise = loadPyodide({
       indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/",
     }).then((py) => {
