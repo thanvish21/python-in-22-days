@@ -138,7 +138,13 @@
     const view = window.Render.renderLesson(data);
 
     // Warm up Pyodide in the background so the first Run feels instant.
-    if (window.PyRunner) { try { window.PyRunner.getPyodide(); } catch (e) { /* ignore */ } }
+    // Swallow any rejection (offline/CDN slow) — the real error surfaces on Run.
+    if (window.PyRunner) {
+      try {
+        const warm = window.PyRunner.getPyodide();
+        if (warm && typeof warm.catch === "function") warm.catch(() => {});
+      } catch (e) { /* ignore */ }
+    }
 
     // lesson footer: prev / complete / next
     const nav = document.createElement("div");
