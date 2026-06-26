@@ -162,6 +162,7 @@
         return wrap;
       }
       case "quiz": return renderQuiz(b);
+      case "surprise": return renderSurprise(b);
       case "tip": {
         const wrap = el("div", "block");
         const box = el("div", "tip" + (b.variant === "warn" ? " warn" : ""));
@@ -178,22 +179,23 @@
     }
   }
 
-  function renderQuiz(b) {
+  // Render one interactive quiz question (shape: {question, options, answerIndex, explain}).
+  function renderQuizQuestion(q) {
     const wrap = el("div", "block quiz");
-    wrap.appendChild(el("h3", null, "❓ " + (b.question || "Quick check")));
+    wrap.appendChild(el("h3", null, "❓ " + (q.question || "Quick check")));
     const opts = el("div", "quiz-opts");
     let answered = false;
-    const explain = el("div", "quiz-explain", b.explain || "");
-    (b.options || []).forEach((text, i) => {
+    const explain = el("div", "quiz-explain", q.explain || "");
+    (q.options || []).forEach((text, i) => {
       const btn = el("button", "quiz-opt", escapeInline(text));
       btn.addEventListener("click", () => {
         if (answered) return;
         answered = true;
-        const correct = i === b.answerIndex;
+        const correct = i === q.answerIndex;
         btn.classList.add(correct ? "correct" : "wrong");
         btn.appendChild(el("span", "quiz-mark", correct ? " ✓" : " ✗"));
         if (!correct) {
-          const right = opts.children[b.answerIndex];
+          const right = opts.children[q.answerIndex];
           if (right) { right.classList.add("correct"); right.appendChild(el("span", "quiz-mark", " ✓")); }
         }
         explain.classList.add("show");
@@ -202,6 +204,18 @@
     });
     wrap.appendChild(opts);
     wrap.appendChild(explain);
+    return wrap;
+  }
+
+  function renderQuiz(b) {
+    return renderQuizQuestion(b);
+  }
+
+  function renderSurprise(b) {
+    const wrap = el("div", "block surprise-quiz");
+    wrap.appendChild(el("h3", null, "🎁 " + escapeInline(b.title || "Surprise Quiz!")));
+    if (b.intro) wrap.appendChild(el("p", "surprise-intro", escapeInline(b.intro)));
+    (b.questions || []).forEach((q) => wrap.appendChild(renderQuizQuestion(q)));
     return wrap;
   }
 

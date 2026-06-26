@@ -104,6 +104,68 @@
       "solution": "n = int(input(\"Give me a number: \"))\nprint(f\"Double of {n} is {n * 2}!\")",
       "passMsg": "Nice! You converted text to a number and did real math. ✨",
       "failMsg": "Use int(input(\"...\")) to get a real number, then print n * 2."
+    },
+    {
+      "type": "surprise",
+      "title": "Surprise Quiz! Days 1–5",
+      "intro": "Pop quiz! Let's see what stuck from the last 5 days. No grades, just fun 🎉",
+      "questions": [
+        {
+          "question": "Day 1: What does print(\"Hi\") do?",
+          "options": [
+            "Deletes a file",
+            "Shows the text Hi on the screen",
+            "Prints the word print",
+            "Nothing at all"
+          ],
+          "answerIndex": 1,
+          "explain": "print() shows whatever is inside the quotes — here, the text Hi — on its own line."
+        },
+        {
+          "question": "Day 2: What type is the value True?",
+          "options": [
+            "int",
+            "str",
+            "float",
+            "bool"
+          ],
+          "answerIndex": 3,
+          "explain": "True and False are booleans (bool) — yes/no values. Remember the capital first letter!"
+        },
+        {
+          "question": "Day 3: If name = \"Sam\", what does f\"Hi {name}!\" print?",
+          "options": [
+            "Hi {name}!",
+            "Hi Sam!",
+            "Hi name!",
+            "An error"
+          ],
+          "answerIndex": 1,
+          "explain": "The f before the quote tells Python to swap {name} for its value, so you get Hi Sam!"
+        },
+        {
+          "question": "Day 4: What does 17 % 5 give you?",
+          "options": [
+            "3",
+            "2",
+            "3.4",
+            "12"
+          ],
+          "answerIndex": 1,
+          "explain": "% gives the remainder. 5 fits into 17 three times (15), leaving 2 left over."
+        },
+        {
+          "question": "Day 5: What kind of value does input() always give back?",
+          "options": [
+            "A whole number",
+            "A decimal number",
+            "A string (text)",
+            "Nothing"
+          ],
+          "answerIndex": 2,
+          "explain": "input() always hands back a string. Even if you type 7, it's the text \"7\" until you convert it with int()."
+        }
+      ]
     }
   ],
   "challenge": {

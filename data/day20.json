@@ -131,6 +131,68 @@
       "solution": "nums = [4, 15, 8, 23, 9, 42]\nbig = [x for x in nums if x > 10]\nprint(big)",
       "passMsg": "Nice filtering — you're writing pro-level code now! 💪",
       "failMsg": "Add the condition after if, like: [x for x in nums if x > 10]."
+    },
+    {
+      "type": "surprise",
+      "title": "Surprise Quiz! Days 16–20",
+      "intro": "Pop quiz! Let's see what stuck from the last 5 days. No grades, just fun 🎉",
+      "questions": [
+        {
+          "question": "Day 16: What does the mode \"w\" do when you open a file that already has text in it?",
+          "options": [
+            "Adds your new text to the end",
+            "Erases the old text and starts fresh",
+            "Reads the file out loud",
+            "Refuses to open the file"
+          ],
+          "answerIndex": 1,
+          "explain": "\"w\" means write-from-scratch — it clears the file first. Use \"a\" to keep the old text and add more."
+        },
+        {
+          "question": "Day 17: What does 'import math' let you do?",
+          "options": [
+            "Delete your math homework",
+            "Use the tools inside the math module, like math.sqrt()",
+            "Turn numbers into words",
+            "Install Python"
+          ],
+          "answerIndex": 1,
+          "explain": "import math opens the math box so you can use its tools with math.something(), like math.sqrt() or math.pi."
+        },
+        {
+          "question": "Day 18: In the cookie analogy, which one is the class?",
+          "options": [
+            "The cookie you eat",
+            "The cookie cutter (the shape/plan)",
+            "The oven",
+            "The flour"
+          ],
+          "answerIndex": 1,
+          "explain": "The class is the blueprint — the cookie cutter. The actual cookie made from it is the object (instance)."
+        },
+        {
+          "question": "Day 19: Which dunder method does print(my_object) use to show a friendly message?",
+          "options": [
+            "__len__",
+            "__init__",
+            "__str__",
+            "__area__"
+          ],
+          "answerIndex": 2,
+          "explain": "print() uses __str__ if you defined it. Without it you get the ugly default like <__main__.Circle object at 0x...>."
+        },
+        {
+          "question": "Day 20: What does [n + 1 for n in [10, 20, 30]] create?",
+          "options": [
+            "[10, 20, 30]",
+            "[11, 21, 31]",
+            "[1, 1, 1]",
+            "An error"
+          ],
+          "answerIndex": 1,
+          "explain": "It does 'n + 1' for each n, so 10→11, 20→21, 30→31. The recipe is applied to every item."
+        }
+      ]
     }
   ],
   "challenge": {

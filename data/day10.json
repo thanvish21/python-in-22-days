@@ -140,6 +140,68 @@
       "solution": "count = 3\nwhile count > 0:\n    print(count)\n    count -= 1\nprint(\"Liftoff!\")",
       "passMsg": "🚀 Liftoff! Your countdown loop works perfectly.",
       "failMsg": "Print count, then use count -= 1 inside the loop so it counts down to 0."
+    },
+    {
+      "type": "surprise",
+      "title": "Surprise Quiz! Days 6–10",
+      "intro": "Pop quiz! Let's see what stuck from the last 5 days. No grades, just fun 🎉",
+      "questions": [
+        {
+          "question": "Day 6: What does 4 == 4 give you?",
+          "options": [
+            "True",
+            "False",
+            "4",
+            "An error"
+          ],
+          "answerIndex": 0,
+          "explain": "== asks 'are these equal?'. 4 really equals 4, so the answer is True."
+        },
+        {
+          "question": "Day 7: With score = 80, which branch runs?  if score >= 90: print(\"A\")  elif score >= 80: print(\"B\")  else: print(\"C\")",
+          "options": [
+            "A",
+            "B",
+            "C",
+            "Nothing"
+          ],
+          "answerIndex": 1,
+          "explain": "80 is not >= 90 but it IS >= 80, so the first matching branch runs and prints B. Python stops at the first True."
+        },
+        {
+          "question": "Day 8: What is the index of the FIRST item in a list?",
+          "options": [
+            "1",
+            "0",
+            "-1",
+            "It doesn't have one"
+          ],
+          "answerIndex": 1,
+          "explain": "Python starts counting at 0, so the first item is always at index 0."
+        },
+        {
+          "question": "Day 9: What numbers does range(1, 4) give you?",
+          "options": [
+            "1, 2, 3, 4",
+            "1, 2, 3",
+            "0, 1, 2, 3",
+            "1, 4"
+          ],
+          "answerIndex": 1,
+          "explain": "range(start, stop) begins at 1 and stops just BEFORE 4 — so you get 1, 2, 3."
+        },
+        {
+          "question": "Day 10: When does a while loop stop?",
+          "options": [
+            "After exactly 10 turns, always",
+            "When its condition becomes False",
+            "Only when you press a key",
+            "It never stops"
+          ],
+          "answerIndex": 1,
+          "explain": "A while loop keeps running while its condition is True, and stops the moment that condition becomes False."
+        }
+      ]
     }
   ],
   "challenge": {

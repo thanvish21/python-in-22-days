@@ -149,6 +149,68 @@
       "solution": "user_text = \"banana\"\ntry:\n    number = int(user_text)\n    print(\"Your number doubled is\", number * 2)\nexcept ValueError:\n    print(\"That's not a whole number — try again! 🤔\")",
       "passMsg": "Perfect — bad input can't crash you anymore. 💪",
       "failMsg": "Use int(user_text) inside a try block and catch ValueError in the except block."
+    },
+    {
+      "type": "surprise",
+      "title": "Surprise Quiz! Days 11–15",
+      "intro": "Pop quiz! Let's see what stuck from the last 5 days. No grades, just fun 🎉",
+      "questions": [
+        {
+          "question": "Day 11: What makes a tuple different from a list?",
+          "options": [
+            "A tuple can hold only numbers",
+            "A tuple cannot be changed once it is made",
+            "A tuple can only hold one item",
+            "A tuple prints in a different color"
+          ],
+          "answerIndex": 1,
+          "explain": "A tuple is locked (immutable) — once you create it, its contents can't change. Lists can be edited."
+        },
+        {
+          "question": "Day 12: How do you get the value stored under the key \"name\" in a dictionary d?",
+          "options": [
+            "d(\"name\")",
+            "d[\"name\"]",
+            "d.name()",
+            "name[d]"
+          ],
+          "answerIndex": 1,
+          "explain": "You look up a value with square brackets and the key: d[\"name\"]."
+        },
+        {
+          "question": "Day 13: What is the difference between return and print?",
+          "options": [
+            "There is no difference",
+            "print shows a value on screen; return hands a value back so you can keep and reuse it",
+            "return is just a faster print",
+            "print only works inside functions"
+          ],
+          "answerIndex": 1,
+          "explain": "print just displays something. return sends a real value back out so you can store it, do math with it, or print it later."
+        },
+        {
+          "question": "Day 14: Inside a function, what does *args collect the extra arguments into?",
+          "options": [
+            "A dictionary",
+            "A tuple",
+            "A single string",
+            "A global variable"
+          ],
+          "answerIndex": 1,
+          "explain": "One star (*args) gathers extra positional arguments into a tuple. Two stars (**kwargs) make a dictionary."
+        },
+        {
+          "question": "Day 15: When you read a traceback, which line names the kind of error?",
+          "options": [
+            "The very first line",
+            "The last (bottom) line",
+            "The middle line",
+            "There is no such line"
+          ],
+          "answerIndex": 1,
+          "explain": "Read tracebacks from the bottom up — the last line names the error type and gives a short hint."
+        }
+      ]
     }
   ],
   "challenge": {

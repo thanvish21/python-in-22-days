@@ -69,6 +69,18 @@
       "explain": "The # starts a comment. Python skips everything after it on that line."
     },
     {
+      "type": "quiz",
+      "question": "You run two print() lines in a row. How does the text show up?",
+      "options": [
+        "All squished together on one line",
+        "Each print() shows on its own new line",
+        "Only the first line shows",
+        "Python gives an error"
+      ],
+      "answerIndex": 1,
+      "explain": "Each print() makes its own new line, so two print() lines show up one above the other."
+    },
+    {
       "type": "tryit",
       "title": "Print your own name",
       "instructions": "Change the text inside the quotes so the program prints YOUR name. Then press Check.",

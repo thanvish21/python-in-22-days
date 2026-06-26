@@ -254,6 +254,26 @@
     }
   });
 
+  // ---- theme toggle ----
+  const THEME_KEY = "py22_theme";
+  const themeBtn = document.getElementById("themeToggle");
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    if (themeBtn) themeBtn.textContent = theme === "dark" ? "☀️" : "🌙";
+  }
+  function loadTheme() {
+    try { return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light"; }
+    catch (e) { return "light"; }
+  }
+  applyTheme(loadTheme());
+  if (themeBtn) {
+    themeBtn.addEventListener("click", () => {
+      const next = loadTheme() === "dark" ? "light" : "dark";
+      applyTheme(next);
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* private mode / quota */ }
+    });
+  }
+
   window.addEventListener("hashchange", route);
   updateStreak();
   route();

@@ -3,7 +3,7 @@
 import json, os, sys, glob, tempfile, subprocess, textwrap
 
 DATA = os.path.join(os.path.dirname(__file__), "data")
-BLOCK_TYPES = {"text", "code", "tip", "quiz", "tryit"}
+BLOCK_TYPES = {"text", "code", "tip", "quiz", "tryit", "surprise"}
 errors, warnings, snippet_count = [], [], 0
 
 
