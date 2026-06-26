@@ -72,6 +72,7 @@
     const pct = Math.round((done / TOTAL_DAYS) * 100);
 
     const hero = document.createElement("div");
+    hero.className = "view-enter";
     hero.innerHTML =
       '<section class="hero">' +
         "<h1>Learn <span class=\"accent\">Python</span> in 22 Days 🐍</h1>" +
@@ -85,10 +86,11 @@
 
     const grid = document.createElement("div");
     grid.className = "grid";
-    days.forEach((d) => {
+    days.forEach((d, i) => {
       const unlocked = isUnlocked(d.day);
       const card = document.createElement(unlocked ? "a" : "div");
-      card.className = "day-card" + (isDone(d.day) ? " done" : "") + (unlocked ? "" : " locked");
+      card.className = "day-card card-enter" + (isDone(d.day) ? " done" : "") + (unlocked ? "" : " locked");
+      card.style.setProperty("--i", Math.min(i, 12));
       if (unlocked) card.href = "#/day/" + d.day;
       card.innerHTML =
         '<div class="day-emoji">' + (d.emoji || "🐍") + "</div>" +

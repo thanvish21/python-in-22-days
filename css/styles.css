@@ -457,3 +457,128 @@ pre.code-static { margin: 0; padding: 12px 14px; color: var(--code-ink); font-fa
   .topbar { flex-wrap: wrap; }
   .nav-secondary { display: none; }
 }
+
+/* ============================================================
+   ===== Portfolio-grade polish layer (motion + finish) ======
+   ============================================================ */
+:root {
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --dur-fast: .16s;
+  --dur: .28s;
+  --dur-slow: .55s;
+  --brand-rgb: 108, 92, 231;
+  --brand2-rgb: 255, 126, 182;
+  --ring-track: rgba(108, 92, 231, .14);
+}
+[data-theme="dark"] {
+  --brand-rgb: 140, 125, 255;
+  --ring-track: rgba(140, 125, 255, .22);
+}
+
+/* ----- Entrance animations ----- */
+@keyframes view-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes card-rise { from { opacity: 0; transform: translateY(22px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes float-drift { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-14px) rotate(4deg); } }
+@keyframes hue-pan { to { background-position: 200% center; } }
+@keyframes pop-in { 0% { transform: scale(0); } 70% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+.view-enter { animation: view-rise var(--dur-slow) var(--ease-out) both; }
+.card-enter { animation: card-rise .5s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 55ms); }
+
+/* ----- Hero: animated gradient headline + aurora + floating accents ----- */
+.hero { position: relative; overflow: visible; }
+.hero h1 .accent {
+  background: linear-gradient(110deg, var(--brand), var(--brand-2), var(--brand));
+  background-size: 220% auto;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: hue-pan 6s linear infinite;
+}
+.hero::before {
+  content: ""; position: absolute; inset: -40px 0 auto; height: 260px; z-index: -1;
+  background:
+    radial-gradient(420px 200px at 30% 20%, rgba(var(--brand-rgb), .22), transparent 70%),
+    radial-gradient(380px 200px at 72% 10%, rgba(var(--brand2-rgb), .20), transparent 70%);
+  filter: blur(8px); pointer-events: none;
+  animation: float-drift 9s var(--ease-out) infinite;
+}
+.hero-cta {
+  transition: transform var(--dur) var(--ease-spring), box-shadow var(--dur) var(--ease-out), filter var(--dur);
+  position: relative;
+}
+.hero-cta:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 16px 38px rgba(var(--brand-rgb), .42); filter: saturate(1.08); }
+.hero-cta:active { transform: translateY(-1px) scale(.99); }
+
+/* ----- Animated progress bar fill (sheen) ----- */
+.progress-fill { position: relative; overflow: hidden; }
+.progress-fill::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.45) 50%, transparent 80%);
+  transform: translateX(-100%); animation: sheen 2.4s var(--ease-out) infinite;
+}
+@keyframes sheen { to { transform: translateX(100%); } }
+
+/* ----- Day cards: tactile hover + progress accent ----- */
+.day-card {
+  transition: transform var(--dur) var(--ease-spring), box-shadow var(--dur) var(--ease-out), border-color var(--dur);
+  will-change: transform;
+}
+.day-card::before {
+  content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 4px;
+  background: linear-gradient(var(--brand), var(--brand-2)); border-radius: 4px 0 0 4px;
+  opacity: 0; transition: opacity var(--dur);
+}
+.day-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 22px 44px rgba(var(--brand-rgb), .28); border-color: rgba(var(--brand-rgb), .35); }
+.day-card:hover::before { opacity: 1; }
+.day-card:active { transform: translateY(-2px) scale(.99); }
+.day-card .day-emoji { transition: transform var(--dur) var(--ease-spring); display: inline-block; }
+.day-card:hover .day-emoji { transform: scale(1.15) rotate(-6deg); }
+.day-card.done::after { animation: pop-in .4s var(--ease-spring) both; }
+.day-card.locked:hover { transform: none; box-shadow: var(--shadow-sm); }
+.day-card.locked:hover::before { opacity: 0; }
+
+/* ----- Buttons: press + focus feedback ----- */
+.btn, .complete-btn, .navbtn, .mod-test-btn, .nav-link, .icon-btn {
+  transition: transform var(--dur-fast) var(--ease-spring), background var(--dur), box-shadow var(--dur), border-color var(--dur), filter var(--dur);
+}
+.btn:active, .navbtn:active, .mod-test-btn:active { transform: scale(.95); }
+.complete-btn { transition: transform var(--dur) var(--ease-spring), box-shadow var(--dur), filter var(--dur); }
+.complete-btn:hover { box-shadow: 0 16px 36px rgba(29, 209, 161, .4); filter: saturate(1.06); }
+.complete-btn:active { transform: translateY(0) scale(.98); }
+.btn-run:active, .btn-check:active { transform: scale(.94); }
+
+/* ----- Quiz option select feedback ----- */
+.quiz-opt { transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur), background var(--dur), box-shadow var(--dur); }
+.quiz-opt:hover { transform: translateX(3px); }
+.quiz-opt.correct { animation: pop-in .35s var(--ease-spring); box-shadow: 0 6px 18px rgba(29, 209, 161, .25); }
+.quiz-opt:active { transform: scale(.99); }
+
+/* ----- Glass topbar ----- */
+.topbar { backdrop-filter: blur(14px) saturate(1.4); transition: box-shadow var(--dur); }
+.topbar:hover { box-shadow: 0 6px 22px rgba(var(--brand-rgb), .12); }
+
+/* ----- Toast entrance refinement ----- */
+.toast .toast-emoji { display: inline-block; animation: pop-in .5s var(--ease-spring) both; animation-delay: .12s; }
+
+/* ----- Code card chrome (traffic-light dots) ----- */
+.code-card { position: relative; border: 1px solid rgba(255,255,255,.06); }
+.code-card .code-toolbar::before {
+  content: "● ● ●"; letter-spacing: 2px; color: rgba(255,255,255,.22); font-size: 11px; margin-right: 4px;
+}
+
+/* ----- Lesson view entrance ----- */
+.lesson-head { animation: view-rise var(--dur-slow) var(--ease-out) both; }
+.block { animation: view-rise var(--dur) var(--ease-out) both; }
+
+/* ----- Reduced motion: disable non-essential animation ----- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .hero h1 .accent { -webkit-text-fill-color: currentColor; color: var(--brand); background: none; }
+  .day-card:hover { transform: translateY(-3px); }
+}
