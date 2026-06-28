@@ -1,0 +1,257 @@
+{
+  "tier": 3,
+  "language": "python",
+  "emoji": "🪝",
+  "title": "Advanced Metaprogramming & Hooks",
+  "subtitle": "Bend the interpreter at runtime — descriptors, decorators, metaclasses, and context managers that build and police your types for you.",
+  "goal": "Reach under attribute access and class creation: write data descriptors that validate, class decorators and metaclasses that synthesize and register types, and context managers that guarantee cleanup and rollback — the machinery behind ORMs, dataclasses, and trading-system guard rails.",
+  "estMinutes": 250,
+  "tags": [
+    "descriptors",
+    "decorators",
+    "metaclasses",
+    "context-managers",
+    "dunder",
+    "hooks",
+    "runtime"
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "Attribute access is a protocol you can intercept",
+      "html": "<p><code class=\\\"inline\\\">obj.x</code> is not a dictionary lookup — it is a <em>protocol</em>. When the class defines <code class=\\\"inline\\\">x</code> as a <strong>descriptor</strong> (an object implementing <code class=\\\"inline\\\">__get__</code>/<code class=\\\"inline\\\">__set__</code>/<code class=\\\"inline\\\">__delete__</code>), every read and write of <code class=\\\"inline\\\">obj.x</code> is routed through that descriptor. This is the mechanism behind <code class=\\\"inline\\\">property</code>, <code class=\\\"inline\\\">classmethod</code>, <code class=\\\"inline\\\">staticmethod</code>, ORM columns, and typed fields.</p><p>A <strong>data descriptor</strong> (defines <code class=\\\"inline\\\">__set__</code> or <code class=\\\"inline\\\">__delete__</code>) takes precedence over the instance <code class=\\\"inline\\\">__dict__</code>; a <strong>non-data descriptor</strong> (only <code class=\\\"inline\\\">__get__</code>) is shadowed by an instance attribute of the same name. That precedence rule is the single most important thing to know here.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "A validating data descriptor with __set_name__",
+      "code": "class Positive:\\n    def __set_name__(self, owner, name):\\n        self.slot = '_' + name          # learn our own attribute name\\n    def __get__(self, obj, owner=None):\\n        if obj is None:\\n            return self                  # access on the class, not an instance\\n        return getattr(obj, self.slot, None)\\n    def __set__(self, obj, value):\\n        if value <= 0:\\n            raise ValueError(value)\\n        setattr(obj, self.slot, value)\\n\\nclass Account:\\n    balance = Positive()\\n\\na = Account()\\na.balance = 100\\nprint(a.balance)                         # 100\\ntry:\\n    a.balance = -1\\nexcept ValueError:\\n    print('rejected')",
+      "explain": "__set_name__ fires once at class-creation time and tells the descriptor the attribute name it was bound to, so it can pick a private slot. Because __set__ is defined, this is a data descriptor: it intercepts EVERY write to a.balance, even though balance lives on the class, not the instance.",
+      "editable": true
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Data vs non-data precedence.</strong> If <code class=\\\"inline\\\">Positive</code> defined only <code class=\\\"inline\\\">__get__</code>, then <code class=\\\"inline\\\">a.balance = 5</code> would write straight into <code class=\\\"inline\\\">a.__dict__</code> and shadow the descriptor forever. Defining <code class=\\\"inline\\\">__set__</code> (even one that just stores) is what makes validation un-bypassable."
+    },
+    {
+      "type": "text",
+      "heading": "property is just a descriptor — and so is every method",
+      "html": "<p><code class=\\\"inline\\\">property</code> is a built-in data descriptor whose <code class=\\\"inline\\\">__get__</code> calls your getter. Functions are non-data descriptors: <code class=\\\"inline\\\">obj.method</code> triggers the function's <code class=\\\"inline\\\">__get__</code>, which returns a <em>bound method</em> with <code class=\\\"inline\\\">self</code> pre-filled. Understanding this collapses a dozen 'magic' behaviors into one rule.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "A class decorator that synthesizes __init__ and __repr__",
+      "code": "def model(cls):\\n    fields = list(cls.__annotations__)\\n    def __init__(self, *args):\\n        for name, val in zip(fields, args):\\n            setattr(self, name, val)\\n    def __repr__(self):\\n        inner = ', '.join(f'{n}={getattr(self, n)!r}' for n in fields)\\n        return f'{cls.__name__}({inner})'\\n    cls.__init__ = __init__\\n    cls.__repr__ = __repr__\\n    return cls\\n\\n@model\\nclass Point:\\n    x: int\\n    y: int\\n\\nprint(Point(1, 2))                       # Point(x=1, y=2)",
+      "explain": "A class decorator receives the fully-built class and returns a (usually mutated) class. Reading __annotations__ lets you generate boilerplate from a declarative spec — this is a miniature version of how dataclasses works.",
+      "editable": true
+    },
+    {
+      "type": "text",
+      "heading": "Metaclasses: the class of a class",
+      "html": "<p>If a class is an object, what is its type? By default, <code class=\\\"inline\\\">type</code>. A <strong>metaclass</strong> subclasses <code class=\\\"inline\\\">type</code> and customizes class <em>creation</em> (<code class=\\\"inline\\\">__new__</code>/<code class=\\\"inline\\\">__init__</code>) and class <em>calls</em> (<code class=\\\"inline\\\">__call__</code>, which runs when you instantiate). Use them when you must affect every subclass uniformly — registration, validation of method signatures, automatic IDs. For most jobs a class decorator or <code class=\\\"inline\\\">__init_subclass__</code> is lighter; reach for a metaclass when you need to intercept instantiation itself.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "A metaclass that stamps every instance with an auto ID",
+      "code": "class AutoID(type):\\n    def __init__(cls, name, bases, ns):\\n        super().__init__(name, bases, ns)\\n        cls._next = 0                    # per-class counter\\n    def __call__(cls, *a, **k):\\n        obj = super().__call__(*a, **k)  # normal construction\\n        obj.id = cls._next\\n        cls._next += 1\\n        return obj\\n\\nclass Order(metaclass=AutoID):\\n    pass\\n\\nprint(Order().id, Order().id)            # 0 1",
+      "explain": "metaclass __call__ wraps instantiation: it runs type.__call__ (which calls __new__ then __init__) and then post-processes the object. Each class gets its own _next because __init__ runs once per class definition.",
+      "editable": true
+    },
+    {
+      "type": "quiz",
+      "question": "A class defines `x = D()` where D implements only __get__ (a non-data descriptor). You then run `obj.x = 5`. What does `obj.x` return afterward?",
+      "options": [
+        "5 — the instance attribute shadows the non-data descriptor",
+        "Calls D.__get__ — descriptors always win",
+        "Raises AttributeError",
+        "Calls D.__set__ with 5"
+      ],
+      "answerIndex": 0,
+      "explain": "Non-data descriptors (only __get__) are overridden by instance __dict__. Writing obj.x = 5 puts 5 in the instance dict, and subsequent reads find it before consulting the class descriptor. Only DATA descriptors (with __set__/__delete__) take precedence over the instance."
+    },
+    {
+      "type": "text",
+      "heading": "Context managers guarantee the exit runs",
+      "html": "<p>A context manager pairs setup with teardown that is <strong>guaranteed</strong> to run — on normal exit and on exception. The protocol is two dunders: <code class=\\\"inline\\\">__enter__</code> (returns the value bound by <code class=\\\"inline\\\">as</code>) and <code class=\\\"inline\\\">__exit__(exc_type, exc, tb)</code>. If <code class=\\\"inline\\\">__exit__</code> returns a truthy value, the exception is <em>suppressed</em>. That single return value is how you implement rollback, retries, and 'swallow and log'.</p><p><code class=\\\"inline\\\">contextlib.contextmanager</code> lets you write the same thing as a generator: everything before <code class=\\\"inline\\\">yield</code> is enter, everything after (in a <code class=\\\"inline\\\">finally</code>) is exit.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "A transactional context manager with rollback",
+      "code": "class Transaction:\\n    def __init__(self, target):\\n        self.target = target\\n    def __enter__(self):\\n        self._snap = list(self.target)   # snapshot\\n        return self.target\\n    def __exit__(self, et, e, tb):\\n        if et is not None:\\n            self.target[:] = self._snap  # rollback\\n            return True                  # suppress the error\\n        return False                     # commit\\n\\nlog = []\\nwith Transaction(log) as L:\\n    L.append(1); L.append(2)\\nwith Transaction(log) as L:\\n    L.append(99)\\n    raise ValueError('boom')             # rolled back + suppressed\\nprint(log)                               # [1, 2]",
+      "explain": "The second block appends 99 then raises; __exit__ sees the exception, restores the snapshot (dropping 99), and returns True so the ValueError never escapes. This is the exact shape of a DB transaction or an order-batch that must be all-or-nothing.",
+      "editable": true
+    },
+    {
+      "type": "tip",
+      "variant": "warn",
+      "html": "<strong>__getattr__ vs __getattribute__.</strong> <code class=\\\"inline\\\">__getattr__</code> is a fallback called <em>only</em> when normal lookup fails — cheap and safe. <code class=\\\"inline\\\">__getattribute__</code> intercepts <em>every</em> access and is a loaded footgun: touch <code class=\\\"inline\\\">self.anything</code> inside it without delegating to <code class=\\\"inline\\\">super().__getattribute__</code> and you get infinite recursion."
+    },
+    {
+      "type": "tryit",
+      "title": "Write a timer context manager",
+      "instructions": "Make a class-based context manager `Tag` whose __enter__ prints `start` and __exit__ prints `end`. Use it in a `with` block.",
+      "starter": "class Tag:\\n    def __enter__(self):\\n        # TODO print 'start' and return self\\n        pass\\n    def __exit__(self, *a):\\n        # TODO print 'end'\\n        return False\\n\\nwith Tag():\\n    pass",
+      "check": {
+        "stdout_includes": "start"
+      },
+      "solution": "class Tag:\\n    def __enter__(self):\\n        print('start'); return self\\n    def __exit__(self, *a):\\n        print('end'); return False\\n\\nwith Tag():\\n    pass",
+      "passMsg": "That's the protocol — enter sets up, exit always runs.",
+      "failMsg": "Make __enter__ print 'start' (and return self)."
+    }
+  ],
+  "problems": [
+    {
+      "id": "py-t3-p1",
+      "title": "Un-bypassable validated field (data descriptor)",
+      "difficulty": "medium",
+      "language": "python",
+      "engine": "pyodide",
+      "instructions": "<p>Implement a <strong>data descriptor</strong> <code class=\\\"inline\\\">Positive</code> used as <code class=\\\"inline\\\">Account.balance</code>. It must reject any value &le; 0.</p><p><strong>Input:</strong> first line is an integer <code class=\\\"inline\\\">N</code>; the next <code class=\\\"inline\\\">N</code> lines are commands. <code class=\\\"inline\\\">SET x</code> attempts to set the balance to integer <code class=\\\"inline\\\">x</code>; <code class=\\\"inline\\\">GET</code> queries it.</p><p><strong>Output:</strong> for each <code class=\\\"inline\\\">GET</code> print the current balance, or <code class=\\\"inline\\\">UNSET</code> if it was never successfully set. For each <code class=\\\"inline\\\">SET</code> with a value &le; 0 print <code class=\\\"inline\\\">REJECT</code> (a successful SET prints nothing).</p>",
+      "starter": "import sys\n\nclass Positive:\n    \"\"\"TODO: make this a DATA descriptor (define __get__ AND __set__).\n    Enforce value > 0; store the value per-instance (e.g. in \"_\" + name).\"\"\"\n    def __set_name__(self, owner, name):\n        self.slot = \"_\" + name\n    # TODO: __get__(self, obj, owner=None) -> return stored value or None\n    # TODO: __set__(self, obj, value) -> raise ValueError(value) if value <= 0\n\nclass Account:\n    balance = Positive()\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    n = int(data[0])\n    acc = Account()\n    out = []\n    for i in range(1, n + 1):\n        parts = data[i].split()\n        if not parts:\n            continue\n        if parts[0] == \"GET\":\n            # TODO: print \"UNSET\" if never set, else the value\n            pass\n        elif parts[0] == \"SET\":\n            # TODO: try to set acc.balance = int(parts[1]); on ValueError append \"REJECT\"\n            pass\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\nmain()\n",
+      "solution": "import sys\n\nclass Positive:\n    \"\"\"Data descriptor: enforces value > 0, stores per-instance.\"\"\"\n    def __set_name__(self, owner, name):\n        self.slot = \"_\" + name\n    def __get__(self, obj, owner=None):\n        if obj is None:\n            return self\n        return getattr(obj, self.slot, None)\n    def __set__(self, obj, value):\n        if value <= 0:\n            raise ValueError(value)\n        setattr(obj, self.slot, value)\n\nclass Account:\n    balance = Positive()\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    n = int(data[0])\n    acc = Account()\n    out = []\n    for i in range(1, n + 1):\n        parts = data[i].split()\n        if not parts:\n            continue\n        if parts[0] == \"GET\":\n            v = acc.balance\n            out.append(\"UNSET\" if v is None else str(v))\n        elif parts[0] == \"SET\":\n            try:\n                acc.balance = int(parts[1])\n            except ValueError:\n                out.append(\"REJECT\")\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "5\nGET\nSET 100\nGET\nSET -5\nGET\n",
+      "tests": [
+        {
+          "name": "basic",
+          "stdin": "5\nGET\nSET 100\nGET\nSET -5\nGET\n",
+          "expectStdout": "UNSET\n100\nREJECT\n100",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "zero + multi-reject",
+          "stdin": "6\nSET 0\nGET\nSET 42\nSET -1\nGET\nGET\n",
+          "expectStdout": "REJECT\nUNSET\nREJECT\n42\n42",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "complexity": {
+        "codeTemplate": "class Positive:\n    def __set_name__(self, o, n): self.slot = \"_\" + n\n    def __get__(self, o, t=None): return getattr(o, self.slot, None)\n    def __set__(self, o, v):\n        if v <= 0: raise ValueError(v)\n        setattr(o, self.slot, v)\nclass A:\n    bal = Positive()\na = A(); s = 0\nfor i in range(1, {N} + 1):\n    a.bal = i\n    s += a.bal\nprint(s)\n",
+        "sizes": [
+          10000,
+          20000,
+          40000,
+          80000,
+          160000
+        ],
+        "expected": "O(n)"
+      },
+      "hint": "Define __set__ so the descriptor is a DATA descriptor; raise ValueError for value <= 0 and store into '_' + name."
+    },
+    {
+      "id": "py-t3-p2",
+      "title": "Declarative model via class decorator",
+      "difficulty": "medium",
+      "language": "python",
+      "engine": "pyodide",
+      "instructions": "<p>Write a class decorator <code class=\\\"inline\\\">@model</code> that reads <code class=\\\"inline\\\">cls.__annotations__</code> and synthesizes an <code class=\\\"inline\\\">__init__(self, *args)</code> (assigning positionally in annotation order) and a <code class=\\\"inline\\\">__repr__</code> of the form <code class=\\\"inline\\\">Point(x=1, y=2)</code> (using <code class=\\\"inline\\\">repr()</code> of each value).</p><p><strong>Input:</strong> first line <code class=\\\"inline\\\">N</code>; next <code class=\\\"inline\\\">N</code> lines each contain two integers <code class=\\\"inline\\\">x y</code>.</p><p><strong>Output:</strong> for each line, print <code class=\\\"inline\\\">repr(Point(x, y))</code>.</p>",
+      "starter": "import sys\n\ndef model(cls):\n    \"\"\"TODO: read cls.__annotations__ (field order) and synthesize:\n      - __init__(self, *args) assigning args to the annotated fields in order\n      - __repr__ returning 'ClassName(x=<x>, y=<y>)' using repr() of each value\n    Return cls.\"\"\"\n    fields = list(cls.__annotations__)\n    # TODO: define and attach cls.__init__ and cls.__repr__\n    return cls\n\n@model\nclass Point:\n    x: int\n    y: int\n\ndef main():\n    lines = sys.stdin.read().split(\"\\n\")\n    n = int(lines[0])\n    out = []\n    for i in range(1, n + 1):\n        a, b = lines[i].split()\n        out.append(repr(Point(int(a), int(b))))\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\nmain()\n",
+      "solution": "import sys\n\ndef model(cls):\n    fields = list(cls.__annotations__)\n    def __init__(self, *args):\n        for name, val in zip(fields, args):\n            setattr(self, name, val)\n    def __repr__(self):\n        inner = \", \".join(f\"{name}={getattr(self, name)!r}\" for name in fields)\n        return f\"{cls.__name__}({inner})\"\n    cls.__init__ = __init__\n    cls.__repr__ = __repr__\n    return cls\n\n@model\nclass Point:\n    x: int\n    y: int\n\ndef main():\n    lines = sys.stdin.read().split(\"\\n\")\n    n = int(lines[0])\n    out = []\n    for i in range(1, n + 1):\n        a, b = lines[i].split()\n        out.append(repr(Point(int(a), int(b))))\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "3\n1 2\n-4 7\n0 0\n",
+      "tests": [
+        {
+          "name": "basic",
+          "stdin": "3\n1 2\n-4 7\n0 0\n",
+          "expectStdout": "Point(x=1, y=2)\nPoint(x=-4, y=7)\nPoint(x=0, y=0)",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "negatives",
+          "stdin": "2\n100 -200\n5 5\n",
+          "expectStdout": "Point(x=100, y=-200)\nPoint(x=5, y=5)",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "complexity": {
+        "codeTemplate": "def model(cls):\n    fields = list(cls.__annotations__)\n    def __init__(self, *a):\n        for n, v in zip(fields, a): setattr(self, n, v)\n    cls.__init__ = __init__\n    return cls\n@model\nclass P:\n    x: int\n    y: int\nacc = 0\nfor i in range({N}):\n    p = P(i, i)\n    acc += p.x\nprint(acc)\n",
+        "sizes": [
+          20000,
+          40000,
+          80000,
+          160000,
+          320000
+        ],
+        "expected": "O(n)"
+      },
+      "hint": "fields = list(cls.__annotations__); attach generated __init__ and __repr__ as cls attributes, then return cls."
+    },
+    {
+      "id": "py-t3-p3",
+      "title": "Per-class auto IDs via metaclass",
+      "difficulty": "hard",
+      "language": "python",
+      "engine": "pyodide",
+      "instructions": "<p>Write a metaclass <code class=\\\"inline\\\">AutoID</code> that gives every instance an auto-incrementing <code class=\\\"inline\\\">id</code> attribute, counted <em>independently per class</em>, starting at 0. Two classes <code class=\\\"inline\\\">Order</code> and <code class=\\\"inline\\\">Trade</code> use it.</p><p><strong>Input:</strong> first line <code class=\\\"inline\\\">N</code>; next <code class=\\\"inline\\\">N</code> lines each name a class to instantiate (<code class=\\\"inline\\\">Order</code> or <code class=\\\"inline\\\">Trade</code>).</p><p><strong>Output:</strong> for each, print <code class=\\\"inline\\\">Name#id</code> (e.g. <code class=\\\"inline\\\">Order#0</code>).</p>",
+      "starter": "import sys\n\nclass AutoID(type):\n    \"\"\"TODO: a metaclass that gives every instance an auto-incrementing\n    `id` per class, starting at 0. Hint: initialize a per-class counter in\n    __init__, and override __call__ to stamp obj.id after construction.\"\"\"\n    def __init__(cls, name, bases, ns):\n        super().__init__(name, bases, ns)\n        # TODO: cls._next = 0\n    # TODO: def __call__(cls, *args, **kwargs): build obj, assign obj.id, bump counter\n\nclass Order(metaclass=AutoID):\n    pass\n\nclass Trade(metaclass=AutoID):\n    pass\n\ndef main():\n    lines = sys.stdin.read().split(\"\\n\")\n    n = int(lines[0])\n    registry = {\"Order\": Order, \"Trade\": Trade}\n    out = []\n    for i in range(1, n + 1):\n        name = lines[i].strip()\n        if not name:\n            continue\n        obj = registry[name]()\n        out.append(f\"{name}#{obj.id}\")\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\nmain()\n",
+      "solution": "import sys\n\nclass AutoID(type):\n    def __init__(cls, name, bases, ns):\n        super().__init__(name, bases, ns)\n        cls._next = 0\n    def __call__(cls, *args, **kwargs):\n        obj = super().__call__(*args, **kwargs)\n        obj.id = cls._next\n        cls._next += 1\n        return obj\n\nclass Order(metaclass=AutoID):\n    pass\n\nclass Trade(metaclass=AutoID):\n    pass\n\ndef main():\n    lines = sys.stdin.read().split(\"\\n\")\n    n = int(lines[0])\n    registry = {\"Order\": Order, \"Trade\": Trade}\n    out = []\n    for i in range(1, n + 1):\n        name = lines[i].strip()\n        if not name:\n            continue\n        obj = registry[name]()\n        out.append(f\"{name}#{obj.id}\")\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "5\nOrder\nOrder\nTrade\nOrder\nTrade\n",
+      "tests": [
+        {
+          "name": "interleaved",
+          "stdin": "5\nOrder\nOrder\nTrade\nOrder\nTrade\n",
+          "expectStdout": "Order#0\nOrder#1\nTrade#0\nOrder#2\nTrade#1",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "trade-first",
+          "stdin": "3\nTrade\nTrade\nOrder\n",
+          "expectStdout": "Trade#0\nTrade#1\nOrder#0",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "hint": "Initialize cls._next = 0 in the metaclass __init__ (runs once per class), and override __call__ to stamp obj.id then increment cls._next."
+    },
+    {
+      "id": "py-t3-p4",
+      "title": "All-or-nothing batches (context manager rollback)",
+      "difficulty": "hard",
+      "language": "python",
+      "engine": "pyodide",
+      "instructions": "<p>Write a class-based context manager <code class=\\\"inline\\\">Transaction(target_list)</code>. On <code class=\\\"inline\\\">__enter__</code> snapshot the list; on <code class=\\\"inline\\\">__exit__</code>, if an exception occurred inside the block, restore the snapshot (rollback) and <strong>suppress</strong> the exception; otherwise commit.</p><p>Each input batch is appended to a shared list inside a <code class=\\\"inline\\\">with Transaction(state)</code> block. A <code class=\\\"inline\\\">0</code> in a batch raises mid-append, so that whole batch must roll back.</p><p><strong>Input:</strong> first line <code class=\\\"inline\\\">N</code>; next <code class=\\\"inline\\\">N</code> lines are space-separated integers (one batch per line).</p><p><strong>Output:</strong> the final list contents, space-separated on one line.</p>",
+      "starter": "import sys\n\nclass Transaction:\n    \"\"\"TODO: a class-based context manager wrapping a list `target`.\n    __enter__: snapshot a copy of target, return target.\n    __exit__: if an exception occurred inside the block, restore the\n    snapshot (rollback) and return True to SUPPRESS it; otherwise commit.\"\"\"\n    def __init__(self, target):\n        self.target = target\n    # TODO: __enter__(self)\n    # TODO: __exit__(self, exc_type, exc, tb)\n\ndef main():\n    lines = sys.stdin.read().split(\"\\n\")\n    n = int(lines[0])\n    state = []\n    for i in range(1, n + 1):\n        nums = [int(x) for x in lines[i].split()]\n        with Transaction(state) as s:\n            for v in nums:\n                if v == 0:\n                    raise ValueError(\"poison\")\n                s.append(v)\n    sys.stdout.write(\" \".join(map(str, state)) + \"\\n\")\n\nmain()\n",
+      "solution": "import sys\n\nclass Transaction:\n    \"\"\"Snapshot on enter; rollback + suppress on exception; commit on clean exit.\"\"\"\n    def __init__(self, target):\n        self.target = target\n    def __enter__(self):\n        self._snapshot = list(self.target)\n        return self.target\n    def __exit__(self, exc_type, exc, tb):\n        if exc_type is not None:\n            self.target[:] = self._snapshot\n            return True\n        return False\n\ndef main():\n    lines = sys.stdin.read().split(\"\\n\")\n    n = int(lines[0])\n    state = []\n    for i in range(1, n + 1):\n        nums = [int(x) for x in lines[i].split()]\n        with Transaction(state) as s:\n            for v in nums:\n                if v == 0:\n                    raise ValueError(\"poison\")\n                s.append(v)\n    sys.stdout.write(\" \".join(map(str, state)) + \"\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "3\n1 2 3\n4 0 5\n6 7\n",
+      "tests": [
+        {
+          "name": "one poisoned batch",
+          "stdin": "3\n1 2 3\n4 0 5\n6 7\n",
+          "expectStdout": "1 2 3 6 7",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "multiple rollbacks",
+          "stdin": "4\n9\n0\n1 2 0 3\n8 8\n",
+          "expectStdout": "9 8 8",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "hint": "__exit__ must return True when exc_type is not None (after restoring the snapshot) to swallow the error; return False on clean exit to commit."
+    }
+  ]
+}

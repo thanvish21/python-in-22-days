@@ -1,0 +1,361 @@
+{
+  "tier": 4,
+  "language": "python",
+  "emoji": "🔥",
+  "title": "GIL Escape & Native Extensions",
+  "subtitle": "When one core isn't enough — escape the GIL with multiprocessing and drop to native code for CPU-bound work that actually parallelizes.",
+  "goal": "Diagnose why CPython threads do not parallelize CPU-bound work, fan that work across processes with Pool / Process / ProcessPoolExecutor, move bulk data over zero-copy shared memory instead of pickling it, reason about IPC and fork cost so you only parallelize when speedup beats it, and mount native code via ctypes (libc and your own runtime-compiled .so) when the hot loop must leave Python entirely.",
+  "estMinutes": 280,
+  "tags": [
+    "multiprocessing",
+    "GIL",
+    "ctypes",
+    "native-extensions",
+    "ProcessPoolExecutor",
+    "shared-memory",
+    "IPC",
+    "parallelism"
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "One lock to rule them all: why threads don't parallelize CPU work",
+      "html": "<p>CPython protects its object model with a single <strong>Global Interpreter Lock</strong>. Exactly one thread executes Python bytecode at a time; the interpreter hands the GIL around (roughly every 5&nbsp;ms via <code class=\"inline\">sys.setswitchinterval</code>) so threads <em>interleave</em>, but they never run Python code <em>simultaneously</em>. For I/O-bound work this is fine — a thread blocked in <code class=\"inline\">recv()</code> drops the GIL, so other threads progress. For <strong>CPU-bound</strong> work it is fatal: four threads crunching numbers share one core's worth of bytecode throughput and add lock-handoff overhead on top, so threaded CPU code is often <em>slower</em> than single-threaded.</p><p>The escape hatch is <strong>processes</strong>. Each process has its own interpreter and its own GIL, so N processes genuinely run on N cores. That parallelism is not free: there is no shared address space, so arguments and results cross the process boundary by <strong>pickling</strong>, and spawning a process costs milliseconds. The entire skill of this tier is deciding when the parallel speedup outweighs that IPC + fork tax — and shrinking the tax with shared memory and native code.</p><p>(Free-threaded CPython 3.13+ can disable the GIL, but the portable, production-default answer in 2026 is still: <strong>threads for I/O, processes for CPU.</strong>)</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Threads vs processes on a CPU-bound loop — the GIL made visible",
+      "code": "import time, math\nfrom concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor\n\ndef burn(n):                      # pure CPU: no I/O, never drops the GIL voluntarily\n    s = 0.0\n    for i in range(n):\n        s += math.sin(i) * math.cos(i)\n    return s\n\nWORK = [3_000_000] * 4\n\nif __name__ == \"__main__\":\n    t = time.perf_counter()\n    with ThreadPoolExecutor(4) as ex:\n        list(ex.map(burn, WORK))\n    print(\"threads:  %.2fs\" % (time.perf_counter() - t))\n\n    t = time.perf_counter()\n    with ProcessPoolExecutor(4) as ex:\n        list(ex.map(burn, WORK))\n    print(\"processes:%.2fs\" % (time.perf_counter() - t))",
+      "explain": "Four CPU-bound tasks. With threads the GIL serializes the bytecode: wall time is ~4× one task plus handoff overhead. With processes each child gets its own GIL on its own core, so wall time collapses toward 1× (minus spawn/pickle cost). This single comparison is the entire justification for the multiprocessing module on CPU work.",
+      "editable": true
+    },
+    {
+      "type": "tip",
+      "variant": "warn",
+      "html": "<strong>Always guard the entry point.</strong> On the <code class=\"inline\">spawn</code> start method (Windows, and macOS since 3.8) each child <em>re-imports your module</em> to rebuild the worker function. Without an <code class=\"inline\">if __name__ == \"__main__\":</code> guard, the top-level code that creates the Pool runs again in every child — a fork bomb of recursively spawning processes. Module-level work that builds the pool must live under that guard."
+    },
+    {
+      "type": "text",
+      "heading": "Pool, Process, and ProcessPoolExecutor — picking the right primitive",
+      "html": "<p>Three APIs, one idea (fan work across interpreters), different ergonomics:</p><ul><li><strong><code class=\"inline\">multiprocessing.Process</code></strong> — the raw primitive. You construct, <code class=\"inline\">start()</code>, and <code class=\"inline\">join()</code> each process yourself and move data over a <code class=\"inline\">Queue</code> or <code class=\"inline\">Pipe</code>. Maximum control, maximum boilerplate. Reach for it when each worker is long-lived and bespoke.</li><li><strong><code class=\"inline\">multiprocessing.Pool</code></strong> — a fixed set of reusable workers plus <code class=\"inline\">map</code> / <code class=\"inline\">imap</code> / <code class=\"inline\">apply_async</code>. <code class=\"inline\">map</code> preserves input order and blocks; <code class=\"inline\">imap_unordered</code> streams results as they finish (better for skewed task durations). <code class=\"inline\">chunksize</code> batches tasks to amortize per-task IPC.</li><li><strong><code class=\"inline\">concurrent.futures.ProcessPoolExecutor</code></strong> — the modern <code class=\"inline\">Executor</code> interface: the <em>same</em> <code class=\"inline\">submit</code>/<code class=\"inline\">map</code>/<code class=\"inline\">as_completed</code> API as the thread pool, so you can swap I/O→CPU strategies by changing one class name. Prefer it for new code.</li></ul><p>All three pickle the callable and its arguments to the child and pickle the return value back. That means: top-level (picklable) functions only — no lambdas, no closures — and keep payloads small or use shared memory.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Pool.map with chunksize, and imap_unordered for skewed work",
+      "code": "from multiprocessing import Pool\n\ndef work(x):\n    return x * x\n\nif __name__ == \"__main__\":\n    with Pool(4) as p:\n        # chunksize batches ~250 items per IPC round-trip instead of 1.\n        squares = p.map(work, range(1000), chunksize=250)\n        print(sum(squares))                      # 332833500\n\n        # Results stream back in COMPLETION order — ideal when durations vary.\n        for r in p.imap_unordered(work, range(5)):\n            pass  # process each as it lands; no waiting on a slow straggler",
+      "explain": "chunksize is the single biggest Pool tuning knob: with chunksize=1 a million tiny tasks pay a million pickle/IPC round-trips and the overhead dwarfs the work. Batch them. Use map for ordered results, imap_unordered when one slow task shouldn't block consuming the fast ones.",
+      "editable": true
+    },
+    {
+      "type": "text",
+      "heading": "The cost model: pickling, fork, and when NOT to parallelize",
+      "html": "<p>Every task crossing the process boundary is <strong>serialized</strong> (pickle on the way in, pickle on the way out) and copied through a pipe. Spawning a worker costs single-digit milliseconds; sending a 50&nbsp;MB argument costs the pickle + copy of 50&nbsp;MB. The decision rule is brutally simple:</p><blockquote>Parallelize only when <em>per-task compute time ≫ per-task IPC time</em>, and <em>total compute / cores ≫ spawn cost</em>.</blockquote><p>A loop of a million trivial operations should <strong>never</strong> go to a process pool — the pickling alone will be 10× the work. A handful of heavy, long-running, CPU-bound chunks is the sweet spot. Two levers shrink the tax: (1) make tasks <strong>coarse</strong> (few big chunks, not many tiny ones — this is what <code class=\"inline\">chunksize</code> does), and (2) <strong>don't move the data at all</strong> — put the big array in <code class=\"inline\">shared_memory</code> and pass only its name, so workers read the same physical pages with zero copy.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Zero-copy fan-out with multiprocessing.shared_memory",
+      "code": "from multiprocessing import shared_memory, Pool\n\ndef partial(args):\n    name, lo, hi = args\n    shm = shared_memory.SharedMemory(name=name)        # attach existing block\n    buf = memoryview(shm.buf).cast(\"q\")                 # int64 view, no copy\n    acc = sum(buf[i] for i in range(lo, hi))\n    buf.release()                                       # MUST release before close\n    shm.close()\n    return acc\n\nif __name__ == \"__main__\":\n    n, w = 1000, 4\n    shm = shared_memory.SharedMemory(create=True, size=8 * n)\n    mv = memoryview(shm.buf).cast(\"q\")\n    for i in range(n):\n        mv[i] = i\n    edges = [(i * n) // w for i in range(w + 1)]\n    tasks = [(shm.name, edges[i], edges[i + 1]) for i in range(w)]\n    try:\n        with Pool(w) as p:\n            print(sum(p.map(partial, tasks)))          # 499500\n    finally:\n        mv.release(); shm.close(); shm.unlink()        # creator must unlink",
+      "explain": "Only the small (name, lo, hi) tuple is pickled to each worker; the 8*n-byte array is never copied — every process maps the same physical pages. Two lifecycle rules bite hard: release every exported memoryview before close() (else 'cannot close exported pointers'), and the CREATOR must unlink() exactly once or you leak a segment in /dev/shm.",
+      "editable": true
+    },
+    {
+      "type": "text",
+      "heading": "Dropping to native code with ctypes",
+      "html": "<p>Sometimes even one core of Python bytecode is too slow and the answer isn't more processes — it's <em>leaving the interpreter</em>. <code class=\"inline\">ctypes</code> loads any shared library and calls its C functions directly, no compiler-at-import and no build step for the standard library. You <code class=\"inline\">CDLL</code> the library, then — critically — declare each function's <code class=\"inline\">argtypes</code> and <code class=\"inline\">restype</code> so ctypes marshals arguments and interprets the return value correctly. Skip <code class=\"inline\">restype</code> and ctypes assumes <code class=\"inline\">int</code>, silently truncating a 64-bit pointer or <code class=\"inline\">size_t</code> on a 64-bit box — a classic, brutal bug.</p><p>Two tiers of native mounting: (1) call into a library that already exists — <code class=\"inline\">libc</code> is always present, so <code class=\"inline\">strlen</code>, <code class=\"inline\">memcmp</code>, <code class=\"inline\">qsort</code> are a function call away; (2) write your own hot loop in C, compile it to a <code class=\"inline\">.so</code> (<code class=\"inline\">cc -O2 -shared -fPIC</code>), and <code class=\"inline\">CDLL</code> the result. A tight numeric kernel in C routinely beats the Python version by 50–200× because it skips per-iteration boxing, refcounting, and bytecode dispatch entirely.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Calling libc through ctypes — declare the signature or get burned",
+      "code": "import ctypes, ctypes.util\n\nlibc = ctypes.CDLL(ctypes.util.find_library(\"c\") or \"libc.so.6\")\n\n# Without these declarations ctypes assumes int args/return and corrupts 64-bit values.\nlibc.strlen.restype = ctypes.c_size_t\nlibc.strlen.argtypes = [ctypes.c_char_p]\nlibc.strcmp.restype = ctypes.c_int\nlibc.strcmp.argtypes = [ctypes.c_char_p, ctypes.c_char_p]\n\nprint(libc.strlen(b\"orderbook\"))          # 9, computed in C\nprint(libc.strcmp(b\"AAPL\", b\"MSFT\") < 0)  # True (A sorts before M)",
+      "explain": "find_library locates libc portably. argtypes/restype are not optional decoration: they tell ctypes how wide each value is and how to convert Python<->C. c_char_p marshals bytes to a const char*. Pass a str (not bytes) and you'll get a TypeError — C strings are bytes.",
+      "editable": true
+    },
+    {
+      "type": "code",
+      "caption": "Compile a C kernel at runtime and mount it with ctypes",
+      "code": "import ctypes, tempfile, subprocess, os\n\nSRC = r'''\nlong long sumsq(long long n) {        /* sum of i*i for i in [0,n) */\n    long long acc = 0;\n    for (long long i = 0; i < n; i++) acc += i * i;\n    return acc;\n}'''\n\nd = tempfile.mkdtemp()\nc, so = os.path.join(d, \"k.c\"), os.path.join(d, \"k.so\")\nopen(c, \"w\").write(SRC)\nsubprocess.run([os.environ.get(\"CC\", \"cc\"), \"-O2\", \"-shared\", \"-fPIC\", \"-o\", so, c], check=True)\n\nlib = ctypes.CDLL(so)\nlib.sumsq.restype = ctypes.c_longlong\nlib.sumsq.argtypes = [ctypes.c_longlong]\nprint(lib.sumsq(1_000_000))            # 333332833333500000, ~100x faster than Python",
+      "explain": "-shared -fPIC builds a position-independent shared object; -O2 lets the C compiler vectorize the loop. The C version avoids Python's per-iteration int boxing and bytecode dispatch entirely. This is exactly how a hot pricing/risk kernel gets dropped out of Python without rewriting the whole service.",
+      "editable": true
+    },
+    {
+      "type": "quiz",
+      "question": "You run a pure-Python CPU-bound function across 4 OS threads on a 4-core machine. Compared to running it once, wall-clock time is roughly:",
+      "options": [
+        "~4x faster — one thread per core",
+        "~the same or slightly worse — the GIL serializes bytecode and adds handoff overhead",
+        "~2x faster — hyperthreading",
+        "Exactly 4x slower"
+      ],
+      "answerIndex": 1,
+      "explain": "Only one thread holds the GIL and executes Python bytecode at a time, so CPU-bound threads can't run in parallel; you get ~1x throughput plus lock-handoff cost. To use all cores on CPU work you need processes (each with its own GIL)."
+    },
+    {
+      "type": "quiz",
+      "question": "Why pass shm.name (a string) to Pool workers instead of the big list itself?",
+      "options": [
+        "Strings pickle faster than lists of the same length",
+        "Passing the list pickles and copies the entire array to every worker; the name lets each worker map the same physical pages with zero copy",
+        "Workers cannot receive list arguments at all",
+        "It avoids the GIL inside each worker"
+      ],
+      "answerIndex": 1,
+      "explain": "Arguments cross the process boundary by pickling. A large list is serialized and copied into every child — O(workers x size) IPC. shared_memory keeps one physical copy; workers attach by name and read it directly, so only the tiny name + offsets are pickled."
+    },
+    {
+      "type": "quiz",
+      "question": "You call libc.malloc via ctypes on a 64-bit Linux box but never set restype. What's the danger?",
+      "options": [
+        "Nothing — ctypes infers the type from the call",
+        "ctypes defaults restype to int (32-bit), truncating the 64-bit pointer and corrupting it",
+        "It always raises before calling",
+        "malloc returns a Python int automatically"
+      ],
+      "answerIndex": 1,
+      "explain": "ctypes assumes a C int return when restype is unset. On LP64, a pointer/size_t is 64 bits but int is 32 — the high half is dropped, giving a garbage/truncated pointer. Always declare restype (e.g. c_void_p) and argtypes for any non-trivial signature."
+    },
+    {
+      "type": "tryit",
+      "title": "Parallelize a CPU-bound sum across processes",
+      "instructions": "Use a multiprocessing.Pool to compute the sum of squares of 0..999999 across 4 workers. Split the range into 4 contiguous chunks, map a top-level worker, and print the total. Expected: 333332833333500000.",
+      "starter": "from multiprocessing import Pool\n\ndef chunk_sumsq(rng):\n    lo, hi = rng\n    # TODO: return sum(i*i for i in range(lo, hi))\n    return 0\n\nif __name__ == \"__main__\":\n    n, w = 1_000_000, 4\n    edges = [(i * n) // w for i in range(w + 1)]\n    ranges = [(edges[i], edges[i + 1]) for i in range(w)]\n    # TODO: with Pool(w) as p: parts = p.map(chunk_sumsq, ranges)\n    parts = [0]\n    print(sum(parts))",
+      "check": {
+        "stdout_equals": "333332833333500000"
+      },
+      "solution": "from multiprocessing import Pool\n\ndef chunk_sumsq(rng):\n    lo, hi = rng\n    return sum(i * i for i in range(lo, hi))\n\nif __name__ == \"__main__\":\n    n, w = 1_000_000, 4\n    edges = [(i * n) // w for i in range(w + 1)]\n    ranges = [(edges[i], edges[i + 1]) for i in range(w)]\n    with Pool(w) as p:\n        parts = p.map(chunk_sumsq, ranges)\n    print(sum(parts))",
+      "passMsg": "Four interpreters, four cores, one summed result. That's real parallelism — the worker is a top-level (picklable) function and the Pool fans it out.",
+      "failMsg": "Fill in chunk_sumsq to return sum(i*i for i in range(lo, hi)) and use Pool(w).map over the ranges."
+    }
+  ],
+  "problems": [
+    {
+      "id": "py-t4-p1",
+      "title": "Parallel prime sieve across a process pool",
+      "difficulty": "hard",
+      "instructions": "<p>Count the primes below <code class=\"inline\">N</code> by escaping the GIL: split <code class=\"inline\">[0, N)</code> into exactly <code class=\"inline\">W</code> contiguous balanced ranges and count each range in its own process via <code class=\"inline\">multiprocessing.Pool(W)</code>, then sum the partial counts. The result must be <strong>independent of W</strong> — that is the whole point of a correct parallel decomposition.</p><p>Use the cut points <code class=\"inline\">edges[i] = (i * N) // W</code> for <code class=\"inline\">i</code> in <code class=\"inline\">0..W</code> so the ranges are contiguous, non-overlapping, and cover <code class=\"inline\">[0, N)</code> exactly. A number is prime by ordinary trial division up to <code class=\"inline\">isqrt(n)</code>; 0 and 1 are not prime.</p><p><strong>Stdin</strong>: one line, two ints <code class=\"inline\">N W</code> (with <code class=\"inline\">N ≥ 0</code>, <code class=\"inline\">W ≥ 1</code>).</p><p><strong>Stdout</strong>: a single integer — the count of primes <code class=\"inline\">p</code> with <code class=\"inline\">p &lt; N</code>. Print only the count (no timings).</p>",
+      "language": "python",
+      "engine": "backend",
+      "starter": "import sys, math\nfrom multiprocessing import Pool\n\ndef count_primes(rng):\n    \"\"\"Count primes in the half-open range [lo, hi). Runs in a worker process.\"\"\"\n    lo, hi = rng\n    if lo < 2:\n        lo = 2\n    c = 0\n    for n in range(lo, hi):\n        # TODO: trial-divide n by odd divisors up to isqrt(n); count if prime.\n        pass\n    return c\n\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0]); w = int(data[1])\n    # TODO: split [0, n) into exactly w contiguous ranges using the cut points\n    #       edges[i] = (i * n) // w  for i in 0..w  (balanced, deterministic).\n    # TODO: run count_primes on each range across a multiprocessing.Pool(w),\n    #       then print the SUM of the partial counts (one integer, no timings).\n    raise NotImplementedError\n\nmain()\n",
+      "solution": "import sys, math\nfrom multiprocessing import Pool\n\ndef count_primes(rng):\n    lo, hi = rng\n    if lo < 2:\n        lo = 2\n    c = 0\n    for n in range(lo, hi):\n        if n == 2:\n            c += 1\n            continue\n        if n % 2 == 0:\n            continue\n        r = int(math.isqrt(n))\n        is_p = True\n        for d in range(3, r + 1, 2):\n            if n % d == 0:\n                is_p = False\n                break\n        if is_p:\n            c += 1\n    return c\n\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0]); w = int(data[1])\n    edges = [(i * n) // w for i in range(w + 1)]\n    ranges = [(edges[i], edges[i + 1]) for i in range(w)]\n    with Pool(processes=w) as pool:\n        parts = pool.map(count_primes, ranges)\n    print(sum(parts))\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "100 4\n",
+      "tests": [
+        {
+          "name": "primes below 100",
+          "stdin": "100 4\n",
+          "expectStdout": "25",
+          "matchMode": "trim",
+          "timeBudgetMs": 8000,
+          "memBudgetKb": 262144,
+          "hidden": false
+        },
+        {
+          "name": "tiny range no primes",
+          "stdin": "2 3\n",
+          "expectStdout": "0",
+          "matchMode": "trim",
+          "timeBudgetMs": 8000,
+          "memBudgetKb": 262144,
+          "hidden": true
+        },
+        {
+          "name": "1e6 result independent of W",
+          "stdin": "1000000 4\n",
+          "expectStdout": "78498",
+          "matchMode": "trim",
+          "timeBudgetMs": 15000,
+          "memBudgetKb": 524288,
+          "hidden": true
+        },
+        {
+          "name": "single worker still correct",
+          "stdin": "1000 1\n",
+          "expectStdout": "168",
+          "matchMode": "trim",
+          "timeBudgetMs": 8000,
+          "memBudgetKb": 262144,
+          "hidden": true
+        }
+      ],
+      "complexity": {
+        "codeTemplate": "import math\nN = {N}\nc = 0\nfor n in range(2, N):\n    if n == 2:\n        c += 1; continue\n    if n % 2 == 0:\n        continue\n    r = int(math.isqrt(n)); p = True\n    for d in range(3, r + 1, 2):\n        if n % d == 0:\n            p = False; break\n    if p:\n        c += 1\nprint(c)",
+        "sizes": [
+          20000,
+          40000,
+          80000,
+          160000,
+          320000
+        ],
+        "expected": "O(n*sqrt(n))"
+      },
+      "hint": "Make count_primes(lo, hi) a top-level function (picklable). Build ranges from edges[i]=(i*N)//W, Pool(W).map over them, and print the sum. Trial-divide only by odd numbers up to isqrt(n)."
+    },
+    {
+      "id": "py-t4-p2",
+      "title": "Deterministic map-reduce over a ProcessPoolExecutor",
+      "difficulty": "hard",
+      "instructions": "<p>Fan a deterministic workload across a <code class=\"inline\">concurrent.futures.ProcessPoolExecutor(max_workers=W)</code> and reduce the per-chunk results into global statistics. There are <code class=\"inline\">CHUNKS</code> chunks; <strong>chunk i is seeded with (i+1)</strong>. Each chunk generates <code class=\"inline\">COUNT</code> values from a linear-congruential generator and folds them into three statistics.</p><p>For each chunk, starting from <code class=\"inline\">x = seed</code>, repeat <code class=\"inline\">COUNT</code> times: <code class=\"inline\">x = (1103515245 * x + 12345) &amp; 0x7fffffff</code>, then <code class=\"inline\">v = x % MOD</code>. Track per-chunk <code class=\"inline\">sum(v)</code>, <code class=\"inline\">max(v)</code>, and the count of <code class=\"inline\">v</code> with <code class=\"inline\">v % 7 == 0</code>. Reduce across chunks into a global sum, a global max, and a global div-by-7 count. The output must be <strong>identical regardless of W</strong> (correct map-reduce is associative).</p><p><strong>Stdin</strong>: one line, four ints <code class=\"inline\">W CHUNKS COUNT MOD</code>.</p><p><strong>Stdout</strong>: one line, three ints space-separated: <code class=\"inline\">&lt;global_sum&gt; &lt;global_max&gt; &lt;global_div7&gt;</code>.</p>",
+      "language": "python",
+      "engine": "backend",
+      "starter": "import sys\nfrom concurrent.futures import ProcessPoolExecutor\n\ndef chunk_stats(args):\n    \"\"\"Generate `count` LCG values in [0, mod); return (sum, max, count_div_by_7).\"\"\"\n    seed, count, mod = args\n    x = seed\n    s = 0; mx = -1; d7 = 0\n    for _ in range(count):\n        # TODO: advance the LCG: x = (1103515245 * x + 12345) & 0x7fffffff\n        # TODO: v = x % mod ; fold v into s, mx, and d7 (v % 7 == 0).\n        pass\n    return (s, mx, d7)\n\ndef main():\n    data = sys.stdin.read().split()\n    w = int(data[0]); chunks = int(data[1]); count = int(data[2]); mod = int(data[3])\n    # TODO: build `chunks` tasks, chunk i seeded with (i + 1).\n    # TODO: map them over a ProcessPoolExecutor(max_workers=w).\n    # TODO: reduce across chunks -> global sum, global max, global div-by-7 count.\n    # Print: \"<sum> <max> <div7>\"  (worker count must NOT change the answer).\n    raise NotImplementedError\n\nmain()\n",
+      "solution": "import sys\nfrom concurrent.futures import ProcessPoolExecutor\n\ndef chunk_stats(args):\n    seed, count, mod = args\n    x = seed\n    s = 0; mx = -1; d7 = 0\n    for _ in range(count):\n        x = (1103515245 * x + 12345) & 0x7fffffff\n        v = x % mod\n        s += v\n        if v > mx:\n            mx = v\n        if v % 7 == 0:\n            d7 += 1\n    return (s, mx, d7)\n\ndef main():\n    data = sys.stdin.read().split()\n    w = int(data[0]); chunks = int(data[1]); count = int(data[2]); mod = int(data[3])\n    tasks = [(1 + i, count, mod) for i in range(chunks)]\n    with ProcessPoolExecutor(max_workers=w) as ex:\n        results = list(ex.map(chunk_stats, tasks))\n    total = sum(r[0] for r in results)\n    gmax = max(r[1] for r in results)\n    gd7 = sum(r[2] for r in results)\n    print(f\"{total} {gmax} {gd7}\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "2 4 100 50\n",
+      "tests": [
+        {
+          "name": "small grid",
+          "stdin": "2 4 100 50\n",
+          "expectStdout": "9730 49 59",
+          "matchMode": "trim",
+          "timeBudgetMs": 8000,
+          "memBudgetKb": 262144,
+          "hidden": false
+        },
+        {
+          "name": "single chunk single worker",
+          "stdin": "1 1 100 50\n",
+          "expectStdout": "2236 49 15",
+          "matchMode": "trim",
+          "timeBudgetMs": 8000,
+          "memBudgetKb": 262144,
+          "hidden": true
+        },
+        {
+          "name": "heavy result independent of W",
+          "stdin": "4 8 100000 1000\n",
+          "expectStdout": "399638288 999 113700",
+          "matchMode": "trim",
+          "timeBudgetMs": 20000,
+          "memBudgetKb": 524288,
+          "hidden": true
+        }
+      ],
+      "hint": "Make chunk_stats((seed,count,mod)) a top-level function returning (sum,max,div7). Build tasks with seed=i+1, ex.map over them, then reduce: sum the sums, max the maxes, sum the div7 counts. Worker count must not change the math."
+    },
+    {
+      "id": "py-t4-p3",
+      "title": "Mount libc through ctypes: strlen + strcmp",
+      "difficulty": "hard",
+      "instructions": "<p>Leave the interpreter for the hot operations: load <code class=\"inline\">libc</code> via <code class=\"inline\">ctypes</code> and use <strong>its</strong> <code class=\"inline\">strlen</code> and <code class=\"inline\">strcmp</code> — not Python's <code class=\"inline\">len</code> or comparison operators — to analyze a list of tokens.</p><p>Load libc with <code class=\"inline\">ctypes.CDLL(ctypes.util.find_library(\"c\") or \"libc.so.6\")</code>. Declare <code class=\"inline\">strlen.restype = c_size_t</code>, <code class=\"inline\">strlen.argtypes = [c_char_p]</code>, <code class=\"inline\">strcmp.restype = c_int</code>, <code class=\"inline\">strcmp.argtypes = [c_char_p, c_char_p]</code>. Encode each token to bytes. Compute <code class=\"inline\">total</code> = sum of <code class=\"inline\">strlen</code> over all tokens, and <code class=\"inline\">asc</code> = the number of <strong>adjacent</strong> pairs <code class=\"inline\">(token[i], token[i+1])</code> for which <code class=\"inline\">strcmp(token[i], token[i+1]) &lt; 0</code> (strictly ascending in C byte order).</p><p><strong>Stdin</strong>: line 1 = integer <code class=\"inline\">n</code>; then <code class=\"inline\">n</code> whitespace-separated tokens (one per line). Tokens contain no spaces and are ASCII.</p><p><strong>Stdout</strong>: one line, two ints space-separated: <code class=\"inline\">&lt;total&gt; &lt;asc&gt;</code>.</p>",
+      "language": "python",
+      "engine": "backend",
+      "starter": "import sys, ctypes, ctypes.util\n\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0])\n    strs = data[1:1 + n]\n\n    # TODO: load libc via ctypes (find_library(\"c\") or \"libc.so.6\").\n    # TODO: declare strlen -> size_t(c_char_p) and strcmp -> int(c_char_p, c_char_p).\n    # TODO: encode each token to bytes; total = sum of libc.strlen over all tokens.\n    # TODO: asc = number of ADJACENT pairs (i, i+1) with libc.strcmp(a, b) < 0.\n    # Print: \"<total> <asc>\"\n    raise NotImplementedError\n\nmain()\n",
+      "solution": "import sys, ctypes, ctypes.util\n\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0])\n    strs = data[1:1 + n]\n\n    libc_name = ctypes.util.find_library(\"c\") or \"libc.so.6\"\n    libc = ctypes.CDLL(libc_name)\n    libc.strlen.restype = ctypes.c_size_t\n    libc.strlen.argtypes = [ctypes.c_char_p]\n    libc.strcmp.restype = ctypes.c_int\n    libc.strcmp.argtypes = [ctypes.c_char_p, ctypes.c_char_p]\n\n    bs = [s.encode() for s in strs]\n    total = sum(libc.strlen(b) for b in bs)\n    asc = 0\n    for i in range(len(bs) - 1):\n        if libc.strcmp(bs[i], bs[i + 1]) < 0:\n            asc += 1\n    print(f\"{total} {asc}\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "3\nhello\nworld\nab\n",
+      "tests": [
+        {
+          "name": "three tokens",
+          "stdin": "3\nhello\nworld\nab\n",
+          "expectStdout": "12 1",
+          "matchMode": "trim",
+          "timeBudgetMs": 8000,
+          "memBudgetKb": 131072,
+          "hidden": false
+        },
+        {
+          "name": "fully sorted",
+          "stdin": "4\napple\nbanana\ncherry\ndate\n",
+          "expectStdout": "21 3",
+          "matchMode": "trim",
+          "timeBudgetMs": 8000,
+          "memBudgetKb": 131072,
+          "hidden": true
+        },
+        {
+          "name": "single token no pairs",
+          "stdin": "1\nzzz\n",
+          "expectStdout": "3 0",
+          "matchMode": "trim",
+          "timeBudgetMs": 8000,
+          "memBudgetKb": 131072,
+          "hidden": true
+        }
+      ],
+      "hint": "Set argtypes/restype before calling or ctypes assumes int and truncates size_t. Pass bytes (token.encode()), not str, to c_char_p. asc counts only adjacent pairs where libc.strcmp(a,b) < 0."
+    },
+    {
+      "id": "py-t4-p4",
+      "title": "Zero-copy parallel reduction over shared memory",
+      "difficulty": "hard",
+      "instructions": "<p>Compute the <strong>sum of squares</strong> of an integer array in parallel <em>without</em> pickling the array to every worker. Put the data in a <code class=\"inline\">multiprocessing.shared_memory.SharedMemory</code> block once; each of <code class=\"inline\">W</code> workers attaches by name and reduces a contiguous slice, so only the block name + offsets cross the process boundary.</p><p>Create a block of <code class=\"inline\">8 * N</code> bytes, write the values as int64 (<code class=\"inline\">memoryview(shm.buf).cast(\"q\")</code>). Split <code class=\"inline\">[0, N)</code> into <code class=\"inline\">W</code> ranges via <code class=\"inline\">edges[i] = (i * N) // W</code>. Each worker attaches, sums <code class=\"inline\">v*v</code> over its slice, <strong>releases its memoryview before <code class=\"inline\">close()</code></strong>, and returns its partial. Sum the partials. In a <code class=\"inline\">finally</code>, release the writer view, <code class=\"inline\">close()</code>, and <code class=\"inline\">unlink()</code> the block exactly once (the creator owns cleanup).</p><p><strong>Stdin</strong>: line 1 = two ints <code class=\"inline\">N W</code>; line 2 = <code class=\"inline\">N</code> space-separated ints (may be negative; fit in int64).</p><p><strong>Stdout</strong>: a single integer — the sum of squares. Independent of <code class=\"inline\">W</code>.</p>",
+      "language": "python",
+      "engine": "backend",
+      "starter": "import sys\nfrom multiprocessing import shared_memory, Pool\n\ndef worker(args):\n    \"\"\"Sum of squares over buf[lo:hi], reading from the shared block by name.\"\"\"\n    shm_name, lo, hi = args\n    shm = shared_memory.SharedMemory(name=shm_name)\n    buf = memoryview(shm.buf).cast(\"q\")  # int64 view onto the shared block\n    acc = 0\n    # TODO: acc += buf[i] * buf[i] for i in [lo, hi)\n    buf.release()   # release the exported pointer BEFORE closing (or close() errors)\n    shm.close()\n    return acc\n\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0]); w = int(data[1])\n    vals = [int(x) for x in data[2:2 + n]]\n\n    # TODO: create a SharedMemory block of 8*n bytes, write vals into an int64 view.\n    # TODO: split [0, n) into w ranges (edges[i] = i*n//w) and Pool.map `worker`.\n    # TODO: print the summed sum-of-squares; in `finally`, release the view,\n    #       close, and UNLINK the block (no leaked /dev/shm segments).\n    raise NotImplementedError\n\nmain()\n",
+      "solution": "import sys\nfrom multiprocessing import shared_memory, Pool\n\ndef worker(args):\n    shm_name, lo, hi = args\n    shm = shared_memory.SharedMemory(name=shm_name)\n    buf = memoryview(shm.buf).cast(\"q\")\n    acc = 0\n    for i in range(lo, hi):\n        v = buf[i]\n        acc += v * v\n    buf.release()\n    shm.close()\n    return acc\n\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0]); w = int(data[1])\n    vals = [int(x) for x in data[2:2 + n]]\n\n    shm = shared_memory.SharedMemory(create=True, size=max(8, 8 * n))\n    mv = memoryview(shm.buf).cast(\"q\")\n    for i in range(n):\n        mv[i] = vals[i]\n    edges = [(i * n) // w for i in range(w + 1)]\n    tasks = [(shm.name, edges[i], edges[i + 1]) for i in range(w)]\n    try:\n        with Pool(processes=w) as pool:\n            parts = pool.map(worker, tasks)\n        print(sum(parts))\n    finally:\n        mv.release()\n        shm.close()\n        shm.unlink()\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "5 2\n1 2 3 4 5\n",
+      "tests": [
+        {
+          "name": "five values two workers",
+          "stdin": "5 2\n1 2 3 4 5\n",
+          "expectStdout": "55",
+          "matchMode": "trim",
+          "timeBudgetMs": 8000,
+          "memBudgetKb": 262144,
+          "hidden": false
+        },
+        {
+          "name": "single value single worker",
+          "stdin": "1 1\n7\n",
+          "expectStdout": "49",
+          "matchMode": "trim",
+          "timeBudgetMs": 8000,
+          "memBudgetKb": 262144,
+          "hidden": true
+        },
+        {
+          "name": "negatives and W not dividing N",
+          "stdin": "6 4\n-3 -2 -1 0 5 10\n",
+          "expectStdout": "139",
+          "matchMode": "trim",
+          "timeBudgetMs": 8000,
+          "memBudgetKb": 262144,
+          "hidden": true
+        }
+      ],
+      "hint": "Pass only (shm.name, lo, hi) to each worker — never the array. In the worker, buf = memoryview(shm.buf).cast('q'); call buf.release() before shm.close() or you get 'cannot close exported pointers'. The creator must unlink() once in a finally."
+    },
+    {
+      "id": "py-t4-p5",
+      "title": "Compile a native kernel at runtime and call it",
+      "difficulty": "hard",
+      "instructions": "<p>When the hot loop must leave Python entirely, ship a C kernel: write it to a temp <code class=\"inline\">.c</code>, compile a shared object with <code class=\"inline\">cc -O2 -shared -fPIC</code>, and mount it with <code class=\"inline\">ctypes</code>. The kernel counts points inside the Mandelbrot set on a fixed grid — a pure CPU-bound double-precision loop that is dramatically faster in C.</p><p>For a grid of <code class=\"inline\">WIDTH × HEIGHT</code> pixels, pixel <code class=\"inline\">(px, py)</code> maps to <code class=\"inline\">x0 = px/WIDTH*3.5 - 2.5</code>, <code class=\"inline\">y0 = py/HEIGHT*2.0 - 1.0</code> (use <em>double</em> arithmetic, dividing by the integer dimension). Iterate <code class=\"inline\">x,y</code> from 0 with <code class=\"inline\">x' = x*x - y*y + x0</code>, <code class=\"inline\">y' = 2*x*y + y0</code> while <code class=\"inline\">x*x + y*y &lt;= 4.0</code> and <code class=\"inline\">iter &lt; MAX_ITER</code>; a pixel is <em>inside</em> iff it reaches <code class=\"inline\">MAX_ITER</code>. Count the inside pixels. <strong>You must do the inner loop in compiled C via ctypes</strong>, not in Python.</p><p><strong>Stdin</strong>: one line, three ints <code class=\"inline\">WIDTH HEIGHT MAX_ITER</code>.</p><p><strong>Stdout</strong>: a single integer — the count of pixels inside the set.</p>",
+      "language": "python",
+      "engine": "backend",
+      "starter": "import sys, ctypes, tempfile, subprocess, os\n\nC_SRC = r\"\"\"\nlong long mandel_count(long long width, long long height, long long max_iter) {\n    long long total = 0;\n    for (long long py = 0; py < height; py++) {\n        for (long long px = 0; px < width; px++) {\n            double x0 = (double)px / width * 3.5 - 2.5;\n            double y0 = (double)py / height * 2.0 - 1.0;\n            double x = 0.0, y = 0.0;\n            long long it = 0;\n            while (x*x + y*y <= 4.0 && it < max_iter) {\n                double xt = x*x - y*y + x0;\n                y = 2.0*x*y + y0;\n                x = xt;\n                it++;\n            }\n            if (it >= max_iter) total++;\n        }\n    }\n    return total;\n}\n\"\"\"\n\ndef build_lib():\n    # TODO: write C_SRC to a temp .c, compile with `cc -O2 -shared -fPIC -o m.so m.c`\n    #       (honor $CC if set), and return the .so path.\n    raise NotImplementedError\n\ndef main():\n    data = sys.stdin.read().split()\n    w = int(data[0]); h = int(data[1]); mi = int(data[2])\n    # TODO: build + ctypes.CDLL load the .so, declare mandel_count's c_longlong\n    #       signature, and print mandel_count(w, h, mi).\n    raise NotImplementedError\n\nmain()\n",
+      "solution": "import sys, ctypes, tempfile, subprocess, os\n\nC_SRC = r\"\"\"\nlong long mandel_count(long long width, long long height, long long max_iter) {\n    long long total = 0;\n    for (long long py = 0; py < height; py++) {\n        for (long long px = 0; px < width; px++) {\n            double x0 = (double)px / width * 3.5 - 2.5;\n            double y0 = (double)py / height * 2.0 - 1.0;\n            double x = 0.0, y = 0.0;\n            long long it = 0;\n            while (x*x + y*y <= 4.0 && it < max_iter) {\n                double xt = x*x - y*y + x0;\n                y = 2.0*x*y + y0;\n                x = xt;\n                it++;\n            }\n            if (it >= max_iter) total++;\n        }\n    }\n    return total;\n}\n\"\"\"\n\ndef build_lib():\n    d = tempfile.mkdtemp()\n    src = os.path.join(d, \"m.c\")\n    so = os.path.join(d, \"m.so\")\n    with open(src, \"w\") as f:\n        f.write(C_SRC)\n    cc = os.environ.get(\"CC\", \"cc\")\n    subprocess.run([cc, \"-O2\", \"-shared\", \"-fPIC\", \"-o\", so, src], check=True)\n    return so\n\ndef main():\n    data = sys.stdin.read().split()\n    w = int(data[0]); h = int(data[1]); mi = int(data[2])\n    so = build_lib()\n    lib = ctypes.CDLL(so)\n    lib.mandel_count.restype = ctypes.c_longlong\n    lib.mandel_count.argtypes = [ctypes.c_longlong] * 3\n    print(lib.mandel_count(w, h, mi))\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "80 50 100\n",
+      "tests": [
+        {
+          "name": "small grid",
+          "stdin": "80 50 100\n",
+          "expectStdout": "887",
+          "matchMode": "trim",
+          "timeBudgetMs": 12000,
+          "memBudgetKb": 262144,
+          "hidden": false
+        },
+        {
+          "name": "denser grid more iters",
+          "stdin": "200 120 256\n",
+          "expectStdout": "5237",
+          "matchMode": "trim",
+          "timeBudgetMs": 15000,
+          "memBudgetKb": 262144,
+          "hidden": true
+        },
+        {
+          "name": "tiny low-iter grid",
+          "stdin": "10 10 20\n",
+          "expectStdout": "26",
+          "matchMode": "trim",
+          "timeBudgetMs": 12000,
+          "memBudgetKb": 262144,
+          "hidden": true
+        }
+      ],
+      "hint": "Declare mandel_count.restype = c_longlong and argtypes = [c_longlong]*3, and use double (not float) in C so the arithmetic matches. Compile with -O2 -shared -fPIC -o out.so src.c (honor $CC), then ctypes.CDLL the .so."
+    }
+  ]
+}

@@ -98,5 +98,85 @@
     return out.replace(/<lesson>/g, "your code").trim();
   }
 
-  window.PyRunner = { run, getPyodide, isReady: () => ready };
+  // Perf run: execute user code WITHOUT the line tracer (tracing distorts timing) and
+  // report honest in-browser numbers — wall time via perf_counter, peak Python-object
+  // memory via tracemalloc. Numbers are Pyodide/WASM (single-threaded, slower than native);
+  // for real native timing / multiprocessing use the hft-runner backend. No watchdog here,
+  // so this is for well-formed benchmark snippets, not arbitrary student loops.
+  async function runPerf(code, onStatus) {
+    let py;
+    try { py = await getPyodide(onStatus); }
+    catch (e) { return { ok: false, stdout: "", error: String(e.message || e), timeMs: null, memKb: null }; }
+
+    const captured = { out: "" };
+    py.setStdout({ batched: (s) => { captured.out += s + "\n"; } });
+    py.setStderr({ batched: (s) => { captured.out += s + "\n"; } });
+    try {
+      py.globals.set("__USER_SRC__", code);
+      await py.runPythonAsync(PERF_HARNESS);
+      const timeMs = py.globals.get("__HFT_TIME_MS__");
+      const memKb = py.globals.get("__HFT_PEAK_KB__");
+      return { ok: true, stdout: captured.out, error: "", timeMs, memKb };
+    } catch (err) {
+      return { ok: false, stdout: captured.out, error: cleanTraceback(String(err.message || err)), timeMs: null, memKb: null };
+    } finally {
+      try { py.globals.delete("__USER_SRC__"); } catch (e) { /* noop */ }
+    }
+  }
+
+  // Grading run: execute `code` with a fixed `stdin` string (no popups). Lines are
+  // fed to input()/sys.stdin in order; reading past the end yields EOF. Returns
+  // { ok, stdout, error } so the grader can compare stdout per matchMode. Watchdog
+  // still guards against runaway loops.
+  async function runWithInput(code, stdin) {
+    let py;
+    try { py = await getPyodide(); }
+    catch (e) { return { ok: false, stdout: "", error: String(e.message || e) }; }
+
+    const captured = { out: "" };
+    py.setStdout({ batched: (s) => { captured.out += s + "\n"; } });
+    py.setStderr({ batched: (s) => { captured.out += s + "\n"; } });
+
+    // Split the provided stdin into lines; each input()/readline call consumes one.
+    const text = stdin == null ? "" : String(stdin);
+    const lines = text.length ? text.split("\n") : [];
+    // A trailing "\n" produces an empty final element — drop it so we don't hand back
+    // a phantom blank line after the real input.
+    if (lines.length && lines[lines.length - 1] === "") lines.pop();
+    let idx = 0;
+    py.setStdin({
+      stdin: () => {
+        if (idx >= lines.length) return null;   // EOF
+        return lines[idx++] + "\n";
+      },
+    });
+
+    try {
+      py.globals.set("__USER_SRC__", code);
+      await py.runPythonAsync(WATCHDOG);
+      return { ok: true, stdout: captured.out, error: "" };
+    } catch (err) {
+      return { ok: false, stdout: captured.out, error: cleanTraceback(String(err.message || err)) };
+    } finally {
+      try { py.globals.delete("__USER_SRC__"); } catch (e) { /* noop */ }
+    }
+  }
+
+  const PERF_HARNESS = [
+    "import time as _t, tracemalloc as _tm",
+    "_code = compile(__USER_SRC__, '<lesson>', 'exec')",
+    "_ns = {'__name__': '__main__'}",
+    "_tm.start()",
+    "_t0 = _t.perf_counter()",
+    "try:",
+    "    exec(_code, _ns)",
+    "finally:",
+    "    _t1 = _t.perf_counter()",
+    "    _cur, _peak = _tm.get_traced_memory()",
+    "    _tm.stop()",
+    "    __HFT_TIME_MS__ = (_t1 - _t0) * 1000.0",
+    "    __HFT_PEAK_KB__ = _peak / 1024.0",
+  ].join("\n");
+
+  window.PyRunner = { run, runWithInput, runPerf, getPyodide, isReady: () => ready };
 })();

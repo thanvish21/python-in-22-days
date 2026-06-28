@@ -74,3 +74,35 @@ Copy an existing `data/dayNN.json`, keep the same shape, and run `python3 verify
 ---
 
 Made with 💚 for curious minds. Happy coding!
+
+---
+
+## Execution backend (Vercel)
+
+Native Python (Tier 4 — `multiprocessing` / native extensions / GIL escape) and honest
+wall-time + peak-memory profiling run on same-origin Vercel serverless functions:
+
+- `POST /api/run` — execute code, returns `{ ok, stdout, stderr, exitCode, timeMs, totalMs, memKb, timedOut }`.
+- `POST /api/grade` — run a problem's tests, returns `{ passed, total, allPassed, results:[{name, ok, hidden, timeMs, memKb}] }` (hidden-test expected values never leave the server).
+
+Both proxy to a [Judge0](https://judge0.com/) instance; the key stays server-side.
+`js/runner-config.js` defaults `window.HFT_RUNNER_URL` to `"/api"`, so once deployed the
+site uses its own functions with no separate server URL.
+
+### Required Vercel environment variables
+
+| Variable | Required | Notes |
+|---|---|---|
+| `JUDGE0_URL` | **yes** | Base URL, e.g. `https://judge0-ce.p.rapidapi.com` or your self-hosted `https://your-judge0.fly.dev`. |
+| `JUDGE0_KEY` | RapidAPI only | `X-RapidAPI-Key`. |
+| `JUDGE0_HOST` | RapidAPI only | `X-RapidAPI-Host` (defaults to the `JUDGE0_URL` host). |
+| `JUDGE0_LANG_PYTHON` | optional | Judge0 language id, default `71` (Python 3). |
+| `JUDGE0_LANG_JAVA` | optional | Judge0 language id, default `62` (OpenJDK / Java). |
+
+Set these under **Vercel → Project → Settings → Environment Variables**, then redeploy.
+
+### Without the env vars
+
+If `JUDGE0_URL` is unset, `/api/run` and `/api/grade` respond with a clear JSON error
+(HTTP 503) and native execution is disabled — but **Pyodide Tier 1–3 still works fully**
+(in-browser, free, offline), since those never touch the backend.

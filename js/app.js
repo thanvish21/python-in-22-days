@@ -1,60 +1,59 @@
-/* ===== app.js — router, progress, day-unlock, badges ===== */
+/* ===== app.js — 1% HFT Matrix router, per-problem mastery, theme ===== */
 (function () {
   "use strict";
 
-  const TOTAL_DAYS = 22;
-  const STORE_KEY = "py22_progress_v1";
+  const STORE_KEY = "hft_matrix_mastery_v1";
   const app = document.getElementById("app");
 
-  // ---- progress state (localStorage) ----
+  // ---- mastery state (localStorage) ----
+  // A problem is "mastered" when all of its tests pass (Grade succeeds).
+  // Shape: { mastered: { "py-t1-p1": true, ... } }
   function loadProgress() {
     try {
       const raw = localStorage.getItem(STORE_KEY);
       if (raw) {
         const p = JSON.parse(raw);
-        const completed = (p && typeof p.completed === "object" && p.completed) ? p.completed : {};
-        const lastDay = (p && Number.isFinite(p.lastDay)) ? p.lastDay : 1;
-        return { completed, lastDay };
+        const mastered = (p && typeof p.mastered === "object" && p.mastered) ? p.mastered : {};
+        return { mastered };
       }
     } catch (e) { /* ignore */ }
-    return { completed: {}, lastDay: 1 };
+    return { mastered: {} };
   }
   function saveProgress(p) {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(p)); }
     catch (e) { /* private mode / quota: progress just won't persist */ }
   }
   let progress = loadProgress();
-  let autoAdvanceTimer = null;
 
-  const isDone = (d) => !!progress.completed[d];
-  const completedCount = () => Object.keys(progress.completed).filter((k) => progress.completed[k]).length;
-  // Day 1 is always open; day N opens once day N-1 is done.
-  const isUnlocked = (d) => d === 1 || isDone(d - 1);
+  const isMastered = (id) => !!progress.mastered[id];
+  const masteredCount = () => Object.keys(progress.mastered).filter((k) => progress.mastered[k]).length;
 
-  function markDone(d) {
-    progress.completed[d] = true;
-    progress.lastDay = Math.min(d + 1, TOTAL_DAYS);
+  function markMastered(id) {
+    if (!id || progress.mastered[id]) return;
+    progress.mastered[id] = true;
     saveProgress(progress);
     updateStreak();
   }
 
   function updateStreak() {
-    document.getElementById("streakCount").textContent = completedCount();
+    const el = document.getElementById("streakCount");
+    if (el) el.textContent = masteredCount();
   }
 
-  // ---- manifest (day list) ----
-  let manifest = null;
-  async function getManifest() {
-    if (manifest) return manifest;
-    const res = await fetch("data/manifest.json");
-    manifest = await res.json();
-    return manifest;
+  // ---- data loaders ----
+  let tierIndex = null;
+  async function getTiers() {
+    if (tierIndex) return tierIndex;
+    const res = await fetch("data/tiers.json");
+    if (!res.ok) throw new Error("tiers.json not found");
+    tierIndex = await res.json();
+    return tierIndex;
   }
 
-  async function getLesson(day) {
-    const res = await fetch("data/day" + String(day).padStart(2, "0") + ".json");
+  async function getTier(n) {
+    const res = await fetch("data/tier" + String(n) + ".json");
     if (!res.ok) {
-      const err = new Error("Lesson not found");
+      const err = new Error("Tier not found");
       err.status = res.status;
       throw err;
     }
@@ -62,41 +61,47 @@
   }
 
   // ---- views ----
-  async function viewHome() {
-    app.innerHTML = '<div class="center-msg">Loading your journey… 🐍</div>';
-    let days;
-    try { days = await getManifest(); }
-    catch (e) { app.innerHTML = '<div class="center-msg">Could not load lessons. Run this on a server (see README).</div>'; return; }
+  async function viewMatrix() {
+    app.innerHTML = '<div class="center-msg">Loading the Matrix… ⚡</div>';
+    let data;
+    try { data = await getTiers(); }
+    catch (e) {
+      app.innerHTML = '<div class="center-msg">Could not load the tier index. Run this on a static server (see README).</div>';
+      return;
+    }
 
-    const done = completedCount();
-    const pct = Math.round((done / TOTAL_DAYS) * 100);
+    const tiers = data.tiers || [];
+    const total = tiers.length;
+    const mastered = masteredCount();
 
     const hero = document.createElement("div");
     hero.className = "view-enter";
     hero.innerHTML =
-      '<section class="hero">' +
-        "<h1>Learn <span class=\"accent\">Python</span> in 22 Days 🐍</h1>" +
-        "<p>Friendly bite-sized lessons with real code you run right here. Simple enough for a curious kid, deep enough to take you from zero to pro.</p>" +
-        '<button class="hero-cta" id="startBtn">' + (done > 0 ? "▶ Continue Day " + (Number(progress.lastDay) || 1) : "🚀 Start Day 1") + "</button>" +
-        '<div class="progress-wrap">' +
-          '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
-          '<div class="progress-label">' + done + " of 22 days done · " + pct + "% to pro</div>" +
-        "</div>" +
+      '<section class="hero matrix-hero">' +
+        '<div class="matrix-kicker">// PYTHON SYSTEMS ENGINEERING</div>' +
+        "<h1>The <span class=\"accent\">1% HFT</span> Matrix</h1>" +
+        "<p>Four tiers of real, interview-grade Python: async networking under backpressure, " +
+        "high-performance memory, advanced metaprogramming, and GIL escape. Code runs and grades " +
+        "right here — Pyodide in-browser, native on the backend.</p>" +
+        '<div class="matrix-stat"><span class="mono">' + mastered + "</span> problems mastered" +
+          (total ? ' · <span class="mono">' + total + "</span> tiers" : "") + "</div>" +
       "</section>";
 
     const grid = document.createElement("div");
-    grid.className = "grid";
-    days.forEach((d, i) => {
-      const unlocked = isUnlocked(d.day);
-      const card = document.createElement(unlocked ? "a" : "div");
-      card.className = "day-card card-enter" + (isDone(d.day) ? " done" : "") + (unlocked ? "" : " locked");
+    grid.className = "matrix-grid";
+    tiers.forEach((t, i) => {
+      const card = document.createElement("a");
+      card.className = "tier-card card-enter";
       card.style.setProperty("--i", Math.min(i, 12));
-      if (unlocked) card.href = "#/day/" + d.day;
+      card.href = "#/tier/" + t.tier;
       card.innerHTML =
-        '<div class="day-emoji">' + (d.emoji || "🐍") + "</div>" +
-        '<div class="day-num">Day ' + d.day + "</div>" +
-        '<div class="day-title">' + d.title + "</div>" +
-        '<div class="day-meta">' + (d.tag ? "#" + d.tag : "") + "</div>";
+        '<div class="tier-card-top">' +
+          '<span class="tier-emoji">' + (t.emoji || "⚡") + "</span>" +
+          '<span class="tier-no">T' + t.tier + "</span>" +
+        "</div>" +
+        '<div class="tier-card-title">' + escapeInline(t.title || ("Tier " + t.tier)) + "</div>" +
+        '<div class="tier-card-tag">' + (t.tag ? "#" + escapeInline(t.tag) : "") + "</div>" +
+        '<div class="tier-card-summary">' + escapeInline(t.summary || "") + "</div>";
       grid.appendChild(card);
     });
 
@@ -104,42 +109,37 @@
     app.appendChild(hero);
     const h = document.createElement("h2");
     h.className = "section-title";
-    h.textContent = "🗺️ Your 22-Day Map";
+    h.textContent = "▚ Select your tier";
     app.appendChild(h);
     app.appendChild(grid);
-
-    document.getElementById("startBtn").addEventListener("click", () => {
-      location.hash = "#/day/" + (done > 0 ? progress.lastDay : 1);
-    });
+    window.scrollTo(0, 0);
   }
 
-  async function viewDay(day) {
-    day = Number(day);
-    if (!day || day < 1 || day > TOTAL_DAYS) return viewHome();
-    if (!isUnlocked(day)) {
-      app.innerHTML = '<div class="center-msg">🔒 Finish Day ' + (day - 1) +
-        ' first to unlock this one!<br><br><a class="hero-cta" href="#/day/' + (day - 1) + '">Go to Day ' + (day - 1) + "</a></div>";
+  async function viewTier(n) {
+    n = Number(n);
+    if (!n || n < 1) return viewMatrix();
+
+    app.innerHTML = '<div class="center-msg">Opening Tier ' + n + "… ⚡</div>";
+    let data;
+    try { data = await getTier(n); }
+    catch (e) {
+      if (e && e.status === 404) {
+        app.innerHTML = '<div class="center-msg">📝 Tier ' + n + " is being written — check back soon." +
+          '<br><br><a class="hero-cta" href="#/">⌂ Back to the Matrix</a></div>';
+      } else {
+        app.innerHTML = '<div class="center-msg">😕 Couldn\'t load this tier — if you opened the file directly, run it on a server (see README).' +
+          '<br><br><a class="hero-cta" href="#/">⌂ Back to the Matrix</a></div>';
+      }
       window.scrollTo(0, 0);
       return;
     }
 
-    app.innerHTML = '<div class="center-msg">Opening Day ' + day + "… 🐍</div>";
-    let data;
-    try { data = await getLesson(day); }
-    catch (e) {
-      if (e && e.status === 404) {
-        app.innerHTML = '<div class="center-msg">📝 Day ' + day + " is being written! Check back soon." +
-          '<br><br><a class="hero-cta" href="#/">🏠 Back home</a></div>';
-      } else {
-        app.innerHTML = '<div class="center-msg">😕 Couldn\'t load this lesson — if you opened the file directly, run it on a server (see README).' +
-          '<br><br><a class="hero-cta" href="#/">🏠 Back home</a></div>';
-      }
-      return;
-    }
+    const view = window.Render.renderTier(data, {
+      isMastered,
+      onMastered: markMastered,
+    });
 
-    const view = window.Render.renderLesson(data);
-
-    // Warm up Pyodide in the background so the first Run feels instant.
+    // Warm up Pyodide in the background so the first Run/Grade feels instant.
     // Swallow any rejection (offline/CDN slow) — the real error surfaces on Run.
     if (window.PyRunner) {
       try {
@@ -148,116 +148,44 @@
       } catch (e) { /* ignore */ }
     }
 
-    // lesson footer: prev / complete / next
-    const nav = document.createElement("div");
-    nav.className = "lesson-nav";
-    const prevBtn = document.createElement("button");
-    prevBtn.className = "navbtn";
-    prevBtn.textContent = "← Prev";
-    prevBtn.disabled = day === 1;
-    prevBtn.addEventListener("click", () => { location.hash = "#/day/" + (day - 1); });
-
-    const completeBtn = document.createElement("button");
-    completeBtn.className = "complete-btn" + (isDone(day) ? " done" : "");
-    completeBtn.textContent = isDone(day) ? "✓ Day " + day + " complete!" : "✅ Mark Day " + day + " complete";
-    completeBtn.addEventListener("click", () => {
-      const wasDone = isDone(day);
-      markDone(day);
-      completeBtn.classList.add("done");
-      completeBtn.textContent = "✓ Day " + day + " complete!";
-      if (!wasDone) {
-        celebrate(day);
-        if (day < TOTAL_DAYS) {
-          autoAdvanceTimer = setTimeout(() => { location.hash = "#/day/" + (day + 1); }, 1400);
-        }
-      }
-    });
-
-    const nextBtn = document.createElement("button");
-    nextBtn.className = "navbtn";
-    nextBtn.textContent = "Next →";
-    nextBtn.addEventListener("click", () => {
-      if (!isDone(day)) { celebrate(day); markDone(day); completeBtn.classList.add("done"); completeBtn.textContent = "✓ Day " + day + " complete!"; }
-      location.hash = "#/day/" + Math.min(day + 1, TOTAL_DAYS);
-    });
-
-    nav.appendChild(prevBtn);
-    nav.appendChild(completeBtn);
-    if (day < TOTAL_DAYS) nav.appendChild(nextBtn);
-    view.appendChild(nav);
-
     app.innerHTML = "";
     app.appendChild(view);
     window.scrollTo(0, 0);
   }
 
-  // ---- badge / celebration toast ----
-  const BADGES = {
-    1: ["🐣", "First Steps!", "You wrote your first Python!"],
-    7: ["🔥", "One Week Strong!", "A full week of Python down."],
-    14: ["⚡", "Two Weeks!", "You're officially dangerous now."],
-    21: ["🧠", "Almost a Pro!", "21 days. One to go!"],
-    22: ["🏆", "PYTHON PRO!", "You finished all 22 days. Incredible!"],
-  };
-  function celebrate(day) {
-    const badge = BADGES[day] || ["🎉", "Day " + day + " done!", "On to the next one!"];
-    showToast(badge[0], badge[1], badge[2]);
-  }
-  let toastTimer = null;
-  function showToast(emoji, title, sub) {
-    let t = document.getElementById("toast");
-    if (!t) {
-      t = document.createElement("div");
-      t.id = "toast";
-      t.className = "toast";
-      document.body.appendChild(t);
-    }
-    t.innerHTML = '<span class="toast-emoji">' + emoji + "</span><div><div class=\"toast-title\">" +
-      title + '</div><div class="toast-sub">' + sub + "</div></div>";
-    requestAnimationFrame(() => t.classList.add("show"));
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove("show"), 3200);
-  }
+  function escapeInline(s) { return String(s == null ? "" : s).replace(/[<>]/g, (c) => ({ "<": "&lt;", ">": "&gt;" }[c])); }
 
-  // ---- expose state for the course/sidebar module ----
-  const listeners = [];
-  window.Py22 = {
-    TOTAL_DAYS,
-    isDone, isUnlocked, completedCount,
-    lastDay: () => progress.lastDay,
-    getManifest, getLesson,
-    onChange: (fn) => listeners.push(fn),
-    notify: () => listeners.forEach((fn) => { try { fn(); } catch (e) {} }),
+  // ---- expose mastery API for render.js (Grade hooks call onMastered) ----
+  window.HFTMatrix = {
+    isMastered,
+    masteredCount,
+    markMastered,
   };
-  const origMarkDone = markDone;
-  markDone = function (d) { origMarkDone(d); window.Py22.notify(); };
 
   // ---- router ----
   function route() {
-    if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
     const hash = location.hash || "#/";
     let m;
-    if ((m = hash.match(/^#\/day\/(\d+)/))) viewDay(m[1]);
-    else if ((m = hash.match(/^#\/test\/(\d+)/)) && window.Course) window.Course.viewModuleTest(app, Number(m[1]));
-    else if (hash.startsWith("#/modules") && window.Course) window.Course.viewModules(app);
-    else if (hash.startsWith("#/exam") && window.Course) window.Course.viewExam(app);
-    else viewHome();
-    if (window.Course) window.Course.syncSidebar();
+    if ((m = hash.match(/^#\/tier\/(\d+)/))) viewTier(m[1]);
+    else viewMatrix();
   }
 
   // ---- reset ----
-  document.getElementById("resetBtn").addEventListener("click", () => {
-    if (confirm("Reset all your progress and badges? This can't be undone.")) {
-      progress = { completed: {}, lastDay: 1 };
-      saveProgress(progress);
-      updateStreak();
-      location.hash = "#/";
-      route();
-    }
-  });
+  const resetBtn = document.getElementById("resetBtn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      if (confirm("Reset all mastery progress? This can't be undone.")) {
+        progress = { mastered: {} };
+        saveProgress(progress);
+        updateStreak();
+        location.hash = "#/";
+        route();
+      }
+    });
+  }
 
   // ---- theme toggle ----
-  const THEME_KEY = "py22_theme";
+  const THEME_KEY = "hft_matrix_theme";
   const themeBtn = document.getElementById("themeToggle");
   function applyTheme(theme) {
     document.documentElement.setAttribute("data-theme", theme);
