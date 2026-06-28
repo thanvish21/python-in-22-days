@@ -1,0 +1,325 @@
+/* ===== onepct.css — "1% Assessment Mode": high-density dark terminal theme =====
+   Strict minimalist, low padding, razor-thin borders, monospace accents, no slow animation.
+   Scoped under body.onepct so it never affects the friendly default theme. */
+
+/* Floating toggle — always visible, monospace, square. */
+#onepct-toggle {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 9999;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  border: 1px solid #3a3a3a;
+  border-radius: 0;
+  background: #111;
+  color: #d7d7d7;
+  cursor: pointer;
+}
+#onepct-toggle:hover { border-color: #00e676; color: #00e676; }
+
+body.onepct {
+  background: #0b0d0e;
+  color: #cfd2d4;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Kill slow/decorative motion — assessment mode is about signal, not polish. */
+body.onepct *,
+body.onepct *::before,
+body.onepct *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+body.onepct h1,
+body.onepct h2,
+body.onepct h3 {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: 0.01em;
+  color: #e6e6e6;
+}
+
+/* Compress the layout: thin borders, low padding. */
+body.onepct .code-card,
+body.onepct .block,
+body.onepct .card,
+body.onepct .lesson-card {
+  border: 1px solid #242829 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #0f1213 !important;
+  padding: 10px 12px !important;
+}
+
+body.onepct .code-area,
+body.onepct .code-static,
+body.onepct pre {
+  background: #07090a !important;
+  color: #b8f5d0 !important;
+  border: 1px solid #1c2122 !important;
+  border-radius: 0 !important;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+body.onepct .btn {
+  border-radius: 0 !important;
+  border: 1px solid #2b2f30 !important;
+  background: #14181a !important;
+  color: #d7d7d7 !important;
+  box-shadow: none !important;
+}
+body.onepct .btn-run { border-color: #00b248 !important; color: #00e676 !important; }
+body.onepct .run-out {
+  background: #07090a !important;
+  border: 1px solid #1c2122 !important;
+  border-radius: 0 !important;
+  color: #cfd2d4 !important;
+}
+
+/* ---- perf badge + complexity table (used in both modes, tuned for dark) ---- */
+.perf-badge {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  color: #5b6b62;
+  margin-top: 6px;
+  display: inline-block;
+}
+body.onepct .perf-badge { color: #00e676; }
+
+.perf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  margin-top: 8px;
+}
+.perf-table th,
+.perf-table td {
+  border: 1px solid #2b2f30;
+  padding: 3px 8px;
+  text-align: right;
+}
+.perf-table th { color: #8a8f90; font-weight: 600; }
+.perf-bigo {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 700;
+  color: #00b248;
+}
+
+/* ===================================================================== */
+/* 1% HFT Matrix — matrix grid, tier cards, problem cards, grading UI    */
+/* Base styles work in the friendly/light theme; body.onepct overrides   */
+/* below tighten them into the dense dark-terminal aesthetic.            */
+/* ===================================================================== */
+
+/* ---- Matrix home (tier selector) ---- */
+.matrix-hero .matrix-kicker {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: #0a8f6f;
+  margin-bottom: 6px;
+}
+.matrix-hero .matrix-stat {
+  font-size: 15px;
+  color: var(--ink-soft, #6b7280);
+  margin-top: 10px;
+}
+.matrix-hero .matrix-stat .mono,
+.nav-track {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+.nav-track {
+  font-size: 12px;
+  opacity: 0.7;
+  align-self: center;
+  letter-spacing: 0.03em;
+}
+
+.matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.tier-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid rgba(127, 127, 127, 0.22);
+  border-radius: 14px;
+  background: var(--card, #fff);
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.tier-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(10, 143, 111, 0.45);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
+  text-decoration: none;
+}
+.tier-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tier-card-top .tier-emoji { font-size: 34px; }
+.tier-card-top .tier-no {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 14px;
+  color: #0a8f6f;
+  letter-spacing: 0.05em;
+}
+.tier-card-title { font-size: 19px; font-weight: 700; line-height: 1.25; }
+.tier-card-tag {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  color: #0a8f6f;
+}
+.tier-card-summary { font-size: 14px; color: var(--ink-soft, #6b7280); line-height: 1.45; }
+
+/* ---- Tier view header ---- */
+.tier-head .tier-emoji { font-size: 40px; }
+
+/* ---- Problem cards ---- */
+.problem-card {
+  border: 1px solid rgba(127, 127, 127, 0.22);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  background: var(--card, #fff);
+}
+.problem-card.mastered { border-color: #0a8f6f; box-shadow: inset 3px 0 0 #0a8f6f; }
+.problem-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.problem-title { font-size: 18px; font-weight: 700; }
+.diff-pill, .engine-pill {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+.diff-pill { background: rgba(127, 127, 127, 0.16); }
+.diff-easy { background: rgba(16, 185, 129, 0.18); color: #0a8f6f; }
+.diff-medium { background: rgba(245, 158, 11, 0.18); color: #b45309; }
+.diff-hard { background: rgba(239, 68, 68, 0.18); color: #b91c1c; }
+.engine-pill { background: rgba(59, 130, 246, 0.16); color: #2563eb; }
+.master-badge {
+  display: none;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  color: #0a8f6f;
+  margin-left: auto;
+}
+.problem-card.mastered .master-badge { display: inline; }
+
+.problem-card .instructions { margin-bottom: 12px; line-height: 1.5; }
+.problem-card .code-area {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  resize: vertical;
+}
+
+/* ---- Grade + complexity output ---- */
+.grade-out, .complexity-out { display: none; margin-top: 10px; }
+.grade-out.show, .complexity-out.show { display: block; }
+.grade-summary {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.grade-out.pass .grade-summary { color: #0a8f6f; }
+.grade-out.partial .grade-summary { color: #b45309; }
+.grade-out.fail .grade-summary { color: #b91c1c; }
+.test-row {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  padding: 3px 0;
+  border-bottom: 1px dashed rgba(127, 127, 127, 0.18);
+}
+.test-row.pass { color: #0a8f6f; }
+.test-row.fail { color: #b91c1c; }
+.test-row .hidden-tag {
+  font-size: 10px;
+  opacity: 0.6;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  padding: 0 4px;
+  margin-left: 6px;
+}
+.test-row .test-meta { color: var(--ink-soft, #6b7280); margin-left: 6px; }
+.test-detail {
+  margin: 4px 0 4px 16px;
+  color: var(--ink-soft, #6b7280);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.test-detail code {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  background: rgba(127, 127, 127, 0.12);
+  padding: 0 3px;
+  border-radius: 3px;
+}
+.grade-hint { margin-top: 8px; font-size: 13px; color: var(--ink-soft, #6b7280); }
+.complexity-fit {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  margin-top: 8px;
+}
+.cx-slope { opacity: 0.7; }
+
+/* ---- onepct (dark terminal) overrides ---- */
+body.onepct .tier-card,
+body.onepct .problem-card {
+  background: #0f1213 !important;
+  border: 1px solid #242829 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+body.onepct .tier-card:hover {
+  transform: none;
+  border-color: #00b248 !important;
+}
+body.onepct .tier-card-summary,
+body.onepct .matrix-hero .matrix-stat,
+body.onepct .test-detail,
+body.onepct .test-row .test-meta,
+body.onepct .grade-hint { color: #8a8f90; }
+body.onepct .tier-card-no,
+body.onepct .tier-card-tag,
+body.onepct .tier-card-top .tier-no,
+body.onepct .matrix-hero .matrix-kicker,
+body.onepct .grade-out.pass .grade-summary,
+body.onepct .test-row.pass,
+body.onepct .master-badge,
+body.onepct .problem-card.mastered .master-badge { color: #00e676 !important; }
+body.onepct .problem-card.mastered {
+  border-color: #00b248 !important;
+  box-shadow: inset 3px 0 0 #00b248 !important;
+}
+body.onepct .grade-out.fail .grade-summary,
+body.onepct .test-row.fail { color: #ff6b6b; }
+body.onepct .grade-out.partial .grade-summary { color: #ffb454; }
+body.onepct .diff-pill,
+body.onepct .engine-pill { background: #14181a; color: #cfd2d4; border: 1px solid #2b2f30; }
+body.onepct .code-area { background: #07090a !important; color: #b8f5d0 !important; border-color: #1c2122 !important; border-radius: 0 !important; }

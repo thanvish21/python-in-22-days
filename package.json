@@ -1,0 +1,8 @@
+{
+  "name": "python-in-22-days",
+  "private": true,
+  "description": "1% HFT Matrix — Python systems-engineering platform (static site + Vercel /api functions)",
+  "engines": {
+    "node": "20.x"
+  }
+}

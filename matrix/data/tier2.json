@@ -1,0 +1,359 @@
+{
+  "tier": 2,
+  "language": "python",
+  "emoji": "🧠",
+  "title": "High-Performance Memory Management",
+  "subtitle": "Stream the firehose without OOM — generators, lazy iterators, __slots__, and zero-copy buffers that process inputs larger than RAM.",
+  "goal": "Process unbounded or out-of-core inputs in constant memory: replace materialized lists with generator pipelines, shrink per-object footprint with __slots__ and array, parse multi-gigabyte streams chunk-by-chunk, and move bytes without copying via memoryview.",
+  "estMinutes": 250,
+  "tags": ["generators", "iterators", "itertools", "__slots__", "memoryview", "streaming", "lazy-evaluation", "zero-copy"],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "A generator is constant memory; a list is O(n) memory",
+      "html": "<p>The single most important memory lever in Python is the difference between <em>materializing</em> a sequence and <em>streaming</em> it. <code class=\"inline\">[x*x for x in range(10**8)]</code> allocates ~800&nbsp;MB of int objects and pointers <strong>up front</strong> and will OOM a small container. <code class=\"inline\">(x*x for x in range(10**8))</code> allocates one generator frame — a few hundred bytes — and produces each value on demand, holding exactly one at a time.</p><p>The mechanism: a generator function compiles to a code object with <code class=\"inline\">CO_GENERATOR</code> set. Calling it does <strong>not</strong> run the body; it returns a generator object whose frame is suspended at the top. Each <code class=\"inline\">next()</code> resumes the frame until the next <code class=\"inline\">yield</code>, then re-suspends, preserving locals on the heap. There is no intermediate container — values flow through.</p><p>The trade is real: a list is re-iterable, indexable, and <code class=\"inline\">len()</code>-able; a generator is <strong>single-pass</strong> and exhausts. In a feed handler you almost always want single-pass streaming — you read each tick once and never look back. Reach for a list only when you genuinely need random access or multiple passes.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Measuring the footprint gap — list vs generator",
+      "code": "import sys\n\n# A list comprehension materializes every element + the list's own array.\nlst = [x * x for x in range(100_000)]\nprint(\"list object:\", sys.getsizeof(lst), \"bytes (just the pointer array)\")\n\n# The generator holds one suspended frame, regardless of length.\ngen = (x * x for x in range(100_000))\nprint(\"generator object:\", sys.getsizeof(gen), \"bytes\")\n\n# Consuming lazily: sum never builds a container.\nprint(\"sum via generator:\", sum(x * x for x in range(100_000)))",
+      "explain": "sys.getsizeof on the list reports only its internal pointer array (~800KB here) and excludes the 100k int objects it references — the true cost is far larger. The generator is a fixed ~100-200 bytes no matter the length. sum(genexpr) is the canonical constant-memory reduction: no list is ever built.",
+      "editable": true
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Genexpr vs list-comp at the call site.</strong> When a function consumes an iterable once, drop the brackets: <code class=\"inline\">sum([x for x in it])</code> builds a throwaway list first; <code class=\"inline\">sum(x for x in it)</code> streams. Same for <code class=\"inline\">any</code>, <code class=\"inline\">all</code>, <code class=\"inline\">min</code>, <code class=\"inline\">max</code>, <code class=\"inline\">\"\".join(...)</code>, and <code class=\"inline\">set(...)</code>. The one exception: <code class=\"inline\">sorted</code> and <code class=\"inline\">len</code> must materialize anyway, so brackets cost nothing there."
+    },
+    {
+      "type": "text",
+      "heading": "itertools is the lazy standard library — combinators that never materialize",
+      "html": "<p><code class=\"inline\">itertools</code> gives you composable, C-speed iterator transforms that hold no backing buffer. The ones you reach for constantly under memory pressure:</p><ul><li><code class=\"inline\">islice(it, start, stop, step)</code> — lazy slicing; the only safe way to take the first <em>k</em> of an infinite or huge iterator.</li><li><code class=\"inline\">chain(*its)</code> — concatenate iterables without copying them into one list.</li><li><code class=\"inline\">groupby(it, key)</code> — group <strong>consecutive</strong> equal keys (requires pre-sorted input), streaming.</li><li><code class=\"inline\">accumulate(it, func)</code> — running fold (prefix sums, running max) one element at a time.</li><li><code class=\"inline\">tee(it, n)</code> — fork one iterator into n — but beware: it buffers everything consumed by the fastest branch, so it is <em>not</em> free.</li></ul><p>The discipline: build a <strong>pipeline of generators</strong> where each stage pulls from the previous. Memory stays flat because only one element is in flight per stage, no matter how many stages or how large the source.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "A generator pipeline: parse → filter → transform → reduce, all lazy",
+      "code": "import itertools as it\n\ndef read_ticks(lines):\n    for line in lines:                      # source: one line at a time\n        sym, px = line.split(\",\")\n        yield sym, float(px)\n\ndef only(symbol, ticks):\n    for sym, px in ticks:                   # filter stage\n        if sym == symbol:\n            yield px\n\nraw = [\"AAPL,191.2\", \"MSFT,420.0\", \"AAPL,191.5\", \"AAPL,190.9\", \"NVDA,1200.0\"]\n\n# Compose stages. Nothing runs until the final reduction pulls.\nprices = only(\"AAPL\", read_ticks(raw))\nrunning_max = it.accumulate(prices, max)    # lazy running max\nprint(list(running_max))                     # [191.2, 191.5, 191.5]",
+      "explain": "Each stage is a generator that pulls one item from the stage upstream. read_ticks never holds more than one parsed tick; only() forwards matches; accumulate folds a running max. Swap `raw` for a 50GB file object and the memory profile is identical — flat. This is the streaming-ETL shape for out-of-core data.",
+      "editable": true
+    },
+    {
+      "type": "text",
+      "heading": "__slots__: kill the per-instance __dict__",
+      "html": "<p>By default every instance carries a <code class=\"inline\">__dict__</code> (a hash table) to hold its attributes. For one object that's fine; for ten million order records it is the dominant cost — each <code class=\"inline\">__dict__</code> is hundreds of bytes of overhead before your data.</p><p>Declaring <code class=\"inline\">__slots__ = (\"price\", \"qty\")</code> tells Python to store those attributes in a fixed C-level array on the instance instead of a dict. The instance loses its <code class=\"inline\">__dict__</code> (you can no longer add arbitrary attributes), and footprint drops by roughly 50–60% for small objects. Attribute access also gets slightly faster (slot descriptor vs dict lookup).</p><p>Costs to know: no dynamic attributes, multiple-inheritance with slots needs care, and a slotted class can't have a class-level default for a slot name. For the millions-of-small-records case that defines HFT data structures, it is almost always the right call — or skip the class entirely and use a parallel <code class=\"inline\">array.array</code> / columnar layout.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "__slots__ vs __dict__ footprint, and array vs object-list",
+      "code": "import sys\n\nclass Order:                       # default: has a per-instance __dict__\n    def __init__(self, px, qty):\n        self.px = px\n        self.qty = qty\n\nclass SlotOrder:\n    __slots__ = (\"px\", \"qty\")      # fixed C array, no __dict__\n    def __init__(self, px, qty):\n        self.px = px\n        self.qty = qty\n\na = Order(101, 5)\nb = SlotOrder(101, 5)\nprint(\"dict-based instance:\", sys.getsizeof(a) + sys.getsizeof(a.__dict__))\nprint(\"slotted instance:   \", sys.getsizeof(b))\n\nimport array\n# Columnar: a million prices as a C double array, not a million float objects.\ncol = array.array(\"d\", (float(i) for i in range(1000)))\nprint(\"array of 1000 doubles:\", sys.getsizeof(col), \"bytes (~8 each + header)\")",
+      "explain": "The dict-based instance pays for both the object header AND its separate __dict__ hash table. The slotted instance stores px/qty inline — typically half the bytes. For purely numeric columns, array.array beats even slots: it stores raw C doubles contiguously with zero per-element Python-object overhead, the columnar layout real tick stores use.",
+      "editable": true
+    },
+    {
+      "type": "tip",
+      "variant": "warn",
+      "html": "<strong>__slots__ pitfalls.</strong> A subclass that does <em>not</em> define <code class=\"inline\">__slots__</code> silently regains a <code class=\"inline\">__dict__</code>, erasing the savings — every class in the hierarchy must declare slots. And you cannot <code class=\"inline\">weakref</code> a slotted instance unless you add <code class=\"inline\">\"__weakref__\"</code> to the slots. Measure with <code class=\"inline\">sys.getsizeof</code> before assuming you won the bytes back."
+    },
+    {
+      "type": "text",
+      "heading": "Streaming parsers: process inputs larger than RAM",
+      "html": "<p>The rule for out-of-core data: <strong>never call <code class=\"inline\">.read()</code> or <code class=\"inline\">.readlines()</code> on a huge source.</strong> Both pull the entire payload into memory. Instead iterate the file object directly (<code class=\"inline\">for line in f:</code> yields one line at a time via buffered I/O) or pull fixed-size chunks with <code class=\"inline\">iter(lambda: f.read(CHUNK), b\"\")</code>.</p><p>The <code class=\"inline\">iter(callable, sentinel)</code> two-argument form is the canonical chunked-read idiom: it calls the zero-arg callable repeatedly until it returns the sentinel, yielding each result. With <code class=\"inline\">f.read(65536)</code> as the callable and <code class=\"inline\">b\"\"</code> as the sentinel, you stream a file in 64&nbsp;KB blocks in constant memory — even if the file is a terabyte.</p><p>The subtlety with fixed chunks is <strong>record boundaries</strong>: a logical record (a line, a length-prefixed frame) can straddle two chunks. The streaming-parser pattern keeps a small <em>carry</em> buffer of the unfinished tail, prepends it to the next chunk, and emits only complete records. Memory stays bounded by the largest single record, not the file.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Chunked reader with carry buffer — emit complete lines without read()",
+      "code": "import io\n\ndef stream_lines(stream, chunk_size=8):\n    \"\"\"Yield complete '\\n'-terminated lines from a binary stream,\n    never holding more than one chunk + one partial line in memory.\"\"\"\n    carry = b\"\"\n    for block in iter(lambda: stream.read(chunk_size), b\"\"):\n        carry += block\n        while b\"\\n\" in carry:\n            line, carry = carry.split(b\"\\n\", 1)   # emit one complete record\n            yield line.decode()\n    if carry:                                       # trailing line, no newline\n        yield carry.decode()\n\nsrc = io.BytesIO(b\"AAPL,191\\nMSFT,420\\nNVDA,1200\\nAMD,160\")\nprint(list(stream_lines(src, chunk_size=8)))",
+      "explain": "iter(lambda: stream.read(8), b\"\") is the two-arg-iter chunked-read idiom: pull 8 bytes at a time until EOF (b\"\"). The `carry` buffer holds the partial line that straddles a chunk boundary; we only yield once a full '\\n'-delimited record is assembled. Peak memory is one chunk plus one line — independent of total stream size.",
+      "editable": true
+    },
+    {
+      "type": "text",
+      "heading": "memoryview & bytearray: slice bytes without copying",
+      "html": "<p>Slicing <code class=\"inline\">bytes</code> or <code class=\"inline\">bytearray</code> <strong>copies</strong>: <code class=\"inline\">buf[10:1_000_000]</code> allocates a ~1&nbsp;MB duplicate. In a hot parse loop over a large frame, those copies dominate. A <code class=\"inline\">memoryview</code> is a zero-copy <em>window</em> onto the same underlying buffer — slicing a memoryview produces another view, no bytes moved.</p><p>This is the buffer-protocol contract: <code class=\"inline\">memoryview(buf)[a:b]</code> shares storage with <code class=\"inline\">buf</code>. You can read through it, and if the source is writable (a <code class=\"inline\">bytearray</code>), write through it too — edits land in the original. Combine with <code class=\"inline\">bytearray</code> for an in-place mutable byte buffer you parse and patch without reallocating.</p><p>The practical win: parse a length-prefixed protocol by walking an offset and taking <code class=\"inline\">mv[offset:offset+n]</code> views for each field — you decode fields touching zero extra allocation until you actually materialize a value. Release views with <code class=\"inline\">.release()</code> (or a <code class=\"inline\">with</code> block) before resizing the source.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Zero-copy field extraction from a length-prefixed frame",
+      "code": "# Frame layout: [1-byte length][payload] repeated.\nframe = bytearray(b\"\\x03abc\\x05hello\\x02hi\")\nmv = memoryview(frame)\n\noffset = 0\nfields = []\nwhile offset < len(mv):\n    n = mv[offset]                 # length byte (int)\n    offset += 1\n    view = mv[offset:offset + n]   # zero-copy view of the payload\n    fields.append(bytes(view))     # materialize only when we keep it\n    offset += n\nprint([f.decode() for f in fields])\n\n# Writing through a view mutates the original buffer in place (no realloc):\nmv2 = memoryview(frame)\nmv2[1:4] = b\"XYZ\"\nprint(frame[:4])                   # bytearray(b'\\x03XYZ')",
+      "explain": "mv[offset:offset+n] never copies — it's a window into `frame`. We only pay for bytes when we explicitly call bytes(view) to retain a field. Writing mv2[1:4] = b'XYZ' edits the shared buffer in place. This is how you parse multi-MB frames with allocation proportional to fields kept, not frame size.",
+      "editable": true
+    },
+    {
+      "type": "quiz",
+      "question": "You write `g = (x*x for x in range(1_000_000))`, then call `list(g)` and immediately `sum(g)`. What does sum return?",
+      "options": [
+        "The sum of all squares",
+        "0 — the generator was exhausted by list(g) and yields nothing",
+        "It raises StopIteration",
+        "It re-runs the generator from the start"
+      ],
+      "answerIndex": 1,
+      "explain": "Generators are single-pass. list(g) drains it to exhaustion; the second consumer (sum) sees an empty iterator and returns 0. To iterate twice you must rebuild the generator or materialize once into a list (paying the memory)."
+    },
+    {
+      "type": "quiz",
+      "question": "Which slice operation does NOT allocate a copy of the underlying bytes?",
+      "options": [
+        "big_bytes[100:200000]",
+        "bytearray(big_bytes)[100:200000]",
+        "memoryview(big_bytes)[100:200000]",
+        "big_bytes.split(b'\\n')[0]"
+      ],
+      "answerIndex": 2,
+      "explain": "Slicing bytes/bytearray copies, and split builds new bytes objects. Only memoryview slicing returns another view that shares the original storage — zero copy. That's the whole point of memoryview in a hot parse path."
+    },
+    {
+      "type": "quiz",
+      "question": "You add `__slots__ = ('a', 'b')` to a class to save memory on millions of instances, but footprint barely changes. The most likely cause?",
+      "options": [
+        "__slots__ only works on Python 3.12+",
+        "A subclass without its own __slots__ reintroduced a per-instance __dict__",
+        "You must also delete __init__",
+        "__slots__ only affects class attributes, not instances"
+      ],
+      "answerIndex": 1,
+      "explain": "If any class in the hierarchy omits __slots__, instances regain a __dict__ and the savings vanish. Every class in the MRO must declare __slots__ for the optimization to hold."
+    },
+    {
+      "type": "tryit",
+      "title": "Constant-memory sum of squares",
+      "instructions": "Reduce a huge range to the sum of squares WITHOUT building any list. Replace the TODO with a single generator-expression reduction so memory stays flat. Print the result for n=10000.",
+      "starter": "def sum_squares(n):\n    # TODO: return the sum of i*i for i in range(n) WITHOUT materializing a list\n    raise NotImplementedError\n\nprint(sum_squares(10000))",
+      "check": { "stdout_equals": "333283335000" },
+      "solution": "def sum_squares(n):\n    return sum(i * i for i in range(n))\n\nprint(sum_squares(10000))",
+      "passMsg": "Flat memory: sum(genexpr) folds one square at a time — no list is ever allocated.",
+      "failMsg": "Use sum(i*i for i in range(n)) — a generator expression, not a list comprehension, so nothing is materialized."
+    },
+    {
+      "type": "tryit",
+      "title": "Lazy first-k with islice",
+      "instructions": "You have a potentially infinite source. Take only the first 5 values lazily — never consuming more than needed — and print them as a list. Use itertools.islice.",
+      "starter": "import itertools\n\ndef naturals():\n    i = 0\n    while True:\n        yield i\n        i += 1\n\n# TODO: take the first 5 values from naturals() lazily, as a list\nresult = None\nprint(result)",
+      "check": { "stdout_equals": "[0, 1, 2, 3, 4]" },
+      "solution": "import itertools\n\ndef naturals():\n    i = 0\n    while True:\n        yield i\n        i += 1\n\nresult = list(itertools.islice(naturals(), 5))\nprint(result)",
+      "passMsg": "islice pulls exactly 5 items then stops — the only safe way to slice an infinite iterator.",
+      "failMsg": "Use list(itertools.islice(naturals(), 5)) — plain slicing [:5] doesn't work on a generator."
+    }
+  ],
+  "problems": [
+    {
+      "id": "py-t2-p1",
+      "title": "Streaming top-K by frequency in one pass, bounded memory",
+      "difficulty": "hard",
+      "instructions": "<p>A symbol firehose is too large to materialize. Read it as a stream and report the <code class=\"inline\">K</code> most frequently seen symbols using a single pass and memory proportional to the number of <em>distinct</em> symbols only (a streaming counter), never the stream length.</p><p><strong>Stdin format</strong>: line 1 = one int <code class=\"inline\">K</code>. Each subsequent line is one symbol token (a non-empty string, no spaces). The stream ends at EOF. Treat the lines as a stream — do not assume you may load them all (your solution should iterate, not index).</p><p><strong>Stdout</strong>: the top <code class=\"inline\">K</code> symbols by descending count; ties broken by ascending symbol (lexicographic). Print one per line as <code class=\"inline\">symbol count</code>. If fewer than K distinct symbols exist, print all of them.</p><p>This is the canonical streaming-aggregation shape: a fixed-size dict of counts grows only with cardinality, and you sort the small distinct set at the end — not the unbounded stream.</p>",
+      "language": "python",
+      "engine": "pyodide",
+      "starter": "import sys\n\ndef main():\n    it = iter(sys.stdin)\n    k = int(next(it).strip())\n    # Stream the rest: accumulate counts in a dict keyed by symbol.\n    # Memory is O(distinct symbols), NOT O(stream length).\n    # TODO: for each remaining line (a symbol), increment its count.\n    # TODO: select the top K by (-count, symbol) and print \"symbol count\".\n    raise NotImplementedError\n\nmain()\n",
+      "solution": "import sys\n\ndef main():\n    it = iter(sys.stdin)\n    k = int(next(it).strip())\n    counts = {}\n    for line in it:                       # single streaming pass\n        sym = line.strip()\n        if not sym:\n            continue\n        counts[sym] = counts.get(sym, 0) + 1\n    # Sort only the distinct set: descending count, then ascending symbol.\n    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))\n    out = []\n    for sym, c in ranked[:k]:\n        out.append(f\"{sym} {c}\")\n    sys.stdout.write(\"\\n\".join(out))\n    if out:\n        sys.stdout.write(\"\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "2\nAAPL\nMSFT\nAAPL\nNVDA\nAAPL\nMSFT\n",
+      "tests": [
+        {
+          "name": "basic top-2",
+          "stdin": "2\nAAPL\nMSFT\nAAPL\nNVDA\nAAPL\nMSFT\n",
+          "expectStdout": "AAPL 3\nMSFT 2",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "tie broken lexicographically",
+          "stdin": "3\nb\na\nc\na\nb\nc\n",
+          "expectStdout": "a 2\nb 2\nc 2",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        },
+        {
+          "name": "K larger than distinct count",
+          "stdin": "10\nX\nY\nX\n",
+          "expectStdout": "X 2\nY 1",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "complexity": {
+        "codeTemplate": "import random\nrandom.seed(11)\nN = {N}\n# Streaming counter over N tokens drawn from a fixed-cardinality alphabet.\n# One dict pass is O(N); final sort is over the small distinct set.\ncounts = {}\nfor _ in range(N):\n    sym = str(random.randint(0, 255))\n    counts[sym] = counts.get(sym, 0) + 1\nranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))\nprint(ranked[0][0])",
+        "sizes": [50000, 100000, 200000, 400000, 800000],
+        "expected": "O(n)"
+      },
+      "hint": "Iterate sys.stdin line by line (it's already a lazy iterator) and keep a dict of counts — that dict is the only thing that grows, and only with distinct symbols. At the end, sort counts.items() by key=lambda kv: (-kv[1], kv[0]) and slice [:K]."
+    },
+    {
+      "id": "py-t2-p2",
+      "title": "Chunked record framing across buffer boundaries",
+      "difficulty": "hard",
+      "instructions": "<p>You receive a byte stream of <strong>length-prefixed records</strong>: each record is one ASCII-digit length token, a single space, then exactly that many payload bytes — concatenated with no separators between records. The catch: in production these arrive in fixed-size network chunks and a record can straddle a chunk boundary, so you must parse with a <strong>carry buffer</strong> that holds the unfinished tail.</p><p><strong>Stdin format</strong>: line 1 = one int <code class=\"inline\">CHUNK</code> (the chunk size to simulate). Line 2 = the raw stream as a single string (it contains no newlines; spaces are part of the framing). Read line 2, encode it to bytes, and feed it to your parser <code class=\"inline\">CHUNK</code> bytes at a time — you must not parse the whole buffer at once; carry partial records between chunks.</p><p>Example stream <code class=\"inline\">3 abc5 hello2 hi</code> decodes to records <code class=\"inline\">abc</code>, <code class=\"inline\">hello</code>, <code class=\"inline\">hi</code>. (After a length token's space, the next <em>len</em> bytes are payload; immediately after, the next length token begins.)</p><p><strong>Stdout</strong>: each decoded payload on its own line, in order. Final line: <code class=\"inline\">records=&lt;count&gt;</code>.</p>",
+      "language": "python",
+      "engine": "pyodide",
+      "starter": "import sys\n\ndef parse_stream(chunks):\n    \"\"\"chunks: an iterable of bytes blocks. Yield decoded payload strings.\"\"\"\n    carry = b\"\"\n    # State machine: read a length token up to the space, then `length`\n    # payload bytes. Anything incomplete stays in `carry` for the next chunk.\n    # TODO: implement framing across chunk boundaries and yield payloads.\n    raise NotImplementedError\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    chunk = int(data[0])\n    stream = data[1].encode() if len(data) > 1 else b\"\"\n    chunks = (stream[i:i + chunk] for i in range(0, len(stream), chunk))\n    count = 0\n    out = []\n    for payload in parse_stream(chunks):\n        out.append(payload)\n        count += 1\n    sys.stdout.write(\"\\n\".join(out))\n    if out:\n        sys.stdout.write(\"\\n\")\n    sys.stdout.write(f\"records={count}\\n\")\n\nmain()\n",
+      "solution": "import sys\n\ndef parse_stream(chunks):\n    carry = b\"\"\n    for block in chunks:\n        carry += block\n        while True:\n            sp = carry.find(b\" \")\n            if sp == -1:\n                break                      # length token not fully arrived\n            length = int(carry[:sp])\n            start = sp + 1\n            end = start + length\n            if len(carry) < end:\n                break                      # payload not fully arrived yet\n            yield carry[start:end].decode()\n            carry = carry[end:]            # drop the consumed record\n    # any leftover carry is an incomplete trailing record -> ignored\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    chunk = int(data[0])\n    stream = data[1].encode() if len(data) > 1 else b\"\"\n    chunks = (stream[i:i + chunk] for i in range(0, len(stream), chunk))\n    count = 0\n    out = []\n    for payload in parse_stream(chunks):\n        out.append(payload)\n        count += 1\n    sys.stdout.write(\"\\n\".join(out))\n    if out:\n        sys.stdout.write(\"\\n\")\n    sys.stdout.write(f\"records={count}\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "4\n3 abc5 hello2 hi",
+      "tests": [
+        {
+          "name": "records straddle 4-byte chunks",
+          "stdin": "4\n3 abc5 hello2 hi",
+          "expectStdout": "abc\nhello\nhi\nrecords=3",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "chunk size 1 (worst-case fragmentation)",
+          "stdin": "1\n3 abc5 hello2 hi",
+          "expectStdout": "abc\nhello\nhi\nrecords=3",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        },
+        {
+          "name": "payload contains spaces",
+          "stdin": "3\n5 a b c11 hello world",
+          "expectStdout": "a b c\nhello world\nrecords=2",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "hint": "Append each chunk to a carry buffer. Loop: find the first space to read the length token, then check whether carry already holds space+length payload bytes. If not, break and wait for the next chunk. After emitting, slice the consumed bytes off carry. Note payloads may themselves contain spaces — only the FIRST space after a length token is the delimiter."
+    },
+    {
+      "id": "py-t2-p3",
+      "title": "Zero-copy column extraction from a packed buffer",
+      "difficulty": "medium",
+      "instructions": "<p>A fixed-width binary table is packed into one contiguous buffer: <code class=\"inline\">R</code> rows, each row exactly <code class=\"inline\">W</code> bytes. You must compute a per-column byte-sum over a single requested column range without copying row data out — walk the buffer with a <code class=\"inline\">memoryview</code> and sum the bytes of the target slice of each row directly from the shared storage.</p><p><strong>Stdin format</strong>: line 1 = four ints <code class=\"inline\">R W C0 C1</code> — rows, row width, and a half-open column range <code class=\"inline\">[C0, C1)</code> within each row. Line 2 = <code class=\"inline\">R*W</code> space-separated ints in <code class=\"inline\">0..255</code>, the buffer contents in row-major order.</p><p><strong>Stdout</strong>: one line per row: the sum of bytes in that row's columns <code class=\"inline\">[C0, C1)</code>. Final line: <code class=\"inline\">total=&lt;grand sum&gt;</code>.</p><p>Build the buffer as a <code class=\"inline\">bytearray</code>, wrap it once in a <code class=\"inline\">memoryview</code>, and take <code class=\"inline\">mv[row_start+C0 : row_start+C1]</code> per row — those slices are views, not copies.</p>",
+      "language": "python",
+      "engine": "pyodide",
+      "starter": "import sys\n\ndef main():\n    data = sys.stdin.read().split()\n    idx = 0\n    r = int(data[idx]); idx += 1\n    w = int(data[idx]); idx += 1\n    c0 = int(data[idx]); idx += 1\n    c1 = int(data[idx]); idx += 1\n    buf = bytearray(int(data[idx + i]) for i in range(r * w)); idx += r * w\n    mv = memoryview(buf)\n    # TODO: for each row, sum bytes in columns [c0, c1) via a zero-copy view\n    #       mv[row*w + c0 : row*w + c1]; print that sum per row.\n    # TODO: print f\"total=<grand sum>\".\n    raise NotImplementedError\n\nmain()\n",
+      "solution": "import sys\n\ndef main():\n    data = sys.stdin.read().split()\n    idx = 0\n    r = int(data[idx]); idx += 1\n    w = int(data[idx]); idx += 1\n    c0 = int(data[idx]); idx += 1\n    c1 = int(data[idx]); idx += 1\n    buf = bytearray(int(data[idx + i]) for i in range(r * w)); idx += r * w\n    mv = memoryview(buf)\n    out = []\n    total = 0\n    for row in range(r):\n        base = row * w\n        s = sum(mv[base + c0:base + c1])   # zero-copy view; sum of ints\n        out.append(str(s))\n        total += s\n    sys.stdout.write(\"\\n\".join(out))\n    if out:\n        sys.stdout.write(\"\\n\")\n    sys.stdout.write(f\"total={total}\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "2 3 1 3\n10 20 30 40 50 60\n",
+      "tests": [
+        {
+          "name": "two rows column slice",
+          "stdin": "2 3 1 3\n10 20 30 40 50 60\n",
+          "expectStdout": "50\n110\ntotal=160",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "single full-width column range",
+          "stdin": "3 2 0 2\n1 2 3 4 5 6\n",
+          "expectStdout": "3\n7\n11\ntotal=21",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        },
+        {
+          "name": "empty column range sums zero",
+          "stdin": "2 4 2 2\n9 9 9 9 9 9 9 9\n",
+          "expectStdout": "0\n0\ntotal=0",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "hint": "Wrap the bytearray once in memoryview(buf). For row r the byte offset is r*w; take mv[r*w + c0 : r*w + c1] and sum() it — iterating a memoryview of bytes yields ints, so sum() gives the byte total directly, no copy."
+    },
+    {
+      "id": "py-t2-p4",
+      "title": "Lazy windowed aggregation over a stream",
+      "difficulty": "medium",
+      "instructions": "<p>Compute a <strong>sliding-window sum</strong> of width <code class=\"inline\">K</code> over a numeric stream, emitting one output per window, using <code class=\"inline\">O(K)</code> memory regardless of stream length. Use a generator that keeps only a fixed-size deque of the last K values plus a running total — never the whole input.</p><p><strong>Stdin format</strong>: line 1 = two ints <code class=\"inline\">K M</code> (window width, number of values). Line 2 = <code class=\"inline\">M</code> space-separated ints, the stream.</p><p><strong>Stdout</strong>: the window sums in order, one per line — there are <code class=\"inline\">M - K + 1</code> of them (the first is the sum of values[0..K-1]). If <code class=\"inline\">M &lt; K</code>, print nothing. Final line: <code class=\"inline\">windows=&lt;count&gt;</code>.</p><p>This is the bounded-memory streaming aggregate: maintain the running sum incrementally (add the entering value, subtract the leaving one) so each window is O(1) and total memory is O(K).</p>",
+      "language": "python",
+      "engine": "pyodide",
+      "starter": "import sys\nfrom collections import deque\n\ndef windowed_sums(values, k):\n    \"\"\"Yield sliding-window sums of width k using O(k) memory.\"\"\"\n    win = deque()\n    total = 0\n    # TODO: feed each value; once the window holds k items, yield the sum,\n    #       then evict the oldest (subtract it) so memory stays O(k).\n    raise NotImplementedError\n\ndef main():\n    data = sys.stdin.read().split()\n    k = int(data[0]); m = int(data[1])\n    values = (int(data[2 + i]) for i in range(m))   # lazy source\n    out = []\n    for s in windowed_sums(values, k):\n        out.append(str(s))\n    sys.stdout.write(\"\\n\".join(out))\n    if out:\n        sys.stdout.write(\"\\n\")\n    sys.stdout.write(f\"windows={len(out)}\\n\")\n\nmain()\n",
+      "solution": "import sys\nfrom collections import deque\n\ndef windowed_sums(values, k):\n    win = deque()\n    total = 0\n    for v in values:\n        win.append(v)\n        total += v\n        if len(win) == k:\n            yield total\n            total -= win.popleft()      # evict oldest, keep O(k)\n\ndef main():\n    data = sys.stdin.read().split()\n    k = int(data[0]); m = int(data[1])\n    values = (int(data[2 + i]) for i in range(m))\n    out = []\n    for s in windowed_sums(values, k):\n        out.append(str(s))\n    sys.stdout.write(\"\\n\".join(out))\n    if out:\n        sys.stdout.write(\"\\n\")\n    sys.stdout.write(f\"windows={len(out)}\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "3 6\n1 2 3 4 5 6\n",
+      "tests": [
+        {
+          "name": "window 3 over 6 values",
+          "stdin": "3 6\n1 2 3 4 5 6\n",
+          "expectStdout": "6\n9\n12\n15\nwindows=4",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "window equals length",
+          "stdin": "4 4\n10 20 30 40\n",
+          "expectStdout": "100\nwindows=1",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        },
+        {
+          "name": "window larger than stream",
+          "stdin": "5 3\n1 2 3\n",
+          "expectStdout": "windows=0",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "complexity": {
+        "codeTemplate": "from collections import deque\nN = {N}\nK = 64\nwin = deque()\ntotal = 0\nlast = 0\nfor v in range(N):\n    win.append(v)\n    total += v\n    if len(win) == K:\n        last = total\n        total -= win.popleft()\nprint(last)",
+        "sizes": [100000, 200000, 400000, 800000, 1600000],
+        "expected": "O(n)"
+      },
+      "hint": "Keep a deque and a running total. Append+add each value; when the deque hits K, yield the total, then popleft and subtract it. That makes each window O(1) and total memory O(K) — independent of M."
+    },
+    {
+      "id": "py-t2-p5",
+      "title": "Memory-frugal aggregation: __slots__ columnar group-by",
+      "difficulty": "hard",
+      "instructions": "<p>Aggregate trades by symbol into compact accumulator objects. To keep per-group footprint minimal at scale you must use a class with <code class=\"inline\">__slots__</code> (no per-instance <code class=\"inline\">__dict__</code>) as the accumulator — tracking total quantity and notional (price&times;qty) per symbol.</p><p><strong>Stdin format</strong>: line 1 = one int <code class=\"inline\">N</code> (number of trades). Next N lines: <code class=\"inline\">symbol price qty</code> where price and qty are non-negative integers and symbol has no spaces.</p><p><strong>Stdout</strong>: one line per symbol, sorted ascending by symbol: <code class=\"inline\">symbol total_qty notional</code> where <code class=\"inline\">notional = sum(price*qty)</code> over that symbol's trades. Final line: <code class=\"inline\">symbols=&lt;distinct count&gt;</code>.</p><p>Your accumulator class MUST declare <code class=\"inline\">__slots__</code>. The grader checks output correctness; the constraint trains the millions-of-small-objects footprint discipline where __slots__ is mandatory.</p>",
+      "language": "python",
+      "engine": "pyodide",
+      "starter": "import sys\n\nclass Agg:\n    # TODO: declare __slots__ for the accumulated fields (no __dict__).\n    def __init__(self):\n        self.qty = 0\n        self.notional = 0\n\ndef main():\n    it = iter(sys.stdin)\n    n = int(next(it).strip())\n    groups = {}\n    for _ in range(n):\n        sym, price, qty = next(it).split()\n        price = int(price); qty = int(qty)\n        # TODO: fetch-or-create the Agg for sym and accumulate qty + price*qty\n        raise NotImplementedError\n    # TODO: print \"symbol total_qty notional\" sorted by symbol, then count.\n\nmain()\n",
+      "solution": "import sys\n\nclass Agg:\n    __slots__ = (\"qty\", \"notional\")\n    def __init__(self):\n        self.qty = 0\n        self.notional = 0\n\ndef main():\n    it = iter(sys.stdin)\n    n = int(next(it).strip())\n    groups = {}\n    for _ in range(n):\n        sym, price, qty = next(it).split()\n        price = int(price); qty = int(qty)\n        a = groups.get(sym)\n        if a is None:\n            a = Agg()\n            groups[sym] = a\n        a.qty += qty\n        a.notional += price * qty\n    out = []\n    for sym in sorted(groups):\n        a = groups[sym]\n        out.append(f\"{sym} {a.qty} {a.notional}\")\n    sys.stdout.write(\"\\n\".join(out))\n    if out:\n        sys.stdout.write(\"\\n\")\n    sys.stdout.write(f\"symbols={len(groups)}\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "5\nAAPL 100 2\nMSFT 200 1\nAAPL 110 3\nMSFT 210 2\nAAPL 105 1\n",
+      "tests": [
+        {
+          "name": "group-by two symbols",
+          "stdin": "5\nAAPL 100 2\nMSFT 200 1\nAAPL 110 3\nMSFT 210 2\nAAPL 105 1\n",
+          "expectStdout": "AAPL 6 635\nMSFT 3 620\nsymbols=2",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "single symbol single trade",
+          "stdin": "1\nNVDA 1000 5\n",
+          "expectStdout": "NVDA 5 5000\nsymbols=1",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        },
+        {
+          "name": "zero qty contributes nothing to notional",
+          "stdin": "3\nA 50 0\nB 10 4\nA 50 2\n",
+          "expectStdout": "A 2 100\nB 4 40\nsymbols=2",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "hint": "Give Agg `__slots__ = ('qty', 'notional')` so instances carry no __dict__. Use groups.get(sym) to fetch-or-create the accumulator, then add qty and price*qty. Sort the dict keys at the end and emit one line per symbol."
+    }
+  ]
+}

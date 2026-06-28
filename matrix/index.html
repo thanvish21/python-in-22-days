@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1% HFT Matrix — Python Systems Engineering</title>
+  <meta name="description" content="A four-tier Python systems-engineering gauntlet: async networking, high-performance memory, advanced metaprogramming, and GIL escape. Real code, graded in-browser." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/onepct.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-left">
+      <a class="brand" href="#/">
+        <span class="brand-logo">⚡</span>
+        <span class="brand-name">1% HFT Matrix</span>
+      </a>
+    </div>
+    <nav class="topnav">
+      <a href="/" class="nav-link" style="background:#0a8f6f;color:#fff;border-radius:6px;font-weight:700" title="Switch to the 22-Day Beginner course">🐍 Beginner</a>
+      <a href="#/" class="nav-link">Matrix</a>
+      <span class="nav-track" title="Track">Python Systems Engineering</span>
+      <button id="resetBtn" class="nav-link ghost" title="Reset mastery progress">Reset</button>
+      <button id="themeToggle" class="nav-link ghost" title="Toggle dark mode">🌙</button>
+      <div class="streak" id="streakBadge" title="Problems mastered">✓ <span id="streakCount">0</span> mastered</div>
+    </nav>
+  </header>
+
+  <main id="app" class="app">
+    <!-- Views render here -->
+  </main>
+
+  <footer class="footer">
+    <p>Real Python runs in your browser via Pyodide. Tier 4 grades on the execution backend. No installs.</p>
+  </footer>
+
+  <!-- Pyodide: real Python in the browser -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+  <script src="js/pyrunner.js"></script>
+  <script src="js/runner-config.js"></script>
+  <script src="js/runner.js"></script>
+  <script src="js/onepct.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+{
+  "tier": 1,
+  "language": "python",
+  "emoji": "⚡",
+  "title": "Asynchronous Network Foundations",
+  "subtitle": "Saturate the wire without melting it — coroutine pipelines, bounded concurrency, and throughput under backpressure.",
+  "goal": "Reason about the event loop at the level of scheduled callbacks, build cancellation-correct fan-out, and design rate-limit-respecting pipelines that maximize throughput while never exceeding a downstream budget.",
+  "estMinutes": 260,
+  "tags": ["asyncio", "coroutines", "tasks", "concurrency", "backpressure", "throughput", "cancellation"],
+  "blocks": [
+    {
+      "type": "text",
+      "heading": "The event loop is a single-threaded scheduler, not magic",
+      "html": "<p>asyncio gives you concurrency, <strong>not parallelism</strong>. One thread, one loop. The loop holds a ready queue of callbacks; it pops one, runs it until that callback voluntarily yields control (an <code class=\"inline\">await</code> on something not-yet-ready), then moves to the next. Nothing is preempted. If a coroutine never awaits, it monopolizes the loop and every other task starves.</p><p>This is the whole mental model: <em>concurrency is interleaving at await points</em>. A <code class=\"inline\">time.sleep(1)</code> blocks the entire loop for a second; <code class=\"inline\">await asyncio.sleep(1)</code> yields, lets 10,000 other coroutines make progress, and resumes you when the timer fires. In an HFT feed handler, a single accidental blocking call (a sync DNS lookup, a CPU-bound parse) is a latency spike across every connected stream.</p><p>Rule of thumb: <strong>await releases the loop; bare computation holds it.</strong> If you must do CPU work, push it to <code class=\"inline\">loop.run_in_executor</code> (Tier 4 territory) so the loop stays responsive.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Coroutine objects are inert until scheduled",
+      "code": "import asyncio\n\nasync def quote(symbol, latency):\n    await asyncio.sleep(latency)        # simulated I/O — yields the loop\n    return (symbol, round(100 + latency * 10, 2))\n\nasync def main():\n    # Calling quote(...) builds a coroutine object. NOTHING runs yet.\n    coro = quote(\"AAPL\", 0.05)\n    print(type(coro).__name__)          # 'coroutine'\n    # A Task wraps it and submits it to the loop to run concurrently.\n    task = asyncio.create_task(coro)\n    # await drives it to completion and returns its result.\n    print(await task)\n\nasyncio.run(main())",
+      "explain": "create_task schedules the coroutine on the loop immediately and returns a Task you can await, cancel, or inspect. A bare coroutine that is never awaited or scheduled is a bug — Python warns 'coroutine was never awaited'. await on the Task is what actually advances it.",
+      "editable": true
+    },
+    {
+      "type": "tip",
+      "html": "<strong>gather vs as_completed.</strong> <code class=\"inline\">asyncio.gather(*tasks)</code> returns results in the <em>order you passed them</em>, once <em>all</em> finish. <code class=\"inline\">asyncio.as_completed(tasks)</code> yields each result <em>as soon as it lands</em>, in completion order. Use gather when you need positional alignment (request i ↔ result i); use as_completed when you want to start processing the fastest responses immediately and hide tail latency."
+    },
+    {
+      "type": "code",
+      "caption": "Bounded concurrency with a Semaphore — the core throughput primitive",
+      "code": "import asyncio\n\nasync def fetch(sem, symbol, latency, results):\n    async with sem:                     # acquire a slot; blocks if all in use\n        await asyncio.sleep(latency)    # downstream call\n        results[symbol] = round(latency * 1000, 1)\n\nasync def main():\n    work = {\"AAPL\": 0.03, \"MSFT\": 0.01, \"NVDA\": 0.05, \"AMD\": 0.02, \"INTC\": 0.04}\n    sem = asyncio.Semaphore(2)           # never more than 2 in flight\n    results = {}\n    await asyncio.gather(*(fetch(sem, s, l, results) for s, l in work.items()))\n    print(sorted(results.items()))\n\nasyncio.run(main())",
+      "explain": "Firing 10,000 requests at once is not throughput — it is a self-inflicted DoS that the downstream rejects. A Semaphore(k) caps in-flight work at k: the (k+1)th coroutine parks at `async with sem` until a slot frees. This is how you respect a provider's concurrency limit while keeping exactly k requests saturating the pipe.",
+      "editable": true
+    },
+    {
+      "type": "text",
+      "heading": "Backpressure: a fast producer must not drown a slow consumer",
+      "html": "<p>A pipeline is only as fast as its slowest stage, and an <em>unbounded</em> buffer between a fast producer and a slow consumer is a memory leak waiting to OOM you. <strong>Backpressure</strong> is the mechanism by which a full buffer pushes back on the producer, forcing it to slow down to the consumer's rate.</p><p>In asyncio the primitive is a <strong>bounded</strong> <code class=\"inline\">asyncio.Queue(maxsize=k)</code>. When the queue is full, <code class=\"inline\">await queue.put(item)</code> <em>blocks</em> the producer until a consumer calls <code class=\"inline\">get()</code>. The producer literally cannot run ahead. This is the difference between a system that degrades gracefully under load and one that falls over.</p><p>The canonical pipeline: producer → bounded queue → pool of N worker consumers. Workers signal completion with <code class=\"inline\">queue.task_done()</code>; the producer drains with <code class=\"inline\">await queue.join()</code>. Sentinels (one <code class=\"inline\">None</code> per worker) tell workers to exit cleanly.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Backpressured producer/worker pipeline with task_done/join",
+      "code": "import asyncio\n\nasync def producer(q, items):\n    for it in items:\n        await q.put(it)                 # blocks when q is full -> backpressure\n\nasync def worker(q, out):\n    while True:\n        it = await q.get()\n        if it is None:                  # sentinel -> shut down\n            q.task_done()\n            return\n        await asyncio.sleep(0.01)       # slow processing stage\n        out.append(it * it)\n        q.task_done()\n\nasync def main():\n    q = asyncio.Queue(maxsize=4)        # small buffer forces backpressure\n    out = []\n    workers = [asyncio.create_task(worker(q, out)) for _ in range(3)]\n    await producer(q, range(12))\n    for _ in workers:\n        await q.put(None)               # one sentinel per worker\n    await asyncio.gather(*workers)\n    print(sorted(out))\n\nasyncio.run(main())",
+      "explain": "maxsize=4 means the producer can be at most 4 items ahead of the workers — bounded memory regardless of input size. join()/task_done() let you wait for *processing* to finish, not just enqueueing. Sentinels are the clean shutdown protocol: each worker consumes exactly one None and returns.",
+      "editable": true
+    },
+    {
+      "type": "text",
+      "heading": "Timeouts and cancellation must be correct, not best-effort",
+      "html": "<p>Cancellation in asyncio is cooperative: <code class=\"inline\">task.cancel()</code> raises <code class=\"inline\">asyncio.CancelledError</code> inside the task <em>at its next await point</em>. Two non-negotiable rules:</p><ul><li><strong>Never swallow CancelledError.</strong> If you catch it to run cleanup, re-raise it. Eating it makes a task un-cancellable and breaks every layer above you.</li><li><strong>Bound every external call.</strong> Use <code class=\"inline\">async with asyncio.timeout(t):</code> (3.11+) or <code class=\"inline\">asyncio.wait_for(coro, t)</code>. On timeout the inner coroutine is cancelled and the budget is enforced.</li></ul><p>For fan-out where one slow leg shouldn't sink the batch: gather the legs, give each a per-leg timeout, and collect partial results. Use <code class=\"inline\">gather(..., return_exceptions=True)</code> so one failure/timeout doesn't cancel the siblings — then you decide what a timed-out leg contributes.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Per-leg timeout with partial results — no slow leg sinks the batch",
+      "code": "import asyncio\n\nasync def leg(symbol, latency, budget):\n    try:\n        async with asyncio.timeout(budget):\n            await asyncio.sleep(latency)\n            return (symbol, \"ok\")\n    except asyncio.TimeoutError:\n        return (symbol, \"timeout\")\n\nasync def main():\n    budget = 0.05\n    legs = {\"AAPL\": 0.02, \"MSFT\": 0.20, \"NVDA\": 0.01}  # MSFT exceeds budget\n    res = await asyncio.gather(*(leg(s, l, budget) for s, l in legs.items()))\n    print(sorted(res))\n\nasyncio.run(main())",
+      "explain": "Each leg owns its budget. The slow MSFT leg is cancelled at 50ms and reported as 'timeout' instead of stalling the whole fan-out. gather still returns positionally-aligned results for the fast legs. This is the partial-result pattern: degrade per-item, not per-batch.",
+      "editable": true
+    },
+    {
+      "type": "quiz",
+      "question": "You await asyncio.gather(a(), b(), c()) where b() finishes first, then c(), then a(). In what order are results returned?",
+      "options": [
+        "Completion order: b, c, a",
+        "Argument order: a, b, c",
+        "Reverse order: c, b, a",
+        "Undefined / random each run"
+      ],
+      "answerIndex": 1,
+      "explain": "gather preserves the ORDER OF ARGUMENTS regardless of completion order — result[0] is always a()'s result. If you want results as they complete, use as_completed() instead."
+    },
+    {
+      "type": "quiz",
+      "question": "A producer calls `await q.put(x)` on an asyncio.Queue(maxsize=8) that is currently full. What happens?",
+      "options": [
+        "It raises QueueFull immediately",
+        "It silently drops x",
+        "The producer suspends until a consumer get()s, then resumes (backpressure)",
+        "maxsize is ignored; the queue grows unbounded"
+      ],
+      "answerIndex": 2,
+      "explain": "await put() on a full bounded queue suspends the producer until space frees — that IS backpressure. (q.put_nowait() is the non-blocking variant that raises QueueFull. maxsize=0 means unbounded.)"
+    },
+    {
+      "type": "quiz",
+      "question": "Inside a coroutine you catch asyncio.CancelledError to close a socket, then return normally without re-raising. What's the consequence?",
+      "options": [
+        "Nothing — that's the correct pattern",
+        "The task becomes effectively un-cancellable, breaking cancellation propagation upstream",
+        "The event loop crashes",
+        "Python automatically re-raises it for you"
+      ],
+      "answerIndex": 1,
+      "explain": "Swallowing CancelledError without re-raising tells the loop the task 'handled' cancellation by completing — upstream timeouts/cancels are defeated. Always re-raise after cleanup (or use try/finally for cleanup and let it propagate)."
+    },
+    {
+      "type": "tryit",
+      "title": "Cap concurrency at 3 with a Semaphore",
+      "instructions": "Complete the worker so that at most 3 coroutines hold the semaphore at once. The program tracks peak concurrency; if your bound works, peak must be exactly 3. Print the peak.",
+      "starter": "import asyncio\n\nasync def task(sem, state):\n    # TODO: acquire `sem` around the work below using `async with`\n    state[\"cur\"] += 1\n    state[\"peak\"] = max(state[\"peak\"], state[\"cur\"])\n    await asyncio.sleep(0.01)\n    state[\"cur\"] -= 1\n\nasync def main():\n    sem = asyncio.Semaphore(3)\n    state = {\"cur\": 0, \"peak\": 0}\n    await asyncio.gather(*(task(sem, state) for _ in range(20)))\n    print(state[\"peak\"])\n\nasyncio.run(main())",
+      "check": { "stdout_equals": "3" },
+      "solution": "import asyncio\n\nasync def task(sem, state):\n    async with sem:\n        state[\"cur\"] += 1\n        state[\"peak\"] = max(state[\"peak\"], state[\"cur\"])\n        await asyncio.sleep(0.01)\n        state[\"cur\"] -= 1\n\nasync def main():\n    sem = asyncio.Semaphore(3)\n    state = {\"cur\": 0, \"peak\": 0}\n    await asyncio.gather(*(task(sem, state) for _ in range(20)))\n    print(state[\"peak\"])\n\nasyncio.run(main())",
+      "passMsg": "Exactly 3 in flight — that's bounded concurrency. The (k+1)th coroutine parks at `async with sem` until a slot frees.",
+      "failMsg": "Wrap the body in `async with sem:` so only 3 coroutines run the critical section at once."
+    },
+    {
+      "type": "tryit",
+      "title": "Enforce a latency budget with asyncio.timeout",
+      "instructions": "A call takes 0.2s but your budget is 0.05s. Wrap it so it times out and prints `timeout` instead of `done`.",
+      "starter": "import asyncio\n\nasync def slow():\n    await asyncio.sleep(0.2)\n    return \"done\"\n\nasync def main():\n    try:\n        # TODO: enforce a 0.05s budget around slow()\n        result = await slow()\n    except asyncio.TimeoutError:\n        result = \"timeout\"\n    print(result)\n\nasyncio.run(main())",
+      "check": { "stdout_equals": "timeout" },
+      "solution": "import asyncio\n\nasync def slow():\n    await asyncio.sleep(0.2)\n    return \"done\"\n\nasync def main():\n    try:\n        async with asyncio.timeout(0.05):\n            result = await slow()\n    except asyncio.TimeoutError:\n        result = \"timeout\"\n    print(result)\n\nasyncio.run(main())",
+      "passMsg": "Budget enforced. asyncio.timeout cancels the inner coroutine when the clock runs out.",
+      "failMsg": "Use `async with asyncio.timeout(0.05):` around `await slow()` (or asyncio.wait_for(slow(), 0.05))."
+    }
+  ],
+  "problems": [
+    {
+      "id": "py-t1-p1",
+      "title": "Token-bucket rate-limited async map",
+      "difficulty": "hard",
+      "instructions": "<p>You must process N jobs against a downstream that enforces a <strong>token-bucket rate limit</strong>: the bucket holds at most <code class=\"inline\">CAP</code> tokens and refills <code class=\"inline\">RATE</code> tokens per second; each job spends exactly 1 token and cannot start until a token is available. Simultaneously, never exceed <code class=\"inline\">MAXINFLIGHT</code> concurrent jobs. Maximize throughput while <em>respecting</em> both limits (do not exceed the downstream's published rate).</p><p>Simulate the limiter deterministically with a logical clock: process jobs in id order; a job's <em>start tick</em> is the first tick at which a token is available AND fewer than MAXINFLIGHT jobs are running. Each job occupies the worker for its given <code class=\"inline\">cost</code> ticks. The bucket starts full (CAP tokens) and gains 1 token every <code class=\"inline\">refill</code> ticks (integer division of ticks).</p><p><strong>Stdin format</strong>: line 1 = four ints <code class=\"inline\">CAP RATE_refill MAXINFLIGHT N</code> where <code class=\"inline\">RATE_refill</code> is the number of ticks between token refills. Next N lines: <code class=\"inline\">job_id cost</code>. Job ids are 0..N-1 in order.</p><p><strong>Stdout</strong>: for each job in id order, print <code class=\"inline\">job_id start_tick end_tick</code> (end = start + cost). Final line: <code class=\"inline\">makespan=&lt;max end_tick&gt;</code>.</p><p>This is a deterministic model of a real bounded-concurrency, rate-respecting scheduler — the same shape you'd build with asyncio.Semaphore + a token bucket, but reduced to integers so the grader is exact.</p>",
+      "language": "python",
+      "engine": "pyodide",
+      "starter": "import sys\n\ndef main():\n    data = sys.stdin.read().split()\n    idx = 0\n    cap = int(data[idx]); idx += 1\n    refill = int(data[idx]); idx += 1\n    maxinflight = int(data[idx]); idx += 1\n    n = int(data[idx]); idx += 1\n    jobs = []\n    for _ in range(n):\n        jid = int(data[idx]); idx += 1\n        cost = int(data[idx]); idx += 1\n        jobs.append((jid, cost))\n\n    # State: a logical clock `tick`, available `tokens`, and the set of\n    # currently-running jobs (their end ticks). Tokens start full at `cap`\n    # and gain 1 every `refill` ticks.\n    # TODO: for each job in id order, advance the clock to the first tick\n    #       where (tokens > 0) AND (in-flight < maxinflight). Spend 1 token,\n    #       record start = tick, end = tick + cost, mark it in-flight.\n    # TODO: print \"job_id start end\" per job, then \"makespan=<max end>\".\n    raise NotImplementedError\n\nmain()\n",
+      "solution": "import sys\nimport heapq\n\ndef main():\n    data = sys.stdin.read().split()\n    idx = 0\n    cap = int(data[idx]); idx += 1\n    refill = int(data[idx]); idx += 1\n    maxinflight = int(data[idx]); idx += 1\n    n = int(data[idx]); idx += 1\n    jobs = []\n    for _ in range(n):\n        jid = int(data[idx]); idx += 1\n        cost = int(data[idx]); idx += 1\n        jobs.append((jid, cost))\n\n    tick = 0\n    tokens = cap\n    last_refill_tick = 0\n    inflight = []  # min-heap of end ticks\n    out = []\n    max_end = 0\n\n    def refill_to(t):\n        nonlocal tokens, last_refill_tick\n        if refill > 0:\n            gained = (t // refill) - (last_refill_tick // refill)\n            if gained > 0:\n                tokens = min(cap, tokens + gained)\n        last_refill_tick = t\n\n    for jid, cost in jobs:\n        while True:\n            # free any worker slots whose job finished by `tick`\n            while inflight and inflight[0] <= tick:\n                heapq.heappop(inflight)\n            refill_to(tick)\n            if tokens > 0 and len(inflight) < maxinflight:\n                break\n            # advance to the next event: a refill or a slot freeing\n            candidates = []\n            if refill > 0 and tokens <= 0:\n                next_refill = ((tick // refill) + 1) * refill\n                candidates.append(next_refill)\n            if len(inflight) >= maxinflight and inflight:\n                candidates.append(inflight[0])\n            if not candidates:\n                tick += 1\n            else:\n                tick = min(candidates)\n        tokens -= 1\n        start = tick\n        end = start + cost\n        heapq.heappush(inflight, end)\n        out.append(f\"{jid} {start} {end}\")\n        if end > max_end:\n            max_end = end\n\n    sys.stdout.write(\"\\n\".join(out))\n    sys.stdout.write(f\"\\nmakespan={max_end}\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "3 2 2 5\n0 4\n1 4\n2 4\n3 4\n4 4\n",
+      "tests": [
+        {
+          "name": "basic 5 jobs",
+          "stdin": "3 2 2 5\n0 4\n1 4\n2 4\n3 4\n4 4\n",
+          "expectStdout": "0 0 4\n1 0 4\n2 4 8\n3 4 8\n4 8 12\nmakespan=12",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "token-starved single slot",
+          "stdin": "1 5 1 3\n0 2\n1 2\n2 2\n",
+          "expectStdout": "0 0 2\n1 5 7\n2 10 12\nmakespan=12",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        },
+        {
+          "name": "wide concurrency full bucket",
+          "stdin": "10 1 4 6\n0 3\n1 3\n2 3\n3 3\n4 3\n5 3\n",
+          "expectStdout": "0 0 3\n1 0 3\n2 0 3\n3 0 3\n4 3 6\n5 3 6\nmakespan=6",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "hint": "Drive a logical clock. At each step, free finished slots, refill tokens up to the current tick, and if you still can't start, jump the clock straight to the next event (next refill tick or the earliest in-flight end) instead of incrementing by 1."
+    },
+    {
+      "id": "py-t1-p2",
+      "title": "Ordered merge of N async streams under a latency budget",
+      "difficulty": "hard",
+      "instructions": "<p>You are merging <code class=\"inline\">K</code> sorted async streams (think order-book updates from K venues) into one globally sorted output, but you operate under a <strong>latency budget</strong>: any individual item whose arrival latency exceeds <code class=\"inline\">BUDGET</code> is dropped (a stale tick is worse than a missing one). Each stream is already sorted by sequence number; merge all surviving items into one ascending sequence.</p><p><strong>Stdin format</strong>: line 1 = two ints <code class=\"inline\">K BUDGET</code>. Then K blocks. Each block: a line <code class=\"inline\">M</code> (number of items in that stream), followed by M lines of <code class=\"inline\">seq latency</code> (both ints), already sorted ascending by seq.</p><p><strong>Stdout</strong>: the merged, globally ascending <code class=\"inline\">seq</code> values of all items whose <code class=\"inline\">latency &lt;= BUDGET</code>, one per line. If two surviving items share a seq, print both (stable: lower stream index first). Final line: <code class=\"inline\">dropped=&lt;count&gt;</code> for items exceeding budget.</p><p>Models a k-way merge with as_completed-style filtering: fast items pass, tail-latency items are shed to protect the budget.</p>",
+      "language": "python",
+      "engine": "pyodide",
+      "starter": "import sys\nimport heapq\n\ndef main():\n    data = sys.stdin.read().split()\n    idx = 0\n    k = int(data[idx]); idx += 1\n    budget = int(data[idx]); idx += 1\n    streams = []\n    for _ in range(k):\n        m = int(data[idx]); idx += 1\n        items = []\n        for _ in range(m):\n            seq = int(data[idx]); idx += 1\n            lat = int(data[idx]); idx += 1\n            items.append((seq, lat))\n        streams.append(items)\n\n    # TODO: drop items with lat > budget, then k-way merge the survivors\n    #       into one globally ascending sequence by seq. Ties: lower stream\n    #       index first. Use a heap seeded with each stream's head for O(total log k).\n    # TODO: print each surviving seq on its own line, then \"dropped=<count>\".\n    raise NotImplementedError\n\nmain()\n",
+      "solution": "import sys\nimport heapq\n\ndef main():\n    data = sys.stdin.read().split()\n    idx = 0\n    k = int(data[idx]); idx += 1\n    budget = int(data[idx]); idx += 1\n    streams = []\n    for _ in range(k):\n        m = int(data[idx]); idx += 1\n        items = []\n        for _ in range(m):\n            seq = int(data[idx]); idx += 1\n            lat = int(data[idx]); idx += 1\n            items.append((seq, lat))\n        streams.append(items)\n\n    dropped = 0\n    # filtered[stream_index] = list of surviving seqs (still sorted)\n    filtered = []\n    for items in streams:\n        keep = []\n        for seq, lat in items:\n            if lat <= budget:\n                keep.append(seq)\n            else:\n                dropped += 1\n        filtered.append(keep)\n\n    # heap entries: (seq, stream_index, pos_in_stream)\n    heap = []\n    for si, keep in enumerate(filtered):\n        if keep:\n            heapq.heappush(heap, (keep[0], si, 0))\n\n    out = []\n    while heap:\n        seq, si, pos = heapq.heappop(heap)\n        out.append(str(seq))\n        nxt = pos + 1\n        if nxt < len(filtered[si]):\n            heapq.heappush(heap, (filtered[si][nxt], si, nxt))\n\n    if out:\n        sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n    sys.stdout.write(f\"dropped={dropped}\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "2 50\n3\n1 10\n3 90\n5 20\n3\n2 30\n4 40\n6 200\n",
+      "tests": [
+        {
+          "name": "two streams, budget drops tail",
+          "stdin": "2 50\n3\n1 10\n3 90\n5 20\n3\n2 30\n4 40\n6 200\n",
+          "expectStdout": "1\n2\n4\n5\ndropped=2",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "tie on seq, stable by stream index",
+          "stdin": "3 100\n1\n7 5\n2\n7 5\n8 5\n1\n7 5\n",
+          "expectStdout": "7\n7\n7\n8\ndropped=0",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        },
+        {
+          "name": "all dropped",
+          "stdin": "2 0\n2\n1 1\n2 1\n1\n3 1\n",
+          "expectStdout": "dropped=3",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "complexity": {
+        "codeTemplate": "import heapq, random\nrandom.seed(7)\nN = {N}\n# K sorted streams, total N items, heap-based k-way merge -> O(N log K)\nK = 8\nstreams = [[] for _ in range(K)]\nfor i in range(N):\n    streams[i % K].append(i)  # each stream already ascending\nheap = []\nfor si, s in enumerate(streams):\n    if s:\n        heapq.heappush(heap, (s[0], si, 0))\nmerged = 0\nwhile heap:\n    val, si, pos = heapq.heappop(heap)\n    merged += 1\n    if pos + 1 < len(streams[si]):\n        heapq.heappush(heap, (streams[si][pos + 1], si, pos + 1))\nprint(merged)",
+        "sizes": [2000, 4000, 8000, 16000, 32000],
+        "expected": "O(n log k)"
+      },
+      "hint": "Filter first (drop lat > budget), then seed a min-heap with each surviving stream's head as (seq, stream_index, position). Pop the smallest, push that stream's next item. The tuple's second element (stream index) breaks seq ties stably."
+    },
+    {
+      "id": "py-t1-p3",
+      "title": "Backpressured pipeline: worker-pool makespan",
+      "difficulty": "hard",
+      "instructions": "<p>Model a producer → <strong>bounded queue</strong> → pool of <code class=\"inline\">W</code> workers pipeline and compute its makespan. The queue has capacity <code class=\"inline\">CAP</code>. The producer emits items 0..N-1 in order; emitting item i takes <code class=\"inline\">prod[i]</code> ticks of producer time (it can only push the next item after that). Pushing blocks when the queue is full (<strong>backpressure</strong>). Each idle worker pulls the oldest queued item and spends <code class=\"inline\">work[i]</code> ticks on it.</p><p>Deterministic semantics (event-driven, ties resolved by rule): the producer becomes ready to push item i at tick = (time it finished producing i). A push succeeds at the first tick where queue size &lt; CAP. A free worker grabs the front of the queue instantly at the tick it becomes free (or at the tick an item arrives if it was idle and waiting). When multiple workers are free at the same tick, the <strong>lowest-indexed</strong> worker takes the item. When the producer and a worker act at the same tick, the worker's pull happens first (freeing a slot), then the producer's push.</p><p><strong>Stdin format</strong>: line 1 = three ints <code class=\"inline\">W CAP N</code>. Line 2 = N ints <code class=\"inline\">prod</code>. Line 3 = N ints <code class=\"inline\">work</code>.</p><p><strong>Stdout</strong>: <code class=\"inline\">makespan=&lt;tick at which the last item finishes processing&gt;</code>.</p>",
+      "language": "python",
+      "engine": "pyodide",
+      "starter": "import sys\n\ndef main():\n    data = sys.stdin.read().split()\n    idx = 0\n    w = int(data[idx]); idx += 1\n    cap = int(data[idx]); idx += 1\n    n = int(data[idx]); idx += 1\n    prod = [int(data[idx + i]) for i in range(n)]; idx += n\n    work = [int(data[idx + i]) for i in range(n)]; idx += n\n\n    # Simulate an event-driven pipeline:\n    #  - queue holds at most `cap` produced-but-unstarted item indices\n    #  - W workers, each free at some tick; lowest index wins ties\n    #  - producer is ready to push item i at the tick it finished producing it,\n    #    but the push waits until queue size < cap (backpressure)\n    #  - on a tick, worker pulls happen before producer pushes\n    # TODO: advance an event clock and compute the final finish tick.\n    # TODO: print f\"makespan={...}\".\n    raise NotImplementedError\n\nmain()\n",
+      "solution": "import sys\nfrom collections import deque\n\ndef main():\n    data = sys.stdin.read().split()\n    idx = 0\n    w = int(data[idx]); idx += 1\n    cap = int(data[idx]); idx += 1\n    n = int(data[idx]); idx += 1\n    prod = [int(data[idx + i]) for i in range(n)]; idx += n\n    work = [int(data[idx + i]) for i in range(n)]; idx += n\n\n    INF = float(\"inf\")\n    worker_free = [0] * w          # tick at which each worker becomes free\n    worker_busy_item = [-1] * w    # item index a busy worker is processing\n\n    queue = deque()                # produced-but-unstarted item indices\n    next_to_produce = 0\n    producer_ready_tick = prod[0] if n > 0 else INF  # when item 0 is ready to push\n    items_done = 0\n    last_finish = 0\n    tick = 0\n\n    def next_worker_event():\n        best = INF\n        for f in worker_free:\n            if worker_busy_item_any() and f < best:\n                pass\n        return best\n\n    # Helper not needed; we compute events inline below.\n    def worker_busy_item_any():\n        return any(b != -1 for b in worker_busy_item)\n\n    while items_done < n:\n        # candidate event ticks\n        events = []\n        # a busy worker finishing\n        for wi in range(w):\n            if worker_busy_item[wi] != -1:\n                events.append(worker_free[wi])\n        # producer ready to attempt a push\n        if next_to_produce < n:\n            events.append(producer_ready_tick)\n        # a free worker can start immediately if queue non-empty -> event now\n        free_exists = any(worker_busy_item[wi] == -1 for wi in range(w))\n        if queue and free_exists:\n            events.append(tick)\n        tick = min(events)\n\n        # 1) finish any workers whose free tick == tick (frees queue slots/workers)\n        for wi in range(w):\n            if worker_busy_item[wi] != -1 and worker_free[wi] == tick:\n                fin = worker_free[wi]\n                if fin > last_finish:\n                    last_finish = fin\n                worker_busy_item[wi] = -1\n                items_done += 1\n\n        # 2) workers pull from queue (lowest index first) — before producer push\n        for wi in range(w):\n            if worker_busy_item[wi] == -1 and queue:\n                item = queue.popleft()\n                worker_busy_item[wi] = item\n                worker_free[wi] = tick + work[item]\n\n        # 3) producer pushes if it is ready and there is room\n        if next_to_produce < n and producer_ready_tick <= tick and len(queue) < cap:\n            queue.append(next_to_produce)\n            produced = next_to_produce\n            next_to_produce += 1\n            if next_to_produce < n:\n                producer_ready_tick = tick + prod[next_to_produce]\n            else:\n                producer_ready_tick = INF\n            # a freshly pushed item may be grabbable now by a still-free worker\n            for wi in range(w):\n                if worker_busy_item[wi] == -1 and queue:\n                    item = queue.popleft()\n                    worker_busy_item[wi] = item\n                    worker_free[wi] = tick + work[item]\n\n    sys.stdout.write(f\"makespan={last_finish}\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "2 2 5\n1 1 1 1 1\n3 3 3 3 3\n",
+      "tests": [
+        {
+          "name": "2 workers cap 2",
+          "stdin": "2 2 5\n1 1 1 1 1\n3 3 3 3 3\n",
+          "expectStdout": "makespan=9",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "single worker serializes",
+          "stdin": "1 1 3\n1 1 1\n2 2 2\n",
+          "expectStdout": "makespan=7",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        },
+        {
+          "name": "slow producer starves workers",
+          "stdin": "3 5 4\n5 5 5 5\n1 1 1 1\n",
+          "expectStdout": "makespan=21",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "hint": "Event-driven simulation: at each event tick, first retire workers finishing now, then let free workers pull (lowest index first), then push from the producer if it's ready and the queue has room. The next event tick is the min of (busy workers' finish ticks, producer-ready tick, or 'now' if a free worker can grab a queued item)."
+    },
+    {
+      "id": "py-t1-p4",
+      "title": "Cancellation-correct fan-out with partial results",
+      "difficulty": "hard",
+      "instructions": "<p>Fan out <code class=\"inline\">N</code> requests with a global wall-clock <strong>budget</strong> <code class=\"inline\">DEADLINE</code> ticks. Each request i has an arrival latency <code class=\"inline\">lat[i]</code>. Any request with <code class=\"inline\">lat[i] &lt;= DEADLINE</code> returns its <code class=\"inline\">value[i]</code>; any request with <code class=\"inline\">lat[i] &gt; DEADLINE</code> is <strong>cancelled at the deadline</strong> and contributes nothing. This is the deterministic model of <code class=\"inline\">gather(..., return_exceptions=True)</code> under an <code class=\"inline\">asyncio.timeout(DEADLINE)</code> wrapper that yields partial results.</p><p><strong>Stdin format</strong>: line 1 = two ints <code class=\"inline\">N DEADLINE</code>. Next N lines: <code class=\"inline\">lat value</code> (both ints), request ids implicitly 0..N-1.</p><p><strong>Stdout</strong>: line 1 = the surviving values in <strong>completion order</strong> (ascending by lat; ties broken by ascending request id), space-separated — this is the as_completed ordering. Line 2 = <code class=\"inline\">completed=&lt;c&gt; cancelled=&lt;k&gt; sum=&lt;s&gt;</code> where s is the sum of surviving values. If no values survive, line 1 is empty (print a blank line).</p>",
+      "language": "python",
+      "engine": "pyodide",
+      "starter": "import sys\n\ndef main():\n    data = sys.stdin.read().split()\n    idx = 0\n    n = int(data[idx]); idx += 1\n    deadline = int(data[idx]); idx += 1\n    reqs = []\n    for rid in range(n):\n        lat = int(data[idx]); idx += 1\n        val = int(data[idx]); idx += 1\n        reqs.append((rid, lat, val))\n\n    # TODO: keep requests with lat <= deadline (completed); the rest are cancelled.\n    # TODO: order survivors in completion order: sort by (lat, rid).\n    # TODO: line 1 = survivor values space-separated (blank line if none).\n    # TODO: line 2 = \"completed=<c> cancelled=<k> sum=<s>\".\n    raise NotImplementedError\n\nmain()\n",
+      "solution": "import sys\n\ndef main():\n    data = sys.stdin.read().split()\n    idx = 0\n    n = int(data[idx]); idx += 1\n    deadline = int(data[idx]); idx += 1\n    reqs = []\n    for rid in range(n):\n        lat = int(data[idx]); idx += 1\n        val = int(data[idx]); idx += 1\n        reqs.append((rid, lat, val))\n\n    survivors = [(lat, rid, val) for (rid, lat, val) in reqs if lat <= deadline]\n    survivors.sort(key=lambda t: (t[0], t[1]))  # completion order: lat, then id\n\n    completed = len(survivors)\n    cancelled = n - completed\n    total = sum(val for (_, _, val) in survivors)\n    values = [str(val) for (_, _, val) in survivors]\n\n    sys.stdout.write(\" \".join(values) + \"\\n\")\n    sys.stdout.write(f\"completed={completed} cancelled={cancelled} sum={total}\\n\")\n\nmain()\n",
+      "runtimeFlags": [],
+      "stdin": "5 100\n40 7\n200 99\n10 3\n100 5\n150 8\n",
+      "tests": [
+        {
+          "name": "mixed deadline",
+          "stdin": "5 100\n40 7\n200 99\n10 3\n100 5\n150 8\n",
+          "expectStdout": "3 7 5\ncompleted=3 cancelled=2 sum=15",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": false
+        },
+        {
+          "name": "tie on latency ordered by id",
+          "stdin": "4 50\n50 1\n50 2\n50 3\n51 9\n",
+          "expectStdout": "1 2 3\ncompleted=3 cancelled=1 sum=6",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        },
+        {
+          "name": "all cancelled blank line",
+          "stdin": "3 5\n10 1\n20 2\n30 3\n",
+          "expectStdout": "\ncompleted=0 cancelled=3 sum=0",
+          "matchMode": "trim",
+          "timeBudgetMs": 2000,
+          "memBudgetKb": 65536,
+          "hidden": true
+        }
+      ],
+      "hint": "A request 'completes' iff lat <= deadline. as_completed order is just completion order: sort survivors by (lat, request_id). Everything else is cancelled at the deadline and contributes 0 to the sum."
+    }
+  ]
+}

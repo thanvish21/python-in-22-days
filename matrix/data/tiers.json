@@ -1,0 +1,33 @@
+{
+  "track": "Python Systems Engineering — 1% HFT Matrix",
+  "tiers": [
+    {
+      "tier": 1,
+      "emoji": "⚡",
+      "title": "Asynchronous Network Foundations",
+      "tag": "asyncio",
+      "summary": "Coroutine pipelines, bounded concurrency, and rate-respecting schedulers that hold throughput under backpressure."
+    },
+    {
+      "tier": 2,
+      "emoji": "🧠",
+      "title": "High-Performance Memory Management",
+      "tag": "generators",
+      "summary": "Generators, iterators, __slots__, and streaming parsers that chew through huge inputs without OOM."
+    },
+    {
+      "tier": 3,
+      "emoji": "🪝",
+      "title": "Advanced Metaprogramming & Hooks",
+      "tag": "metaclasses",
+      "summary": "Descriptors, class decorators, metaclasses, and context managers — bending the interpreter at runtime."
+    },
+    {
+      "tier": 4,
+      "emoji": "🔥",
+      "title": "GIL Escape & Native Extensions",
+      "tag": "multiprocessing",
+      "summary": "Escape the GIL with multiprocessing, mount native code via ctypes, and measure real parallel speedup. Runs on the backend."
+    }
+  ]
+}
