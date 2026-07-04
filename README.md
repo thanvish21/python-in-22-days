@@ -8,6 +8,7 @@ A friendly, **kid-simple** course that takes you from absolute beginner to confi
 
 - **22 days, beginner → pro** — from `print()` to classes, files, and a capstone project.
 - **Run real Python in the browser** — powered by [Pyodide](https://pyodide.org). Click **Run**, see output instantly.
+- **🤖 AI Python Tutor (PyBuddy)** — a built-in AI assistant that understands your current lesson and code. Ask questions, get explanations, debug your code, or request practice problems. Powered by free models via [OpenRouter](https://openrouter.ai).
 - **Interactive exercises** — fill-in-the-blank "try it" boxes with auto-checking, quizzes, and a daily challenge.
 - **Progress tracking & badges** — your progress is saved in the browser; days unlock as you finish, and you earn badges along the way.
 - **Safe to experiment** — a built-in watchdog stops runaway/infinite loops so the page never freezes.
@@ -38,6 +39,17 @@ python3 -m http.server 8000
 # then visit http://localhost:8000
 ```
 
+## 🤖 AI Tutor Setup
+
+The AI tutor (PyBuddy) uses [OpenRouter](https://openrouter.ai) for free AI model access.
+
+1. Sign up at [openrouter.ai](https://openrouter.ai) (free)
+2. Create an API key at [openrouter.ai/keys](https://openrouter.ai/keys)
+3. Add `OPENROUTER_API_KEY` to your Vercel project environment variables
+4. Deploy — the tutor will use `qwen/qwen3-coder:free` (with Gemma 4 fallback), both 100% free
+
+The tutor automatically knows which lesson the student is on and can see their code editor contents.
+
 ## ☁️ Deploy
 
 **Vercel** (recommended): import the GitHub repo at [vercel.com/new](https://vercel.com/new). No build step — it's static. `vercel.json` is already included.
@@ -54,6 +66,7 @@ css/styles.css      # playful theme
 js/pyrunner.js      # loads Pyodide, runs code with a 12s safety watchdog
 js/render.js        # turns a lesson JSON into interactive DOM
 js/app.js           # router, progress, unlock, badges
+js/ai-tutor.js      # PyBuddy AI tutor chat panel
 data/manifest.json  # the day list
 data/dayNN.json     # one file per lesson
 verify.py           # checks every lesson: JSON schema + compiles/runs all snippets
