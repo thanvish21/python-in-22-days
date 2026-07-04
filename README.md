@@ -46,7 +46,7 @@ The AI tutor (PyBuddy) uses [OpenRouter](https://openrouter.ai) for free AI mode
 1. Sign up at [openrouter.ai](https://openrouter.ai) (free)
 2. Create an API key at [openrouter.ai/keys](https://openrouter.ai/keys)
 3. Add `OPENROUTER_API_KEY` to your Vercel project environment variables
-4. Deploy — the tutor will use `qwen/qwen3-coder:free` (with Gemma 4 fallback), both 100% free
+4. Deploy — the tutor will use `nvidia/nemotron-3-ultra-550b-a55b:free` (with Qwen3 Coder fallback), both 100% free
 
 The tutor automatically knows which lesson the student is on and can see their code editor contents.
 
