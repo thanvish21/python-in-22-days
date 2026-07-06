@@ -5,7 +5,11 @@
   "subtitle": "Let your programs ASK questions and listen to the answer.",
   "goal": "Use input() to talk with the person running your program, and turn their answers into numbers with int() and float() so you can do math with them.",
   "estMinutes": 180,
-  "tags": ["basics", "input", "interactive"],
+  "tags": [
+    "basics",
+    "input",
+    "interactive"
+  ],
   "blocks": [
     {
       "type": "text",
@@ -90,7 +94,9 @@
       "title": "Friendly greeter",
       "instructions": "Use input() to ask for the person's name, then print a warm hello that includes their name. (When the popup appears, type any name!) Keep the input() in your code.",
       "starter": "name = input(\"What is your name? \")  # type your name in the popup\n# print a friendly hello that uses name\n",
-      "check": { "code_includes": "input" },
+      "check": {
+        "code_includes": "input"
+      },
       "solution": "name = input(\"What is your name? \")\nprint(f\"Hi {name}, welcome to Python! 🐍\")",
       "passMsg": "Yay — your program now greets people by name!",
       "failMsg": "Make sure you use input(\"...\") to ask for the name, then print a hello with it."
@@ -100,7 +106,9 @@
       "title": "Double it!",
       "instructions": "Ask the user for a number, convert it with int(), then print that number doubled (the number times 2). Use int(input(...)) so the math works. (Type any number in the popup.)",
       "starter": "n = int(input(\"Give me a number: \"))  # type a number in the popup\n# print n times 2\n",
-      "check": { "code_includes": "int(input" },
+      "check": {
+        "code_includes": "int(input"
+      },
       "solution": "n = int(input(\"Give me a number: \"))\nprint(f\"Double of {n} is {n * 2}!\")",
       "passMsg": "Nice! You converted text to a number and did real math. ✨",
       "failMsg": "Use int(input(\"...\")) to get a real number, then print n * 2."
@@ -166,13 +174,86 @@
           "explain": "input() always hands back a string. Even if you type 7, it's the text \"7\" until you convert it with int()."
         }
       ]
+    },
+    {
+      "type": "example",
+      "title": "Real-life example: café tip calculator",
+      "scenario": "<p>You and your friends eat at a café. The bill is ₹850 and you want to add a 12% tip. This tiny program uses variables, math, conversion thinking, and f-strings — the exact skills from Days 1–5.</p>",
+      "caption": "Real app: calculate a bill total",
+      "code": "bill = 850\ntip_percent = 12\n\ntip = bill * tip_percent / 100\ntotal = bill + tip\n\nprint(f\"Bill: ₹{bill}\")\nprint(f\"Tip ({tip_percent}%): ₹{tip}\")\nprint(f\"Total to pay: ₹{total}\")",
+      "explain": "Real programs often ask for numbers, convert them, do math, and print a friendly answer. That is already a useful mini app."
+    },
+    {
+      "type": "assessment",
+      "title": "Days 1–5 Assessment: Python Basics",
+      "intro": "Time to prove the first 5 days are locked in: printing, variables, strings, math, and input conversion.",
+      "passPct": 70,
+      "questions": [
+        {
+          "question": "Which line prints text on the screen?",
+          "options": [
+            "show(\"Hi\")",
+            "print(\"Hi\")",
+            "text(\"Hi\")",
+            "say Hi"
+          ],
+          "answerIndex": 1,
+          "explain": "print() is Python's basic way to show output."
+        },
+        {
+          "question": "What is a variable best described as?",
+          "options": [
+            "A named box that stores a value",
+            "A Python error",
+            "A comment",
+            "A type of loop"
+          ],
+          "answerIndex": 0,
+          "explain": "A variable is a name pointing to a value so you can reuse it later."
+        },
+        {
+          "question": "What does an f-string let you do?",
+          "options": [
+            "Delete a string",
+            "Put variable values inside text",
+            "Only print numbers",
+            "Create a file"
+          ],
+          "answerIndex": 1,
+          "explain": "An f-string like f\"Hi {name}\" inserts variable values into text."
+        },
+        {
+          "question": "What does 17 % 5 return?",
+          "options": [
+            "3",
+            "2",
+            "5",
+            "17"
+          ],
+          "answerIndex": 1,
+          "explain": "% gives the remainder. 17 divided by 5 leaves 2."
+        },
+        {
+          "question": "Why do we use int(input(...)) when asking for an age?",
+          "options": [
+            "input() returns text, so int() converts it to a number",
+            "input() returns a list",
+            "int() prints the answer",
+            "Because strings cannot be shown"
+          ],
+          "answerIndex": 0,
+          "explain": "input() always gives text. int() turns number-like text into a real integer."
+        }
+      ]
     }
   ],
   "challenge": {
     "title": "Age in days machine 🎂",
     "instructions": "Build a little program that asks the user how old they are, converts the answer with int(), and then tells them roughly how many DAYS old they are (age times 365). Use an f-string to show a friendly message. (When the popup appears, type your age!)",
     "starter": "age = int(input(\"How old are you? \"))  # type your age in the popup\n# multiply age by 365 and print a friendly message with an f-string\n",
-    "check": { "code_includes": "int(input" },
+    "check": {
+      "code_includes": "int(input"
+    },
     "solution": "age = int(input(\"How old are you? \"))\ndays = age * 365\nprint(f\"Wow, you are about {days} days old! 🎉\")",
     "hint": "First do age = int(input(\"...\")), then make days = age * 365, then print an f-string using {days}.",
     "passMsg": "🏆 Incredible! Your program asks a question, does math, and answers back. That's Day 5 done — you're building real interactive programs now!"

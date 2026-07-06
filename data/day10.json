@@ -202,6 +202,77 @@
           "explain": "A while loop keeps running while its condition is True, and stops the moment that condition becomes False."
         }
       ]
+    },
+    {
+      "type": "example",
+      "title": "Real-life example: simple login attempts",
+      "scenario": "<p>Apps don't let users try a password forever. This program uses booleans, if/else, lists, for loops, and a while-style stopping idea to allow only a few attempts.</p>",
+      "caption": "Real app: limit password attempts",
+      "code": "correct_password = \"python123\"\nattempts = [\"hello\", \"snake\", \"python123\"]\nlogged_in = False\n\nfor attempt in attempts:\n    print(\"Trying:\", attempt)\n    if attempt == correct_password:\n        logged_in = True\n        print(\"Access granted ✅\")\n        break\n    else:\n        print(\"Wrong password\")\n\nif not logged_in:\n    print(\"Account locked for safety\")",
+      "explain": "This is close to real login logic: store attempts, compare values, stop early with break, and track success with a boolean."
+    },
+    {
+      "type": "assessment",
+      "title": "Days 6–10 Assessment: Logic, Lists, and Loops",
+      "intro": "This checkpoint covers decisions and repetition — the core of programs that react to data.",
+      "passPct": 70,
+      "questions": [
+        {
+          "question": "What does 4 == 4 evaluate to?",
+          "options": [
+            "True",
+            "False",
+            "4",
+            "An error"
+          ],
+          "answerIndex": 0,
+          "explain": "== checks equality. 4 equals 4, so it is True."
+        },
+        {
+          "question": "In an if/elif/else chain, what happens after the first True branch runs?",
+          "options": [
+            "Python checks every branch anyway",
+            "Python stops the chain",
+            "Python deletes the variable",
+            "Python repeats forever"
+          ],
+          "answerIndex": 1,
+          "explain": "Python runs the first matching branch and skips the rest."
+        },
+        {
+          "question": "What is the first index in a Python list?",
+          "options": [
+            "1",
+            "0",
+            "-1",
+            "First"
+          ],
+          "answerIndex": 1,
+          "explain": "Python lists start counting at 0."
+        },
+        {
+          "question": "What numbers does range(1, 4) produce?",
+          "options": [
+            "1, 2, 3, 4",
+            "1, 2, 3",
+            "0, 1, 2, 3",
+            "4 only"
+          ],
+          "answerIndex": 1,
+          "explain": "range stops before the stop value, so it gives 1, 2, 3."
+        },
+        {
+          "question": "What is the biggest danger in a while loop?",
+          "options": [
+            "It cannot print",
+            "It can become infinite if the condition never changes",
+            "It only works on lists",
+            "It deletes variables"
+          ],
+          "answerIndex": 1,
+          "explain": "A while loop must move toward stopping, or it may run forever."
+        }
+      ]
     }
   ],
   "challenge": {

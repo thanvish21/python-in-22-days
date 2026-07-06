@@ -163,6 +163,8 @@
       }
       case "quiz": return renderQuiz(b);
       case "surprise": return renderSurprise(b);
+      case "example": return renderExample(b);
+      case "assessment": return renderAssessment(b);
       case "tip": {
         const wrap = el("div", "block");
         const box = el("div", "tip" + (b.variant === "warn" ? " warn" : ""));
@@ -216,6 +218,84 @@
     wrap.appendChild(el("h3", null, "🎁 " + escapeInline(b.title || "Surprise Quiz!")));
     if (b.intro) wrap.appendChild(el("p", "surprise-intro", escapeInline(b.intro)));
     (b.questions || []).forEach((q) => wrap.appendChild(renderQuizQuestion(q)));
+    return wrap;
+  }
+
+  function renderExample(b) {
+    const wrap = el("div", "block example-card");
+    wrap.appendChild(el("h3", null, "🌍 " + escapeInline(b.title || "Real-life example")));
+    if (b.scenario) wrap.appendChild(el("div", "instructions", b.scenario));
+    if (b.code) wrap.appendChild(makeRunner(b.code, { caption: b.caption || "Run the real-life example" }));
+    if (b.explain) wrap.appendChild(el("p", "explain", b.explain));
+    return wrap;
+  }
+
+  function renderAssessment(b) {
+    const questions = (b.questions || []).filter((q) => {
+      const options = q.options || [];
+      return Number.isInteger(q.answerIndex) && q.answerIndex >= 0 && q.answerIndex < options.length;
+    });
+    const passPct = Number.isFinite(Number(b.passPct)) ? Number(b.passPct) : 70;
+    const wrap = el("div", "block assessment-card");
+    wrap.appendChild(el("h3", null, "📝 " + escapeInline(b.title || "Milestone Assessment")));
+    if (b.intro) wrap.appendChild(el("p", "assessment-intro", escapeInline(b.intro)));
+    wrap.appendChild(el("p", "assessment-note", "Score " + passPct + "% or higher to pass. Choose one answer for each question, then submit."));
+
+    if (!questions.length) {
+      wrap.appendChild(el("p", null, "No assessment questions are available yet."));
+      return wrap;
+    }
+
+    const form = el("div", "test-form assessment-form");
+    const picked = new Array(questions.length).fill(-1);
+    questions.forEach((q, qi) => {
+      const card = el("div", "quiz assessment-question");
+      card.appendChild(el("h3", null, "Q" + (qi + 1) + ". " + escapeInline(q.question || "Question")));
+      const opts = el("div", "quiz-opts");
+      (q.options || []).forEach((text, oi) => {
+        const btn = el("button", "quiz-opt", escapeInline(text));
+        btn.type = "button";
+        btn.addEventListener("click", () => {
+          picked[qi] = oi;
+          opts.querySelectorAll(".quiz-opt").forEach((x) => x.classList.remove("chosen"));
+          btn.classList.add("chosen");
+        });
+        opts.appendChild(btn);
+      });
+      card.appendChild(opts);
+      form.appendChild(card);
+    });
+    wrap.appendChild(form);
+
+    const submit = el("button", "complete-btn assessment-submit", "✅ Submit assessment");
+    submit.type = "button";
+    const result = el("div", "test-result assessment-result");
+    submit.addEventListener("click", () => {
+      let correct = 0;
+      questions.forEach((q, qi) => {
+        const card = form.children[qi];
+        const opts = card.querySelectorAll(".quiz-opt");
+        opts.forEach((o, oi) => {
+          o.disabled = true;
+          if (oi === q.answerIndex) o.classList.add("correct");
+          else if (oi === picked[qi]) o.classList.add("wrong");
+        });
+        if (picked[qi] === q.answerIndex) correct++;
+        if (!card.querySelector(".quiz-explain")) {
+          const ex = el("div", "quiz-explain show", q.explain || "");
+          card.appendChild(ex);
+        }
+      });
+      const pct = Math.round((correct / questions.length) * 100);
+      const pass = pct >= passPct;
+      result.className = "test-result assessment-result show " + (pass ? "pass" : "fail");
+      result.innerHTML = (pass ? "🎉 " : "📚 ") + "You scored <strong>" + correct + "/" + questions.length +
+        " (" + pct + "%)</strong>. " + (pass ? "Passed — you are ready for the next block!" : "Review the explanations above, then try the lesson challenge again.");
+      submit.disabled = true;
+      result.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    wrap.appendChild(submit);
+    wrap.appendChild(result);
     return wrap;
   }
 
