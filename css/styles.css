@@ -867,3 +867,26 @@ code.ai-inline {
   .ai-fab-pulse { animation: none; }
   .ai-dots span { animation: none; }
 }
+
+/* ===== Real-life examples + milestone assessments ===== */
+.example-card,
+.assessment-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+  border: 2px solid rgba(var(--brand-rgb), .22);
+}
+.example-card { border-left: 7px solid var(--green); }
+.assessment-card { border-left: 7px solid var(--brand); }
+.example-card h3,
+.assessment-card h3 { margin: 0 0 8px; font-size: 22px; }
+.assessment-intro,
+.assessment-note { color: var(--ink-soft); margin: 8px 0 14px; }
+.assessment-form { display: flex; flex-direction: column; gap: 14px; margin: 14px 0; }
+.assessment-question { box-shadow: none; border: 2px solid rgba(var(--brand-rgb), .12); }
+.assessment-submit { margin-top: 6px; }
+.assessment-result { margin-bottom: 0; }
+[data-theme="dark"] .example-card,
+[data-theme="dark"] .assessment-card,
+[data-theme="dark"] .assessment-question { border-color: rgba(140, 125, 255, .25); }

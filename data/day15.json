@@ -211,6 +211,77 @@
           "explain": "Read tracebacks from the bottom up — the last line names the error type and gives a short hint."
         }
       ]
+    },
+    {
+      "type": "example",
+      "title": "Real-life example: safe student score lookup",
+      "scenario": "<p>A teacher app needs to look up scores safely. This combines dictionaries, functions, default arguments, and try/except so missing names do not crash the program.</p>",
+      "caption": "Real app: look up student data safely",
+      "code": "scores = {\"Ana\": 91, \"Ben\": 76, \"Cara\": 88}\n\ndef get_grade(name):\n    try:\n        score = scores[name]\n    except KeyError:\n        return f\"No score found for {name}\"\n\n    if score >= 90:\n        return \"A\"\n    if score >= 80:\n        return \"B\"\n    return \"Keep practicing\"\n\nprint(get_grade(\"Ana\"))\nprint(get_grade(\"Dev\"))",
+      "explain": "Real apps look up data all the time. try/except keeps the program friendly when the data is missing."
+    },
+    {
+      "type": "assessment",
+      "title": "Days 11–15 Assessment: Data, Functions, and Errors",
+      "intro": "This checkpoint tests the tools that make your code organized and crash-resistant.",
+      "passPct": 70,
+      "questions": [
+        {
+          "question": "What makes a tuple different from a list?",
+          "options": [
+            "A tuple cannot be changed after creation",
+            "A tuple can only store numbers",
+            "A tuple is always empty",
+            "A tuple is a loop"
+          ],
+          "answerIndex": 0,
+          "explain": "Tuples are immutable: once created, their items do not change."
+        },
+        {
+          "question": "How do you access the value for key \"name\" in dictionary d?",
+          "options": [
+            "d(\"name\")",
+            "d[\"name\"]",
+            "name[d]",
+            "d.name"
+          ],
+          "answerIndex": 1,
+          "explain": "Dictionary lookup uses square brackets with the key."
+        },
+        {
+          "question": "What is the main difference between print and return?",
+          "options": [
+            "print displays; return sends a value back",
+            "return only works with strings",
+            "print stores data",
+            "There is no difference"
+          ],
+          "answerIndex": 0,
+          "explain": "return gives a result back to the caller so it can be reused."
+        },
+        {
+          "question": "What does *args collect extra positional arguments into?",
+          "options": [
+            "A dictionary",
+            "A tuple",
+            "A string",
+            "A file"
+          ],
+          "answerIndex": 1,
+          "explain": "*args collects extra positional arguments into a tuple."
+        },
+        {
+          "question": "Which error happens when a dictionary key is missing?",
+          "options": [
+            "IndexError",
+            "ValueError",
+            "KeyError",
+            "SyntaxError"
+          ],
+          "answerIndex": 2,
+          "explain": "A missing dictionary key raises KeyError."
+        }
+      ]
     }
   ],
   "challenge": {

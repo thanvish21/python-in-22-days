@@ -5,7 +5,12 @@
   "subtitle": "Turn long, clunky loops into short, beautiful one-liners — the Pythonic way.",
   "goal": "Use list and dict comprehensions, write tiny lambda functions, and replace map/filter with clean comprehensions.",
   "estMinutes": 180,
-  "tags": ["intermediate", "pythonic", "comprehensions", "lambda"],
+  "tags": [
+    "intermediate",
+    "pythonic",
+    "comprehensions",
+    "lambda"
+  ],
   "blocks": [
     {
       "type": "text",
@@ -117,7 +122,10 @@
       "title": "Triple every number",
       "instructions": "Use a list comprehension to make a new list where every number in nums is multiplied by 3. Print the result.",
       "starter": "nums = [1, 2, 3, 4]\n# build 'tripled' with a comprehension\ntripled = [___ for x in nums]\nprint(tripled)",
-      "check": { "stdout_includes": "[3, 6, 9, 12]", "code_includes": "for x in nums" },
+      "check": {
+        "stdout_includes": "[3, 6, 9, 12]",
+        "code_includes": "for x in nums"
+      },
       "solution": "nums = [1, 2, 3, 4]\ntripled = [x * 3 for x in nums]\nprint(tripled)",
       "passMsg": "One clean line — that's Pythonic! 🎉",
       "failMsg": "Inside the brackets put x * 3, like [x * 3 for x in nums]."
@@ -127,7 +135,10 @@
       "title": "Filter out the small ones",
       "instructions": "Use a comprehension with an if to keep only the numbers greater than 10. Print the new list.",
       "starter": "nums = [4, 15, 8, 23, 9, 42]\n# keep only numbers > 10\nbig = [x for x in nums if ___]\nprint(big)",
-      "check": { "stdout_includes": "[15, 23, 42]", "code_includes": "if" },
+      "check": {
+        "stdout_includes": "[15, 23, 42]",
+        "code_includes": "if"
+      },
       "solution": "nums = [4, 15, 8, 23, 9, 42]\nbig = [x for x in nums if x > 10]\nprint(big)",
       "passMsg": "Nice filtering — you're writing pro-level code now! 💪",
       "failMsg": "Add the condition after if, like: [x for x in nums if x > 10]."
@@ -193,13 +204,91 @@
           "explain": "It does 'n + 1' for each n, so 10→11, 20→21, 30→31. The recipe is applied to every item."
         }
       ]
+    },
+    {
+      "type": "example",
+      "title": "Real-life example: mini inventory report",
+      "scenario": "<p>Small shops track stock and prices. This program uses a class, a list of objects, a comprehension, and sorted() with lambda to build a useful report.</p>",
+      "caption": "Real app: summarize inventory value",
+      "code": "class Product:\n    def __init__(self, name, stock, price):\n        self.name = name\n        self.stock = stock\n        self.price = price\n\n    def value(self):\n        return self.stock * self.price\n\nitems = [\n    Product(\"Notebook\", 12, 40),\n    Product(\"Pen\", 50, 10),\n    Product(\"Bag\", 3, 900),\n]\n\nvaluable = [item for item in items if item.value() > 500]\nvaluable = sorted(valuable, key=lambda item: item.value(), reverse=True)\n\nfor item in valuable:\n    print(f\"{item.name}: ₹{item.value()}\")",
+      "explain": "This combines several advanced beginner skills into one real-world report: objects hold data, methods compute values, comprehensions filter, and lambda controls sorting."
+    },
+    {
+      "type": "assessment",
+      "title": "Days 16–20 Assessment: Files, Modules, OOP, and Pythonic Tools",
+      "intro": "This checkpoint covers the tools that make programs feel like real applications.",
+      "passPct": 70,
+      "questions": [
+        {
+          "question": "What does opening a file with mode \"w\" do if it already exists?",
+          "options": [
+            "Adds to the end",
+            "Erases old content and writes fresh",
+            "Only reads",
+            "Creates a list"
+          ],
+          "answerIndex": 1,
+          "explain": "Mode 'w' writes from scratch and clears old content."
+        },
+        {
+          "question": "What does import math allow?",
+          "options": [
+            "Use functions inside the math module",
+            "Install Python",
+            "Delete numbers",
+            "Make every number a string"
+          ],
+          "answerIndex": 0,
+          "explain": "import math gives access to tools like math.sqrt()."
+        },
+        {
+          "question": "In OOP, what is a class?",
+          "options": [
+            "A blueprint for objects",
+            "A single printed message",
+            "Only a loop",
+            "A Python error"
+          ],
+          "answerIndex": 0,
+          "explain": "A class is the blueprint; objects are created from it."
+        },
+        {
+          "question": "Which dunder method controls friendly printing with print(obj)?",
+          "options": [
+            "__init__",
+            "__str__",
+            "__len__",
+            "__print__"
+          ],
+          "answerIndex": 1,
+          "explain": "print(obj) uses __str__ when you define it."
+        },
+        {
+          "question": "What does [n * 2 for n in [1, 2, 3]] produce?",
+          "options": [
+            "[1, 2, 3]",
+            "[2, 4, 6]",
+            "[n * 2]",
+            "An error"
+          ],
+          "answerIndex": 1,
+          "explain": "The expression doubles each item in the list."
+        }
+      ]
     }
   ],
   "challenge": {
     "title": "Build a score report",
     "instructions": "You have a list of (name, score) pairs. 1) Use a dict comprehension to make a dictionary of name -> score. 2) Use sorted() with a lambda key to print the names sorted from highest score to lowest. Print the dictionary first, then the sorted names.",
     "starter": "scores = [(\"Ana\", 85), (\"Ben\", 92), (\"Cara\", 78)]\n# 1) make a dict: name -> score\nreport = {___}\nprint(report)\n# 2) sort names by score, highest first\nranked = sorted(scores, key=lambda pair: ___, reverse=True)\nprint([name for name, score in ranked])",
-    "check": { "stdout_includes": ["Ben", "Ana", "Cara"], "code_includes": "lambda" },
+    "check": {
+      "stdout_includes": [
+        "Ben",
+        "Ana",
+        "Cara"
+      ],
+      "code_includes": "lambda"
+    },
     "solution": "scores = [(\"Ana\", 85), (\"Ben\", 92), (\"Cara\", 78)]\nreport = {name: score for name, score in scores}\nprint(report)\nranked = sorted(scores, key=lambda pair: pair[1], reverse=True)\nprint([name for name, score in ranked])",
     "hint": "For the dict use {name: score for name, score in scores}. For sorting, the key is lambda pair: pair[1] and add reverse=True for highest first.",
     "passMsg": "🏆 A dict comprehension AND a lambda sort — that's seriously Pythonic. Day 20 complete!"

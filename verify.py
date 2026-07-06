@@ -3,7 +3,7 @@
 import json, os, sys, glob, tempfile, subprocess, textwrap
 
 DATA = os.path.join(os.path.dirname(__file__), "data")
-BLOCK_TYPES = {"text", "code", "tip", "quiz", "tryit", "surprise"}
+BLOCK_TYPES = {"text", "code", "tip", "quiz", "tryit", "surprise", "example", "assessment"}
 errors, warnings, snippet_count = [], [], 0
 
 
@@ -18,12 +18,24 @@ def collect_code(day, data):
                 yield (f"d{day} block{i} tryit.starter", b["starter"], False)
             if b.get("solution"):
                 yield (f"d{day} block{i} tryit.solution", b["solution"], False)
+        if t == "example" and b.get("code"):
+            yield (f"d{day} block{i} example.code", b["code"], bool(b.get("expectError")))
     c = data.get("challenge")
     if c:
         if c.get("starter"):
             yield (f"d{day} challenge.starter", c["starter"], False)
         if c.get("solution"):
             yield (f"d{day} challenge.solution", c["solution"], False)
+
+
+def validate_question(day, label, q):
+    opts = q.get("options", [])
+    ai = q.get("answerIndex")
+    if not isinstance(opts, list) or not opts:
+        errors.append(f"day{day:02d} {label}: missing/non-empty options array")
+        return
+    if not isinstance(ai, int) or ai < 0 or ai >= len(opts):
+        errors.append(f"day{day:02d} {label}: answerIndex {ai} out of range (0..{len(opts)-1})")
 
 
 def check_schema(day, data):
@@ -37,10 +49,14 @@ def check_schema(day, data):
         if t not in BLOCK_TYPES:
             errors.append(f"day{day:02d} block{i}: bad type '{t}'")
         if t == "quiz":
-            opts = b.get("options", [])
-            ai = b.get("answerIndex")
-            if not isinstance(ai, int) or ai < 0 or ai >= len(opts):
-                errors.append(f"day{day:02d} block{i}: answerIndex {ai} out of range (0..{len(opts)-1})")
+            validate_question(day, f"block{i}", b)
+        if t == "assessment":
+            questions = b.get("questions", [])
+            if not isinstance(questions, list) or not questions:
+                errors.append(f"day{day:02d} block{i}: assessment needs a non-empty questions array")
+            else:
+                for qi, q in enumerate(questions):
+                    validate_question(day, f"block{i} assessment question{qi}", q)
 
 
 def run_snippet(label, code, expect_error=False):
