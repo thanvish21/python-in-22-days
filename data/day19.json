@@ -21,6 +21,18 @@
       "type": "text",
       "heading": "Share your code",
       "html": "<p>Commit and push to GitHub. You are building a real portfolio now!</p>"
+    },
+    {
+      "type": "recapgame",
+      "gameType": "sorter",
+      "title": "Sort the File Writer",
+      "instructions": "Drag lines (or use ▲▼) into the correct order to save a contact to a file.",
+      "lines": [
+        "name = input('Name: ')",
+        "file = open('contacts.txt', 'a')",
+        "file.write(name + '\\n')",
+        "file.close()"
+      ]
     }
   ],
   "challenge": {

@@ -44,6 +44,18 @@
       "options": ["To play games", "To save code, track changes, and share with others", "To make their computer run faster", "To write emails"],
       "answerIndex": 1,
       "explain": "GitHub is like Google Drive for code. It saves your work and lets you show it off."
+    },
+    {
+      "type": "recapgame",
+      "gameType": "sorter",
+      "title": "Sort the Tip Calculator",
+      "instructions": "Drag lines (or use ▲▼) into the correct order to make this program work.",
+      "lines": [
+        "print('Welcome to the Tip Calculator!')",
+        "bill = float(input('What was the bill? '))",
+        "tip = bill * 0.15",
+        "print('Tip:', tip)"
+      ]
     }
   ],
   "challenge": {
