@@ -27,6 +27,18 @@
       "type": "text",
       "heading": "Push it up",
       "html": "<p>Don't forget to push this new project to GitHub! Create a new repository for it.</p>"
+    },
+    {
+      "type": "recapgame",
+      "gameType": "match",
+      "title": "Match the Concepts",
+      "instructions": "Click a card on the left, then its match on the right!",
+      "pairs": [
+        {"left": "for i in range(5):", "right": "Repeats code 5 times"},
+        {"left": "[1, 2, 3]", "right": "A list of items"},
+        {"left": "input()", "right": "Asks the user for text"},
+        {"left": "print()", "right": "Shows text on screen"}
+      ]
     }
   ],
   "challenge": {

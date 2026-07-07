@@ -165,6 +165,7 @@
       case "surprise": return renderSurprise(b);
       case "example": return renderExample(b);
       case "assessment": return renderAssessment(b);
+      case "recapgame": return renderRecapGame(b);
       case "tip": {
         const wrap = el("div", "block");
         const box = el("div", "tip" + (b.variant === "warn" ? " warn" : ""));
@@ -296,6 +297,212 @@
     });
     wrap.appendChild(submit);
     wrap.appendChild(result);
+    return wrap;
+  }
+
+  // ---- recap games (milestone recap, coddy.tech style) ----
+  function shuffleArray(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function renderRecapGame(b) {
+    if (b.gameType === "sorter") return renderRecapSorter(b);
+    if (b.gameType === "match") return renderRecapMatch(b);
+    const wrap = el("div", "block");
+    wrap.appendChild(el("p", null, "[unknown recapgame type: " + escapeInline(b.gameType || "?") + "]"));
+    return wrap;
+  }
+
+  function renderRecapSorter(b) {
+    const wrap = el("div", "block recapgame recapgame-sorter");
+    wrap.appendChild(el("h3", null, "🎮 " + escapeInline(b.title || "Sort the code")));
+    if (b.instructions) wrap.appendChild(el("div", "recap-instructions", escapeInline(b.instructions)));
+
+    const correct = (b.lines || []).map(String);
+    const order = shuffleArray(correct.map((_, i) => i));
+    // Guarantee starting order isn't already correct (when possible).
+    if (correct.length > 1 && order.every((v, i) => v === i)) {
+      const tmp = order[0]; order[0] = order[1]; order[1] = tmp;
+    }
+
+    const list = el("div", "sorter-list");
+    wrap.appendChild(list);
+
+    const toolbar = el("div", "recap-toolbar");
+    const checkBtn = el("button", "btn btn-check", "✓ Check Order");
+    toolbar.appendChild(checkBtn);
+    wrap.appendChild(toolbar);
+
+    const feedback = el("div", "recap-feedback");
+    feedback.setAttribute("role", "status");
+    feedback.setAttribute("aria-live", "polite");
+    wrap.appendChild(feedback);
+
+    function clearFeedback() {
+      feedback.className = "recap-feedback";
+      feedback.innerHTML = "";
+      checkBtn.disabled = false;
+    }
+
+    function renderList() {
+      list.innerHTML = "";
+      order.forEach((idx, pos) => {
+        const item = el("div", "sorter-item");
+        item.setAttribute("draggable", "true");
+        const code = el("pre", "sorter-code");
+        code.textContent = correct[idx];
+        item.appendChild(code);
+
+        const controls = el("div", "sorter-controls");
+        const up = el("button", "sorter-btn", "▲");
+        up.setAttribute("aria-label", "Move up");
+        up.disabled = pos === 0;
+        up.addEventListener("click", () => {
+          const t = order[pos - 1]; order[pos - 1] = order[pos]; order[pos] = t;
+          clearFeedback();
+          renderList();
+        });
+        const down = el("button", "sorter-btn", "▼");
+        down.setAttribute("aria-label", "Move down");
+        down.disabled = pos === order.length - 1;
+        down.addEventListener("click", () => {
+          const t = order[pos + 1]; order[pos + 1] = order[pos]; order[pos] = t;
+          clearFeedback();
+          renderList();
+        });
+        controls.appendChild(up);
+        controls.appendChild(down);
+        item.appendChild(controls);
+
+        // Drag & drop reordering.
+        item.addEventListener("dragstart", (e) => {
+          item.classList.add("dragging");
+          if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", String(pos));
+          }
+        });
+        item.addEventListener("dragend", () => item.classList.remove("dragging"));
+        item.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          item.classList.add("drag-over");
+        });
+        item.addEventListener("dragleave", () => item.classList.remove("drag-over"));
+        item.addEventListener("drop", (e) => {
+          e.preventDefault();
+          item.classList.remove("drag-over");
+          const from = Number(e.dataTransfer ? e.dataTransfer.getData("text/plain") : NaN);
+          if (!Number.isInteger(from) || from === pos) return;
+          const [moved] = order.splice(from, 1);
+          order.splice(pos, 0, moved);
+          clearFeedback();
+          renderList();
+        });
+
+        list.appendChild(item);
+      });
+    }
+    renderList();
+
+    checkBtn.addEventListener("click", () => {
+      const pass = order.every((v, i) => v === i);
+      if (pass) {
+        feedback.className = "recap-feedback pass show";
+        feedback.innerHTML = '<div class="recap-big">✅</div><div class="recap-msg">Perfect order!</div><div class="recap-xp">🏆 +100 XP!</div>';
+        checkBtn.disabled = true;
+      } else {
+        feedback.className = "recap-feedback fail show shake";
+        feedback.innerHTML = '<div class="recap-big">❌</div><div class="recap-msg">Not quite — try rearranging.</div>';
+        setTimeout(() => feedback.classList.remove("shake"), 600);
+      }
+    });
+
+    return wrap;
+  }
+
+  function renderRecapMatch(b) {
+    const wrap = el("div", "block recapgame recapgame-match");
+    wrap.appendChild(el("h3", null, "🎮 " + escapeInline(b.title || "Match concepts")));
+    if (b.instructions) wrap.appendChild(el("div", "recap-instructions", escapeInline(b.instructions)));
+
+    const pairs = (b.pairs || []).map((p) => ({ left: String(p.left), right: String(p.right) }));
+    const rightOrder = shuffleArray(pairs.map((_, i) => i));
+    if (pairs.length > 1 && rightOrder.every((v, i) => v === i)) {
+      const tmp = rightOrder[0]; rightOrder[0] = rightOrder[1]; rightOrder[1] = tmp;
+    }
+
+    const grid = el("div", "match-grid");
+    const leftCol = el("div", "match-col");
+    const rightCol = el("div", "match-col");
+    grid.appendChild(leftCol);
+    grid.appendChild(rightCol);
+    wrap.appendChild(grid);
+
+    const feedback = el("div", "recap-feedback");
+    feedback.setAttribute("role", "status");
+    feedback.setAttribute("aria-live", "polite");
+    wrap.appendChild(feedback);
+
+    const matched = new Set();
+    let selectedLeftIdx = null;
+    let selectedLeftBtn = null;
+
+    pairs.forEach((p, i) => {
+      const btn = el("button", "match-card match-left", escapeInline(p.left));
+      btn.type = "button";
+      btn.addEventListener("click", () => {
+        if (btn.disabled || matched.has(i)) return;
+        if (selectedLeftBtn) selectedLeftBtn.classList.remove("selected");
+        selectedLeftIdx = i;
+        selectedLeftBtn = btn;
+        btn.classList.add("selected");
+      });
+      leftCol.appendChild(btn);
+    });
+
+    rightOrder.forEach((pairIdx) => {
+      const btn = el("button", "match-card match-right", escapeInline(pairs[pairIdx].right));
+      btn.type = "button";
+      btn.addEventListener("click", () => {
+        if (btn.disabled) return;
+        if (selectedLeftIdx === null) {
+          btn.classList.add("shake");
+          setTimeout(() => btn.classList.remove("shake"), 500);
+          return;
+        }
+        const leftBtnRef = selectedLeftBtn;
+        const leftIdxRef = selectedLeftIdx;
+        selectedLeftIdx = null;
+        selectedLeftBtn = null;
+
+        if (pairIdx === leftIdxRef) {
+          matched.add(pairIdx);
+          leftBtnRef.classList.remove("selected");
+          leftBtnRef.classList.add("correct");
+          leftBtnRef.disabled = true;
+          btn.classList.add("correct");
+          btn.disabled = true;
+          if (matched.size === pairs.length) {
+            feedback.className = "recap-feedback pass show";
+            feedback.innerHTML = '<div class="recap-big">🎉</div><div class="recap-msg">🏆 Perfect Recall! +200 XP</div>';
+          }
+        } else {
+          leftBtnRef.classList.add("wrong", "shake");
+          btn.classList.add("wrong", "shake");
+          setTimeout(() => {
+            leftBtnRef.classList.remove("wrong", "shake", "selected");
+            btn.classList.remove("wrong", "shake");
+          }, 600);
+        }
+      });
+      rightCol.appendChild(btn);
+    });
+
     return wrap;
   }
 
