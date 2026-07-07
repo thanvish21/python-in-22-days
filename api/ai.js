@@ -10,7 +10,7 @@
 "use strict";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const PRIMARY_MODEL = "google/gemini-pro";
+const PRIMARY_MODEL = "google/gemini-pro-1.5-exp";
 const FALLBACK_MODEL = "meta-llama/llama-3-8b-instruct:free";
 const MAX_HISTORY = 10;
 const MAX_MSG_LEN = 2000;
@@ -178,9 +178,11 @@ module.exports = async (req, res) => {
       const reply = await callOpenRouter(messages, FALLBACK_MODEL);
       sendJson(res, 200, { ok: true, reply });
     } catch (fallbackErr) {
+      console.error("Primary Error:", primaryErr.message);
+      console.error("Fallback Error:", fallbackErr.message);
       sendJson(res, 502, {
         ok: false,
-        error: "AI tutor is temporarily unavailable. Please try again in a moment.",
+        error: "AI tutor is temporarily unavailable. Primary Error: " + primaryErr.message + " | Fallback Error: " + fallbackErr.message
       });
     }
   }
