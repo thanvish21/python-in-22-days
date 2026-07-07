@@ -1,46 +1,59 @@
-/* ===== Python in 22 Days — playful, kid-friendly theme ===== */
+/* ===== Python Pro — Exact Claude theme (Anthropic palette) ===== */
 :root {
-  --bg: #fff7ef;
+  --bg: #faf9f5;
   --bg-card: #ffffff;
-  --ink: #2b2440;
-  --ink-soft: #6b6385;
-  --brand: #6c5ce7;
-  --brand-2: #ff7eb6;
-  --green: #1dd1a1;
-  --green-deep: #10ac84;
-  --yellow: #feca57;
-  --red: #ff6b6b;
-  --blue: #54a0ff;
-  --code-bg: #2b2440;
-  --code-ink: #f4f1ff;
-  --shadow: 0 10px 30px rgba(108, 92, 231, 0.15);
-  --shadow-sm: 0 4px 14px rgba(43, 36, 64, 0.10);
-  --radius: 20px;
-  --radius-sm: 12px;
+  --ink: #191817;
+  --ink-soft: #6b665d;
+  --brand: #c15f3c;
+  --brand-2: #d97757;
+  --green: #4a7c59;
+  --green-deep: #3c6b4a;
+  --yellow: #d4a574;
+  --red: #b23a1f;
+  --blue: #6c8ab5;
+  --code-bg: #2b2926;
+  --code-ink: #faf9f5;
+  --shadow: 0 8px 24px rgba(25, 24, 23, 0.06);
+  --shadow-sm: 0 2px 8px rgba(25, 24, 23, 0.05);
+  --radius: 14px;
+  --radius-sm: 10px;
   --maxw: 920px;
 }
 
 [data-theme="dark"] {
-  --bg: #161325;
-  --bg-card: #211d36;
-  --ink: #f4f1ff;
-  --ink-soft: #a59ec4;
-  --brand: #8c7dff;
-  --brand-2: #ff7eb6;
-  --green: #1dd1a1;
-  --green-deep: #15b88c;
-  --yellow: #feca57;
-  --red: #ff6b6b;
-  --blue: #54a0ff;
-  --code-bg: #0f0d1c;
-  --code-ink: #f4f1ff;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-  --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --bg: #262624;
+  --bg-card: #30302e;
+  --ink: #f4f3ee;
+  --ink-soft: #b8b1a6;
+  --brand: #e08a68;
+  --brand-2: #d97757;
+  --green: #6ba17d;
+  --green-deep: #5c9070;
+  --yellow: #e0b788;
+  --red: #d16758;
+  --blue: #8ba8cf;
+  --code-bg: #1a1918;
+  --code-ink: #f4f3ee;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
 
   /* Override hardcoded light backgrounds that don't read from variables. */
-  --soft-violet: #2a2545;   /* was #f7f4ff / #efe9ff */
-  --soft-green: #18382f;    /* was #eefcf6 */
-  --soft-yellow: #3a3220;   /* was #fff8e6 */
+  --soft-violet: #3a3230;
+  --soft-green: #2a3a30;
+  --soft-yellow: #3a3428;
+}
+
+body {
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: -0.005em;
+}
+h1, h2, h3, .brand-name, .hero h1 {
+  font-family: "Instrument Serif", "Copernicus", "Charter", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+code, pre, .code-area, .flash-content {
+  font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 [data-theme="dark"] .topbar { background: rgba(22, 19, 37, 0.85); border-bottom-color: rgba(140, 125, 255, 0.18); }
