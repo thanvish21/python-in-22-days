@@ -150,6 +150,36 @@
           "url": "https://leetcode.com/problems/top-k-frequent-elements/"
         }
       ]
+    },
+    {
+      "type": "flashcards",
+      "title": "Dictionary flashcards",
+      "cards": [
+        {
+          "front": "d['key']",
+          "back": "Get value for that key"
+        },
+        {
+          "front": "d['k'] = v",
+          "back": "Add or update pair"
+        },
+        {
+          "front": "d.get(k, 0)",
+          "back": "Get, or default if missing"
+        },
+        {
+          "front": "d.keys()",
+          "back": "All keys"
+        },
+        {
+          "front": "d.values()",
+          "back": "All values"
+        },
+        {
+          "front": "d.items()",
+          "back": "Key + value pairs"
+        }
+      ]
     }
   ],
   "challenge": {

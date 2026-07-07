@@ -167,6 +167,7 @@
       case "assessment": return renderAssessment(b);
       case "recapgame": return renderRecapGame(b);
       case "practice": return renderPractice(b);
+      case "flashcards": return renderFlashcards(b);
       case "tip": {
         const wrap = el("div", "block");
         const box = el("div", "tip" + (b.variant === "warn" ? " warn" : ""));
@@ -298,6 +299,46 @@
     });
     wrap.appendChild(submit);
     wrap.appendChild(result);
+    return wrap;
+  }
+
+  // ---- flashcards (click to flip, quiz yourself) ----
+  function renderFlashcards(b) {
+    const wrap = el("div", "block flashcards-block");
+    wrap.appendChild(el("h3", null, "🃏 " + escapeInline(b.title || "Flashcards")));
+    if (b.intro) wrap.appendChild(el("p", "flash-intro", escapeInline(b.intro)));
+    else wrap.appendChild(el("p", "flash-intro", "Click a card to flip it. Test your memory!"));
+    const grid = el("div", "flashcards-grid");
+    let flippedCount = 0;
+    const total = (b.cards || []).length;
+    const progress = el("div", "flash-progress", "0 / " + total + " flipped");
+    (b.cards || []).forEach((c) => {
+      const card = el("div", "flashcard");
+      const inner = el("div", "flashcard-inner");
+      const front = el("div", "flashcard-face flashcard-front");
+      front.innerHTML = '<div class="flash-label">Q</div><div class="flash-content">' + escapeInline(c.front || "") + "</div>";
+      const back = el("div", "flashcard-face flashcard-back");
+      back.innerHTML = '<div class="flash-label">A</div><div class="flash-content">' + escapeInline(c.back || "") + "</div>";
+      inner.appendChild(front);
+      inner.appendChild(back);
+      card.appendChild(inner);
+      let flipped = false;
+      card.addEventListener("click", () => {
+        card.classList.toggle("flipped");
+        if (!flipped) {
+          flipped = true;
+          flippedCount++;
+          progress.textContent = flippedCount + " / " + total + " flipped";
+          if (flippedCount === total) {
+            progress.classList.add("done");
+            progress.textContent = "✨ All " + total + " reviewed! Great job.";
+          }
+        }
+      });
+      grid.appendChild(card);
+    });
+    wrap.appendChild(progress);
+    wrap.appendChild(grid);
     return wrap;
   }
 

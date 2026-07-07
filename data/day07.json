@@ -114,6 +114,36 @@
       "solution": "is_sunny = True\nis_warm = True\nprint(is_sunny and is_warm)",
       "passMsg": "Perfect picnic weather — both questions were True!",
       "failMsg": "Use the word 'and' between is_sunny and is_warm."
+    },
+    {
+      "type": "flashcards",
+      "title": "Control flow flashcards",
+      "cards": [
+        {
+          "front": "if x > 0:",
+          "back": "Runs block only if condition is True"
+        },
+        {
+          "front": "elif",
+          "back": "'else if' — checks next condition"
+        },
+        {
+          "front": "else:",
+          "back": "Runs when nothing above matched"
+        },
+        {
+          "front": "and",
+          "back": "True only if BOTH sides are True"
+        },
+        {
+          "front": "or",
+          "back": "True if AT LEAST ONE side is True"
+        },
+        {
+          "front": "not",
+          "back": "Flips True ↔ False"
+        }
+      ]
     }
   ],
   "challenge": {

@@ -166,6 +166,36 @@
           "url": "https://codeforces.com/problemset/problem/118/A"
         }
       ]
+    },
+    {
+      "type": "flashcards",
+      "title": "String methods flashcards",
+      "cards": [
+        {
+          "front": "s.upper()",
+          "back": "Returns UPPERCASE copy"
+        },
+        {
+          "front": "s.lower()",
+          "back": "Returns lowercase copy"
+        },
+        {
+          "front": "s.strip()",
+          "back": "Removes spaces at start/end"
+        },
+        {
+          "front": "len(s)",
+          "back": "Counts characters"
+        },
+        {
+          "front": "s.replace('a', 'b')",
+          "back": "Swaps all 'a' with 'b'"
+        },
+        {
+          "front": "f'{name}'",
+          "back": "f-string inserts variable value"
+        }
+      ]
     }
   ],
   "challenge": {
