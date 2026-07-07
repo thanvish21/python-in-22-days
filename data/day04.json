@@ -160,6 +160,30 @@
       "solution": "width = 6\nheight = 4\narea = width * height\nprint(\"The area is\", area)\n",
       "passMsg": "Nice! Area = width times height. You just did real geometry. 📐",
       "failMsg": "Set area to width * height (use the * sign for multiply). 6 * 4 should print 24."
+    },
+    {
+      "type": "practice",
+      "title": "Math problems",
+      "problems": [
+        {
+          "platform": "LeetCode",
+          "title": "Fizz Buzz",
+          "difficulty": "Easy",
+          "url": "https://leetcode.com/problems/fizz-buzz/"
+        },
+        {
+          "platform": "LeetCode",
+          "title": "Palindrome Number",
+          "difficulty": "Easy",
+          "url": "https://leetcode.com/problems/palindrome-number/"
+        },
+        {
+          "platform": "Codeforces",
+          "title": "Team",
+          "difficulty": "Easy",
+          "url": "https://codeforces.com/problemset/problem/231/A"
+        }
+      ]
     }
   ],
   "challenge": {
