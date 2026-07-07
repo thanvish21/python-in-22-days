@@ -5,7 +5,10 @@
   "subtitle": "Stop copy-pasting! Teach Python to repeat things for you.",
   "goal": "Use for loops to repeat actions, walk through lists and strings, count with range(), and build up running totals.",
   "estMinutes": 180,
-  "tags": ["loops", "beginner"],
+  "tags": [
+    "loops",
+    "beginner"
+  ],
   "blocks": [
     {
       "type": "text",
@@ -112,7 +115,13 @@
       "title": "Count to 10",
       "instructions": "Use a for loop with range() to print the numbers 1 through 10, each on its own line. Fill in the range so it counts 1 to 10.",
       "starter": "for n in range(1, ___):\n    print(n)\n",
-      "check": { "stdout_includes": ["1", "10"], "code_includes": "for" },
+      "check": {
+        "stdout_includes": [
+          "1",
+          "10"
+        ],
+        "code_includes": "for"
+      },
       "solution": "for n in range(1, 11):\n    print(n)",
       "passMsg": "Counting like a pro! Notice range(1, 11) stops AT 10. 🎉",
       "failMsg": "Remember: range stops just before the second number, so use range(1, 11) to reach 10."
@@ -122,17 +131,48 @@
       "title": "Sum the numbers 1 to 5",
       "instructions": "Use the accumulator pattern to add up 1 + 2 + 3 + 4 + 5. Start total at 0, loop with range(1, 6), and add each number. Print the final total.",
       "starter": "total = 0\nfor n in range(1, 6):\n    total = ___\nprint(\"Total:\", total)\n",
-      "check": { "stdout_includes": "Total: 15" },
+      "check": {
+        "stdout_includes": "Total: 15"
+      },
       "solution": "total = 0\nfor n in range(1, 6):\n    total = total + n\nprint(\"Total:\", total)",
       "passMsg": "15! You filled the piggy bank one number at a time. 🐷",
       "failMsg": "Inside the loop, write total = total + n so each number gets added on. The answer should be 15."
+    },
+    {
+      "type": "practice",
+      "title": "Loop-based problems",
+      "problems": [
+        {
+          "platform": "LeetCode",
+          "title": "Count Primes",
+          "difficulty": "Medium",
+          "url": "https://leetcode.com/problems/count-primes/"
+        },
+        {
+          "platform": "LeetCode",
+          "title": "Missing Number",
+          "difficulty": "Easy",
+          "url": "https://leetcode.com/problems/missing-number/"
+        },
+        {
+          "platform": "Codeforces",
+          "title": "Beautiful Matrix",
+          "difficulty": "Easy",
+          "url": "https://codeforces.com/problemset/problem/263/A"
+        }
+      ]
     }
   ],
   "challenge": {
     "title": "Build a name banner",
     "instructions": "Take a word and print each letter on its own line, with an arrow. Use a for loop to walk through the letters of the word. Try it with your own name!",
     "starter": "name = \"SAM\"\n# loop over each letter and print it with an arrow, like:  -> S\n",
-    "check": { "stdout_includes": ["->"], "code_includes": "for" },
+    "check": {
+      "stdout_includes": [
+        "->"
+      ],
+      "code_includes": "for"
+    },
     "solution": "name = \"SAM\"\nfor letter in name:\n    print(\"->\", letter)",
     "hint": "Write 'for letter in name:' then indent a print line that shows the arrow and the letter.",
     "passMsg": "🏆 Banner complete! You finished Day 9 — loops are now your superpower. No more copy-paste!"

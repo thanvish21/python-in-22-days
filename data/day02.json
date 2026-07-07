@@ -5,7 +5,12 @@
   "subtitle": "Give your values names and learn the four kinds of stuff Python can hold.",
   "goal": "Store values in variables using =, choose good names, and tell apart the four core types: int, float, str, and bool.",
   "estMinutes": 180,
-  "tags": ["basics", "beginner", "variables", "types"],
+  "tags": [
+    "basics",
+    "beginner",
+    "variables",
+    "types"
+  ],
   "blocks": [
     {
       "type": "text",
@@ -122,7 +127,14 @@
       "title": "Make a 'me' card",
       "instructions": "Create three variables: my_name (your name in quotes), my_age (a whole number), and likes_python (set it to True). Then print all three. Press Check when your output shows your name.",
       "starter": "my_name = \"___\"\nmy_age = 0\nlikes_python = True\nprint(my_name)\nprint(my_age)\nprint(likes_python)",
-      "check": { "code_includes": ["my_name", "my_age", "likes_python"], "stdout_includes": "True" },
+      "check": {
+        "code_includes": [
+          "my_name",
+          "my_age",
+          "likes_python"
+        ],
+        "stdout_includes": "True"
+      },
       "solution": "my_name = \"Thanvish\"\nmy_age = 11\nlikes_python = True\nprint(my_name)\nprint(my_age)\nprint(likes_python)",
       "passMsg": "Nice — three variables, three types, all printed. You're getting it! 🎉",
       "failMsg": "Make sure you have variables named my_name, my_age, and likes_python, and that likes_python is True."
@@ -132,17 +144,57 @@
       "title": "Check a type",
       "instructions": "Make a variable called temperature and set it to a decimal number like 98.6. Then print its type using type(). Your output should mention 'float'.",
       "starter": "temperature = ___\nprint(type(temperature))",
-      "check": { "stdout_includes": "float", "code_includes": ["temperature", "type("] },
+      "check": {
+        "stdout_includes": "float",
+        "code_includes": [
+          "temperature",
+          "type("
+        ]
+      },
       "solution": "temperature = 98.6\nprint(type(temperature))",
       "passMsg": "You asked Python for the type and it said float — exactly right! 🌡️",
       "failMsg": "Set temperature to a decimal number (like 98.6) and print type(temperature)."
+    },
+    {
+      "type": "practice",
+      "title": "Practice variables on LeetCode & Codeforces",
+      "intro": "Try these beginner problems to lock in what you learned.",
+      "problems": [
+        {
+          "platform": "LeetCode",
+          "title": "Two Sum",
+          "difficulty": "Easy",
+          "url": "https://leetcode.com/problems/two-sum/"
+        },
+        {
+          "platform": "Codeforces",
+          "title": "Watermelon",
+          "difficulty": "Easy",
+          "url": "https://codeforces.com/problemset/problem/4/A"
+        },
+        {
+          "platform": "HackerRank",
+          "title": "Say Hello, World!",
+          "difficulty": "Easy",
+          "url": "https://www.hackerrank.com/challenges/py-hello-world/problem"
+        }
+      ],
+      "tip": "Pro tip: Read the constraints first — they hint at what data type to use."
     }
   ],
   "challenge": {
     "title": "Build a player profile",
     "instructions": "Create a tiny game profile using variables. Make: player_name (text), level (a whole number), health (a decimal like 99.5), and is_alive (True or False). Then print one friendly line that uses all of them, like: Player Robo is on level 3 with 99.5 health. Alive: True",
     "starter": "player_name = \"Robo\"\nlevel = 1\nhealth = 100.0\nis_alive = True\n# print one line that uses all four variables\n",
-    "check": { "code_includes": ["player_name", "level", "health", "is_alive"], "regex": "print\\(.*player_name.*level.*health.*is_alive.*\\)" },
+    "check": {
+      "code_includes": [
+        "player_name",
+        "level",
+        "health",
+        "is_alive"
+      ],
+      "regex": "print\\(.*player_name.*level.*health.*is_alive.*\\)"
+    },
     "solution": "player_name = \"Robo\"\nlevel = 3\nhealth = 99.5\nis_alive = True\nprint(\"Player\", player_name, \"is on level\", level, \"with\", health, \"health. Alive:\", is_alive)",
     "hint": "Use one print() with commas between the text pieces and the four variables: print(\"Player\", player_name, ...).",
     "passMsg": "🏆 What a profile! You stored four different types and printed them in one line — Day 2 complete. You're leveling up fast!"

@@ -141,6 +141,31 @@
       "solution": "name = \"riley\"\nprint(f\"My name in caps is {name.upper()}\")",
       "passMsg": "LOUD AND PROUD — great work! 📣",
       "failMsg": "Use .upper() on your name. You can call it right inside the { } of the f-string."
+    },
+    {
+      "type": "practice",
+      "title": "String problems to sharpen your skills",
+      "intro": "Working with text is a core interview skill.",
+      "problems": [
+        {
+          "platform": "LeetCode",
+          "title": "Reverse String",
+          "difficulty": "Easy",
+          "url": "https://leetcode.com/problems/reverse-string/"
+        },
+        {
+          "platform": "LeetCode",
+          "title": "Valid Palindrome",
+          "difficulty": "Easy",
+          "url": "https://leetcode.com/problems/valid-palindrome/"
+        },
+        {
+          "platform": "Codeforces",
+          "title": "String Task",
+          "difficulty": "Easy",
+          "url": "https://codeforces.com/problemset/problem/118/A"
+        }
+      ]
     }
   ],
   "challenge": {

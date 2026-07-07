@@ -5,7 +5,10 @@
   "subtitle": "Build your own little machines that do a job whenever you call them.",
   "goal": "Learn to define functions with def, give them inputs (parameters), call them, and use return to send a value back — and understand how return is different from print.",
   "estMinutes": 180,
-  "tags": ["functions", "beginner"],
+  "tags": [
+    "functions",
+    "beginner"
+  ],
   "blocks": [
     {
       "type": "text",
@@ -112,7 +115,10 @@
       "title": "Make a greet function",
       "instructions": "Finish the function so it greets the name it is given, then call it with your own name. Press Check when the output greets someone.",
       "starter": "def greet(name):\n    print(\"Hello \" + name + \"!\")\n\n# call greet with a name below\n",
-      "check": { "stdout_includes": "Hello", "code_includes": "def greet" },
+      "check": {
+        "stdout_includes": "Hello",
+        "code_includes": "def greet"
+      },
       "solution": "def greet(name):\n    print(\"Hello \" + name + \"!\")\n\ngreet(\"Thanvish\")",
       "passMsg": "Your machine works — one recipe, any name you like!",
       "failMsg": "Keep the def greet(name): line and add a call like greet(\"Sam\") at the bottom."
@@ -122,17 +128,50 @@
       "title": "Add with return",
       "instructions": "Write a function called add that takes two numbers and RETURNS their sum (not print!). Then print the result of adding 10 and 4.",
       "starter": "def add(a, b):\n    # use return to send back the sum\n    return ___\n\nprint(add(10, 4))\n",
-      "check": { "stdout_includes": "14", "code_includes": "return" },
+      "check": {
+        "stdout_includes": "14",
+        "code_includes": "return"
+      },
       "solution": "def add(a, b):\n    return a + b\n\nprint(add(10, 4))",
       "passMsg": "Nice — you returned a real value and printed it. That's the power of return!",
       "failMsg": "Make sure you use return a + b inside the function, then print(add(10, 4))."
+    },
+    {
+      "type": "practice",
+      "title": "Function & recursion problems",
+      "problems": [
+        {
+          "platform": "LeetCode",
+          "title": "Fibonacci Number",
+          "difficulty": "Easy",
+          "url": "https://leetcode.com/problems/fibonacci-number/"
+        },
+        {
+          "platform": "LeetCode",
+          "title": "Power of Two",
+          "difficulty": "Easy",
+          "url": "https://leetcode.com/problems/power-of-two/"
+        },
+        {
+          "platform": "Codeforces",
+          "title": "Factorial Trailing Zeroes",
+          "difficulty": "Medium",
+          "url": "https://codeforces.com/problemset/problem/23/B"
+        }
+      ]
     }
   ],
   "challenge": {
     "title": "Build a square machine",
     "instructions": "Write a function called square that takes one number and RETURNS that number multiplied by itself. Give it a docstring. Then print the square of 6 and the square of 9 so we can see it works.",
     "starter": "def square(n):\n    \"\"\"Return n multiplied by itself.\"\"\"\n    # return the answer here\n    return ___\n\nprint(\"6 squared is\", square(6))\nprint(\"9 squared is\", square(9))",
-    "check": { "stdout_includes": ["36", "81"], "code_includes": "return" },
+    "check": {
+      "stdout_includes": [
+        "36",
+        "81"
+      ],
+      "code_includes": "return"
+    },
     "solution": "def square(n):\n    \"\"\"Return n multiplied by itself.\"\"\"\n    return n * n\n\nprint(\"6 squared is\", square(6))\nprint(\"9 squared is\", square(9))",
     "hint": "Squaring means multiplying a number by itself: n * n. Use return so the answer comes back out.",
     "passMsg": "🏆 You built a real number machine! Day 13 done — functions are now in your toolbox."

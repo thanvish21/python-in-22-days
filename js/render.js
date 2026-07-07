@@ -166,6 +166,7 @@
       case "example": return renderExample(b);
       case "assessment": return renderAssessment(b);
       case "recapgame": return renderRecapGame(b);
+      case "practice": return renderPractice(b);
       case "tip": {
         const wrap = el("div", "block");
         const box = el("div", "tip" + (b.variant === "warn" ? " warn" : ""));
@@ -297,6 +298,35 @@
     });
     wrap.appendChild(submit);
     wrap.appendChild(result);
+    return wrap;
+  }
+
+  // ---- practice problems (LeetCode + Codeforces) ----
+  function renderPractice(b) {
+    const wrap = el("div", "block practice-block");
+    wrap.appendChild(el("h3", null, "💪 " + escapeInline(b.title || "Practice on real problems")));
+    if (b.intro) wrap.appendChild(el("p", "practice-intro", escapeInline(b.intro)));
+    const grid = el("div", "practice-grid");
+    (b.problems || []).forEach((p) => {
+      const card = el("a", "practice-card");
+      card.href = p.url || "#";
+      card.target = "_blank";
+      card.rel = "noopener";
+      const plat = (p.platform || "").toLowerCase();
+      const platIcon = plat.includes("leet") ? "🧠" : plat.includes("code") ? "🏆" : plat.includes("hacker") ? "💻" : "🔗";
+      const diff = (p.difficulty || "").toLowerCase();
+      const diffClass = diff.includes("easy") ? "diff-easy" : diff.includes("med") ? "diff-med" : diff.includes("hard") ? "diff-hard" : "diff-easy";
+      card.innerHTML =
+        '<div class="practice-plat">' + platIcon + ' ' + escapeInline(p.platform || "Problem") + '</div>' +
+        '<div class="practice-title">' + escapeInline(p.title || "Practice Problem") + '</div>' +
+        '<div class="practice-meta">' +
+          '<span class="practice-diff ' + diffClass + '">' + escapeInline(p.difficulty || "Easy") + '</span>' +
+          '<span class="practice-open">Open ↗</span>' +
+        '</div>';
+      grid.appendChild(card);
+    });
+    wrap.appendChild(grid);
+    if (b.tip) wrap.appendChild(el("p", "practice-tip", "💡 " + escapeInline(b.tip)));
     return wrap;
   }
 

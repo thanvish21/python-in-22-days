@@ -5,7 +5,11 @@
   "subtitle": "Build your own blueprints — and stamp out objects from them like cookies!",
   "goal": "Understand what a class and an object are, write a class with __init__, give it attributes and methods, and create instances you can use.",
   "estMinutes": 180,
-  "tags": ["oop", "classes", "intermediate"],
+  "tags": [
+    "oop",
+    "classes",
+    "intermediate"
+  ],
   "blocks": [
     {
       "type": "text",
@@ -95,7 +99,10 @@
       "title": "Make a Cat that meows",
       "instructions": "Fill in the blanks so the Cat class stores a name and has a meow() method that prints the cat's name followed by ' says Meow!'. Then make a cat and call meow().",
       "starter": "class Cat:\n    def __init__(self, name):\n        self.name = ___\n\n    def meow(self):\n        print(self.name + \" says Meow!\")\n\nkitty = Cat(\"Whiskers\")\nkitty.meow()",
-      "check": { "stdout_includes": "says Meow!", "code_includes": "self.name" },
+      "check": {
+        "stdout_includes": "says Meow!",
+        "code_includes": "self.name"
+      },
       "solution": "class Cat:\n    def __init__(self, name):\n        self.name = name\n\n    def meow(self):\n        print(self.name + \" says Meow!\")\n\nkitty = Cat(\"Whiskers\")\nkitty.meow()",
       "passMsg": "Purr-fect! Your Cat blueprint works. 🐱",
       "failMsg": "Set self.name = name inside __init__, then call kitty.meow() so it prints 'says Meow!'."
@@ -105,17 +112,49 @@
       "title": "Give the Player a method to lose points",
       "instructions": "The Player class below can add points. Add a lose_points method that subtracts points from self.score, then call it. Make the final score print out.",
       "starter": "class Player:\n    def __init__(self, name):\n        self.name = name\n        self.score = 20\n\n    def add_points(self, points):\n        self.score = self.score + points\n\n    # write lose_points(self, points) below\n\np = Player(\"Sam\")\np.add_points(10)\n# call lose_points here\nprint(\"Score:\", p.score)",
-      "check": { "stdout_includes": "Score:", "code_includes": "self.score" },
+      "check": {
+        "stdout_includes": "Score:",
+        "code_includes": "self.score"
+      },
       "solution": "class Player:\n    def __init__(self, name):\n        self.name = name\n        self.score = 20\n\n    def add_points(self, points):\n        self.score = self.score + points\n\n    def lose_points(self, points):\n        self.score = self.score - points\n\np = Player(\"Sam\")\np.add_points(10)\np.lose_points(5)\nprint(\"Score:\", p.score)",
       "passMsg": "Nice — your method updates the object's own score. That's real OOP!",
       "failMsg": "Add a method lose_points(self, points) that does self.score = self.score - points, then call p.lose_points(5)."
+    },
+    {
+      "type": "practice",
+      "title": "OOP design problems",
+      "intro": "Real interview questions on class design.",
+      "problems": [
+        {
+          "platform": "LeetCode",
+          "title": "Design HashMap",
+          "difficulty": "Easy",
+          "url": "https://leetcode.com/problems/design-hashmap/"
+        },
+        {
+          "platform": "LeetCode",
+          "title": "Min Stack",
+          "difficulty": "Medium",
+          "url": "https://leetcode.com/problems/min-stack/"
+        },
+        {
+          "platform": "LeetCode",
+          "title": "LRU Cache",
+          "difficulty": "Medium",
+          "url": "https://leetcode.com/problems/lru-cache/"
+        }
+      ],
+      "tip": "For OOP problems: identify the state, then the operations."
     }
   ],
   "challenge": {
     "title": "Build a BankAccount class",
     "instructions": "Make a class called BankAccount. In __init__, store an owner name and start the balance at 0. Add a deposit(amount) method that adds to the balance, and a withdraw(amount) method that subtracts from it. After each action, print the new balance. Then create an account, deposit some money, withdraw some, and show the final balance.",
     "starter": "class BankAccount:\n    def __init__(self, owner):\n        self.owner = owner\n        self.balance = 0\n\n    def deposit(self, amount):\n        # add amount to self.balance, then print the balance\n        pass\n\n    # add a withdraw(self, amount) method too\n\nacc = BankAccount(\"Alex\")\nacc.deposit(100)\n# withdraw some money below\nprint(\"Final balance:\", acc.balance)",
-    "check": { "stdout_includes": "Final balance:", "code_includes": "self.balance" },
+    "check": {
+      "stdout_includes": "Final balance:",
+      "code_includes": "self.balance"
+    },
     "solution": "class BankAccount:\n    def __init__(self, owner):\n        self.owner = owner\n        self.balance = 0\n\n    def deposit(self, amount):\n        self.balance = self.balance + amount\n        print(self.owner + \"'s balance: \" + str(self.balance))\n\n    def withdraw(self, amount):\n        self.balance = self.balance - amount\n        print(self.owner + \"'s balance: \" + str(self.balance))\n\nacc = BankAccount(\"Alex\")\nacc.deposit(100)\nacc.withdraw(30)\nprint(\"Final balance:\", acc.balance)",
     "hint": "deposit should do self.balance = self.balance + amount. withdraw is the same but with a minus. Both should print the balance after changing it.",
     "passMsg": "🏆 Incredible! You built a working bank with your own class. You now understand classes, objects, attributes, and methods — the heart of OOP. Day 18 complete!"
