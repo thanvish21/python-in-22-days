@@ -10,8 +10,8 @@
 "use strict";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const PRIMARY_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
-const FALLBACK_MODEL = "qwen/qwen3-coder:free";
+const PRIMARY_MODEL = "google/gemini-pro";
+const FALLBACK_MODEL = "meta-llama/llama-3-8b-instruct:free";
 const MAX_HISTORY = 10;
 const MAX_MSG_LEN = 2000;
 
