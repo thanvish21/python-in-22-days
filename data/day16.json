@@ -1,123 +1,157 @@
 {
   "day": 16,
-  "emoji": "📁",
-  "title": "Files",
-  "subtitle": "Teach Python to save your work so it remembers things even after the program stops.",
-  "goal": "Use the with open(...) as f: pattern to write, append, and read text files, and build a tiny notes saver and score logger.",
+  "emoji": "🎒",
+  "title": "Scope & Arguments",
+  "subtitle": "Where variables live, and clever ways to hand information to your functions.",
+  "goal": "Understand local vs global scope, use default and keyword arguments, collect extras with *args and **kwargs, and return more than one value at once.",
   "estMinutes": 180,
-  "tags": ["files", "intermediate"],
+  "tags": ["functions", "intermediate"],
   "blocks": [
     {
       "type": "text",
-      "heading": "Why files? 📁",
-      "html": "<p>So far, everything your programs made disappeared the second they stopped running. Variables live in memory, and memory gets wiped clean each time. 😴</p><p>A <strong>file</strong> is how Python <em>remembers</em>. You can save a high score, a to-do list, or a diary entry into a file, and it will still be there tomorrow. Today you'll teach Python to write things down and read them back. ✍️</p>"
-    },
-    {
-      "type": "tip",
-      "html": "<strong>Heads up about this website!</strong> The Python here runs inside your browser, and its file storage resets every time you press Run. So in every example we <em>write</em> a file and <em>read</em> it back in the <strong>same</strong> program. On your own computer, the file stays saved for real! 💾"
-    },
-    {
-      "type": "text",
-      "heading": "The magic words: with open(...) as f",
-      "html": "<p>To use a file, you <strong>open</strong> it. The friendliest way is:</p><p><code class=\"inline\">with open(\"notes.txt\", \"w\") as f:</code></p><p>This opens a file called <code class=\"inline\">notes.txt</code>, gives it the nickname <code class=\"inline\">f</code>, and — best of all — automatically <strong>closes</strong> it for you when the indented block ends. Closing matters: it makes sure your words are really saved. The <code class=\"inline\">with</code> word does that cleanup so you never forget. 🧹</p>"
-    },
-    {
-      "type": "text",
-      "heading": "Three modes: w, a, r",
-      "html": "<p>That little letter after the filename is the <strong>mode</strong> — it tells Python what you want to do:</p><ul><li><code class=\"inline\">\"w\"</code> = <strong>write</strong> (start fresh — erases anything already there!)</li><li><code class=\"inline\">\"a\"</code> = <strong>append</strong> (add to the end, keep what's there)</li><li><code class=\"inline\">\"r\"</code> = <strong>read</strong> (look at what's inside)</li></ul>"
+      "heading": "Variables have a home 🏠",
+      "html": "<p>On Day 13 you built functions. Today we go a level deeper into how they work.</p><p>When you make a variable <strong>inside</strong> a function, it lives in a private room. Code outside the function can't see it. We call this its <strong>scope</strong> — the area where a name actually exists.</p><p>A variable made inside a function is <strong>local</strong>. A variable made out in the open, at the top of your program, is <strong>global</strong> and can be seen everywhere.</p>"
     },
     {
       "type": "code",
-      "caption": "Write a file, then read it back",
-      "code": "# Write some text into a file (mode \"w\")\nwith open(\"hello.txt\", \"w\") as f:\n    f.write(\"Hello from a file!\\n\")\n    f.write(\"Python saved this for me.\\n\")\n\n# Now read the whole file back (mode \"r\")\nwith open(\"hello.txt\", \"r\") as f:\n    contents = f.read()\n\nprint(contents)",
-      "explain": "f.write() puts text into the file. The \\n means 'new line' so each line sits on its own row. f.read() gives back EVERYTHING in the file as one big string."
+      "caption": "Local variables stay inside",
+      "code": "def make_snack():\n    treat = \"cookie\"\n    print(\"Inside the function, treat is a\", treat)\n\nmake_snack()\nprint(\"Outside, the function did its job!\")",
+      "explain": "The variable 'treat' only exists inside make_snack(). It is local. If you tried to print(treat) outside the function, Python would say it doesn't know that name."
     },
     {
       "type": "tip",
-      "html": "<strong>Watch out!</strong> Mode <code class=\"inline\">\"w\"</code> wipes the file clean before writing. If the file had old notes, they're gone! Use <code class=\"inline\">\"a\"</code> when you want to keep the old stuff and just add more.",
+      "html": "<strong>Think of it like a backpack 🎒.</strong> What a function packs inside its own backpack stays there. When the function finishes, the backpack is emptied — those local variables are gone."
+    },
+    {
+      "type": "code",
+      "caption": "A global variable can be seen inside",
+      "code": "player_name = \"Sam\"\n\ndef greet_player():\n    print(\"Welcome back,\", player_name)\n\ngreet_player()\nprint(\"player_name still works out here too:\", player_name)",
+      "explain": "player_name is created at the top level, so it is global. The function can read it, and so can code outside. To CHANGE a global from inside a function you'd need the 'global' keyword, but most of the time it's cleaner to pass values in and return them out."
+    },
+    {
+      "type": "text",
+      "heading": "Default values: a backup plan 🛟",
+      "html": "<p>Sometimes you want a parameter to have a sensible value when the caller doesn't give one. You set a <strong>default value</strong> with an equals sign in the function definition.</p><p>If the caller provides the argument, theirs wins. If they leave it out, the default kicks in.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Default parameter values",
+      "code": "def greet(name, greeting=\"Hi\"):\n    print(greeting + \",\", name + \"!\")\n\ngreet(\"Sam\")\ngreet(\"Sam\", \"Yo\")",
+      "explain": "greeting=\"Hi\" sets the default. The first call leaves greeting out, so it uses \"Hi\". The second call passes \"Yo\", which overrides the default. Parameters with defaults must come AFTER parameters without them."
+    },
+    {
+      "type": "text",
+      "heading": "Keyword arguments: name your gifts 🎁",
+      "html": "<p>Normally Python matches arguments by <strong>position</strong> — the first value goes to the first parameter, and so on. But you can also pass arguments by <strong>name</strong>, which are called <strong>keyword arguments</strong>.</p><p>With keywords, the order doesn't matter, because you've labelled each value. This makes calls easier to read.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Positional vs keyword arguments",
+      "code": "def greet(name, greeting=\"Hi\"):\n    print(greeting + \",\", name + \"!\")\n\ngreet(\"Sam\", \"Hello\")\ngreet(greeting=\"Yo\", name=\"Sam\")",
+      "explain": "The first call is positional: \"Sam\" goes to name, \"Hello\" goes to greeting. The second call uses keywords, so the order can flip and Python still gets it right. Positional arguments must always come before keyword ones."
+    },
+    {
+      "type": "quiz",
+      "question": "What does greet(\"Sam\") print if the function is def greet(name, greeting=\"Hi\")?",
+      "options": [
+        "Hi, Sam!",
+        "Sam, Hi!",
+        "An error, because greeting is missing",
+        "Hi, Hi!"
+      ],
+      "answerIndex": 0,
+      "explain": "greeting wasn't given, so it falls back to its default \"Hi\". name is \"Sam\". The function prints \"Hi, Sam!\"."
+    },
+    {
+      "type": "quiz",
+      "question": "Why might you call a function using keyword arguments like greet(greeting=\"Yo\", name=\"Sam\")?",
+      "options": [
+        "Because keywords run faster",
+        "So the order of arguments doesn't matter and the call is clearer",
+        "Because positional arguments are not allowed in Python",
+        "To delete the default values"
+      ],
+      "answerIndex": 1,
+      "explain": "Naming each argument means Python matches by label, not position — so the order is flexible and the call reads clearly."
+    },
+    {
+      "type": "tryit",
+      "title": "Give it a default",
+      "instructions": "Finish the function so it has a parameter 'times' with a default value of 2. Then call cheer(\"Go\") so it prints the word twice.",
+      "starter": "def cheer(word, times=___):\n    for i in range(times):\n        print(word)\n\ncheer(\"Go\")",
+      "check": { "stdout_equals": "Go\nGo", "code_includes": "times=2" },
+      "solution": "def cheer(word, times=2):\n    for i in range(times):\n        print(word)\n\ncheer(\"Go\")",
+      "passMsg": "Nice — the default value did its job, no extra argument needed!",
+      "failMsg": "Set the default to 2 with times=2, and make sure you call cheer(\"Go\") with no second argument."
+    },
+    {
+      "type": "text",
+      "heading": "*args — catch any number of values ✨",
+      "html": "<p>What if you don't know how many things someone will pass in? Put a <code class=\"inline\">*</code> before a parameter name and Python gathers all the extra <strong>positional</strong> arguments into a tuple for you.</p><p>By tradition this parameter is named <code class=\"inline\">*args</code>, but the star is the important part, not the name.</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Adding up however many numbers you get",
+      "code": "def add_all(*numbers):\n    total = 0\n    for n in numbers:\n        total += n\n    return total\n\nprint(add_all(2, 3))\nprint(add_all(1, 2, 3, 4, 5))",
+      "explain": "The * in *numbers scoops up every positional argument into a tuple called numbers. The same function works with two numbers or with five — you don't have to know how many ahead of time."
+    },
+    {
+      "type": "text",
+      "heading": "**kwargs — catch named values 🏷️",
+      "html": "<p>Two stars <code class=\"inline\">**</code> do the same trick for <strong>keyword</strong> arguments. Python collects all the extra named arguments into a dictionary (remember those from Day 12).</p><p>The traditional name is <code class=\"inline\">**kwargs</code>, short for \"keyword arguments.\"</p>"
+    },
+    {
+      "type": "code",
+      "caption": "Collecting named details into a dictionary",
+      "code": "def describe(**facts):\n    for key in facts:\n        print(key, \"->\", facts[key])\n\ndescribe(name=\"Sam\", age=11, pet=\"dog\")",
+      "explain": "Each name=value pair becomes an entry in the dictionary called facts. We loop over the keys and print each detail. **kwargs is handy when you want to accept flexible, labelled information."
+    },
+    {
+      "type": "tip",
+      "html": "<strong>Watch the stars.</strong> One star <code class=\"inline\">*args</code> gathers positional values into a tuple; two stars <code class=\"inline\">**kwargs</code> gather named values into a dictionary. Mixing them up is a common mistake!",
       "variant": "warn"
     },
     {
-      "type": "code",
-      "caption": "Append adds to the end (it keeps the old lines)",
-      "code": "# Start fresh with one line\nwith open(\"diary.txt\", \"w\") as f:\n    f.write(\"Monday: learned about files.\\n\")\n\n# Append two more days (mode \"a\" keeps the Monday line)\nwith open(\"diary.txt\", \"a\") as f:\n    f.write(\"Tuesday: wrote a notes saver.\\n\")\n    f.write(\"Wednesday: read files back.\\n\")\n\n# Read it all and show it\nwith open(\"diary.txt\", \"r\") as f:\n    print(f.read())",
-      "explain": "First we wrote Monday with \"w\". Then \"a\" added Tuesday and Wednesday to the END without erasing Monday. If we had used \"w\" again, Monday would have vanished!"
-    },
-    {
       "type": "text",
-      "heading": "Reading line by line 📜",
-      "html": "<p><code class=\"inline\">f.read()</code> grabs everything at once. But sometimes you want the lines one at a time — like reading a list. Two handy ways:</p><ul><li><code class=\"inline\">f.readlines()</code> gives you a <strong>list</strong> of lines.</li><li>Looping <code class=\"inline\">for line in f:</code> walks through one line at a time.</li></ul>"
+      "heading": "Returning more than one value 📦",
+      "html": "<p>Back on Day 11 you met <strong>tuples</strong> — a little bundle of values. Functions can return a tuple to hand back several results at once. Just separate the values with commas after <code class=\"inline\">return</code>.</p><p>You can then unpack them into separate variables in one clean line.</p>"
     },
     {
       "type": "code",
-      "caption": "Loop through a file one line at a time",
-      "code": "# Save a little shopping list\nwith open(\"list.txt\", \"w\") as f:\n    f.write(\"apples\\n\")\n    f.write(\"bananas\\n\")\n    f.write(\"cookies\\n\")\n\n# Read it back line by line and number each item\nwith open(\"list.txt\", \"r\") as f:\n    number = 1\n    for line in f:\n        item = line.strip()\n        print(str(number) + \". \" + item)\n        number = number + 1",
-      "explain": "Looping over f gives each line in turn. line.strip() removes the leftover newline (\\n) so things print neatly. We add a number in front of each item."
+      "caption": "Returning a min and a max together",
+      "code": "def smallest_and_largest(numbers):\n    return min(numbers), max(numbers)\n\nlow, high = smallest_and_largest([4, 9, 1, 7])\nprint(\"Smallest:\", low)\nprint(\"Largest:\", high)",
+      "explain": "return min(numbers), max(numbers) hands back a tuple of two values. The line low, high = ... unpacks that tuple into two variables in one go. Returning a tuple is the easy way to give back more than one answer."
     },
     {
       "type": "quiz",
-      "question": "What does the mode \"w\" do when you open a file that already has text in it?",
+      "question": "Inside a function, what does *args collect the extra arguments into?",
       "options": [
-        "Adds your new text to the end",
-        "Erases the old text and starts fresh",
-        "Reads the file out loud",
-        "Refuses to open the file"
+        "A dictionary",
+        "A tuple",
+        "A single string",
+        "A global variable"
       ],
       "answerIndex": 1,
-      "explain": "\"w\" means write-from-scratch. It clears the file first, so any old text is erased. Use \"a\" to keep the old text and add more."
-    },
-    {
-      "type": "quiz",
-      "question": "Why do people like using 'with open(...) as f:' instead of just open()?",
-      "options": [
-        "It makes the file bigger",
-        "It automatically closes the file when the block ends",
-        "It changes the file's color",
-        "It prints the file to the screen"
-      ],
-      "answerIndex": 1,
-      "explain": "The 'with' block closes the file for you automatically, which makes sure everything is saved safely. One less thing to forget!"
-    },
-    {
-      "type": "quiz",
-      "question": "Which method gives you back ALL the text in the file as one big string?",
-      "options": [
-        "f.write()",
-        "f.append()",
-        "f.read()",
-        "f.delete()"
-      ],
-      "answerIndex": 2,
-      "explain": "f.read() returns everything in the file as a single string. f.readlines() gives a list of lines instead."
+      "explain": "A single star (*args) gathers extra positional arguments into a tuple. Two stars (**kwargs) would make a dictionary."
     },
     {
       "type": "tryit",
-      "title": "Save and show a secret message",
-      "instructions": "Write your own secret message into secret.txt using mode \"w\", then read it back and print it. Make the message say the word 'treasure' somewhere!",
-      "starter": "with open(\"secret.txt\", \"w\") as f:\n    f.write(\"___\\n\")\n\nwith open(\"secret.txt\", \"r\") as f:\n    print(f.read())",
-      "check": { "stdout_includes": "treasure", "code_includes": "f.write" },
-      "solution": "with open(\"secret.txt\", \"w\") as f:\n    f.write(\"The treasure is under the old oak tree.\\n\")\n\nwith open(\"secret.txt\", \"r\") as f:\n    print(f.read())",
-      "passMsg": "Secret saved and read back — you're a file wizard! 🪄",
-      "failMsg": "Make sure you use f.write(\"...\") and include the word treasure in your message."
-    },
-    {
-      "type": "tryit",
-      "title": "A tiny notes saver",
-      "instructions": "Write the first note with mode \"w\", then APPEND two more notes with mode \"a\" so none get erased. Finally read the whole file and print it. You should end up with three notes.",
-      "starter": "with open(\"notes.txt\", \"w\") as f:\n    f.write(\"Note 1: ___\\n\")\n\n# append two more notes below using mode \"a\"\n\n\nwith open(\"notes.txt\", \"r\") as f:\n    print(f.read())",
-      "check": { "code_includes": "\"a\"", "regex": ".*\\n.*\\n.*" },
-      "solution": "with open(\"notes.txt\", \"w\") as f:\n    f.write(\"Note 1: feed the cat\\n\")\n\nwith open(\"notes.txt\", \"a\") as f:\n    f.write(\"Note 2: do homework\\n\")\n    f.write(\"Note 3: play outside\\n\")\n\nwith open(\"notes.txt\", \"r\") as f:\n    print(f.read())",
-      "passMsg": "Three notes saved without erasing any — that's exactly how append works! 📝",
-      "failMsg": "Open the file a second time with mode \"a\" to add more notes without erasing the first one."
+      "title": "Multiply them all",
+      "instructions": "Write a function product(*nums) that multiplies every number it receives together and returns the result. Call it with 2, 3, and 4 and print the answer (it should be 24).",
+      "starter": "def product(*nums):\n    result = 1\n    # multiply every number in nums into result, then return it\n    return result\n\nprint(product(2, 3, 4))",
+      "check": { "stdout_includes": "24", "code_includes": "*nums" },
+      "solution": "def product(*nums):\n    result = 1\n    for n in nums:\n        result *= n\n    return result\n\nprint(product(2, 3, 4))",
+      "passMsg": "Excellent — *nums caught all three numbers and you multiplied them perfectly!",
+      "failMsg": "Start result at 1, loop over nums multiplying each into result, then return result. The answer should be 24."
     }
   ],
   "challenge": {
-    "title": "Build a score logger 🏆",
-    "instructions": "Pretend you just played three rounds of a game. Save each score on its own line in scores.txt (use \"w\" for the first, then \"a\" for the rest, OR write all three in one \"w\" block). Then read the file back, add up all the scores, and print the total. Hint: turn each line into a number with int(line.strip()).",
-    "starter": "# Save three scores, one per line\nwith open(\"scores.txt\", \"w\") as f:\n    f.write(\"___\\n\")\n\n# Read them back, add them up, and print the total\ntotal = 0\nwith open(\"scores.txt\", \"r\") as f:\n    for line in f:\n        total = total + int(line.strip())\n\nprint(\"Total score:\", total)",
-    "check": { "stdout_includes": "Total score:", "code_includes": "int(" },
-    "solution": "with open(\"scores.txt\", \"w\") as f:\n    f.write(\"10\\n\")\n    f.write(\"25\\n\")\n    f.write(\"7\\n\")\n\ntotal = 0\nwith open(\"scores.txt\", \"r\") as f:\n    for line in f:\n        total = total + int(line.strip())\n\nprint(\"Total score:\", total)",
-    "hint": "Each line in the file is text like \"10\\n\". Use int(line.strip()) to turn it into a number you can add.",
-    "passMsg": "🏆 You saved scores AND added them back up — that's a real save system! Day 16 complete. You can make programs that remember things now. 💾"
+    "title": "Build a flexible profile maker",
+    "instructions": "Write a function make_profile(name, greeting=\"Hello\", **details) that prints a greeting line like 'Hello, Sam!' and then prints each extra detail on its own line as 'key: value'. Call it with a name, a custom greeting, and at least two extra details (like age and city).",
+    "starter": "def make_profile(name, greeting=\"Hello\", **details):\n    print(greeting + \",\", name + \"!\")\n    # loop over details and print each one as 'key: value'\n\nmake_profile(\"Sam\", greeting=\"Hi\", age=11, city=\"Austin\")",
+    "check": { "stdout_includes": ["Hi, Sam!", "age", "city"], "code_includes": "**details" },
+    "solution": "def make_profile(name, greeting=\"Hello\", **details):\n    print(greeting + \",\", name + \"!\")\n    for key in details:\n        print(key + \":\", details[key])\n\nmake_profile(\"Sam\", greeting=\"Hi\", age=11, city=\"Austin\")",
+    "hint": "The greeting has a default, so it's optional. **details collects age and city into a dictionary — loop over it with 'for key in details' and print key and details[key].",
+    "passMsg": "🏆 Brilliant! Defaults, keywords, and **kwargs all working together — that's real intermediate Python. Day 14 complete!"
   }
 }

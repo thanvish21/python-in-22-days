@@ -1,306 +1,140 @@
 {
   "day": 15,
-  "emoji": "🛟",
-  "title": "Errors & try/except",
-  "subtitle": "Errors aren't scary — they're little notes that help you fix things.",
-  "goal": "Read a traceback, recognize common Python errors, and use try/except so your program keeps going instead of crashing.",
+  "emoji": "🤖",
+  "title": "Functions",
+  "subtitle": "Build your own little machines that do a job whenever you call them.",
+  "goal": "Learn to define functions with def, give them inputs (parameters), call them, and use return to send a value back — and understand how return is different from print.",
   "estMinutes": 180,
-  "tags": [
-    "errors",
-    "try-except",
-    "beginner"
-  ],
+  "tags": ["functions", "beginner"],
   "blocks": [
     {
       "type": "text",
-      "heading": "Errors are friends 🛟",
-      "html": "<p>Everybody's program breaks sometimes — even the pros! When Python hits something it can't do, it stops and shows a message called an <strong>error</strong>. That message is not Python yelling at you. It's Python saying: <em>“I got stuck right here, and this is why.”</em></p><p>Today you'll learn to read those messages, spot the common ones, and write code that stays calm when something goes wrong. 🎉</p>"
+      "heading": "What is a function? 🤖",
+      "html": "<p>A <strong>function</strong> is like a little machine or a recipe. You give it a name, teach it a job once, and then you can use it again and again just by calling its name.</p><p>Think of a microwave: you press the button (call it), it does its job (heats food), and out comes the result. You don't rebuild the microwave every time you want popcorn! 🍿</p>"
     },
     {
       "type": "text",
-      "heading": "Reading a traceback",
-      "html": "<p>When an error happens, Python prints a <strong>traceback</strong>. Read it from the <strong>bottom up</strong>: the very last line tells you the <em>type</em> of error and a short hint. The lines above show <em>where</em> it happened.</p><p>Run the box below — it will crash on purpose so you can see what a traceback looks like.</p>"
+      "heading": "Defining a function with def",
+      "html": "<p>To make a function we use the word <code class=\"inline\">def</code> (short for <em>define</em>), then a name, then <code class=\"inline\">()</code> and a colon <code class=\"inline\">:</code>. The lines that belong to the function are <strong>indented</strong> underneath.</p><p>Defining a function doesn't run it yet — it just teaches Python the recipe. To actually use it, you <strong>call</strong> it by writing its name with <code class=\"inline\">()</code>.</p>"
     },
     {
       "type": "code",
-      "caption": "A crash on purpose (look at the last line!)",
-      "code": "number = 10\nresult = number / 0\nprint(result)",
-      "explain": "The last line says ZeroDivisionError: division by zero. That's Python telling you that you tried to divide by 0, which is impossible. The line above shows it happened on 'result = number / 0'.",
-      "expectError": true
-    },
-    {
-      "type": "text",
-      "heading": "The common errors (meet the gang) 👋",
-      "html": "<ul><li><strong>SyntaxError</strong> — you typed something Python can't read, like a missing quote or colon.</li><li><strong>NameError</strong> — you used a name Python has never seen (maybe a typo).</li><li><strong>TypeError</strong> — you mixed types that don't go together, like adding a number to text.</li><li><strong>ValueError</strong> — the type is right but the value is wrong, like turning the word \"cat\" into a number.</li><li><strong>ZeroDivisionError</strong> — you tried to divide by zero.</li><li><strong>IndexError</strong> — you asked for a list spot that doesn't exist.</li><li><strong>KeyError</strong> — you asked a dictionary for a key it doesn't have.</li></ul>"
+      "caption": "Define a function, then call it",
+      "code": "def say_hello():\n    print(\"Hello there! 👋\")\n\nsay_hello()\nsay_hello()",
+      "explain": "def say_hello(): teaches Python the recipe. The indented line is the job. say_hello() actually runs it — and we call it twice, so we get two greetings!"
     },
     {
       "type": "tip",
-      "html": "<strong>Read bottom to top!</strong> The last line of a traceback is the most important — it names the error and gives a one-line hint."
+      "html": "<strong>Define first, call later.</strong> Writing <code class=\"inline\">def</code> only creates the machine. Nothing happens on screen until you <em>call</em> it with <code class=\"inline\">name()</code>."
     },
     {
       "type": "text",
-      "heading": "try / except: catch the error 🪤",
-      "html": "<p>Instead of letting the program crash, you can <strong>try</strong> some risky code and <strong>except</strong> (handle) the error if it shows up. Python runs the <code class=\"inline\">try</code> block; if an error pops out, it jumps to the <code class=\"inline\">except</code> block instead of crashing.</p>"
+      "heading": "Inputs: parameters and arguments 🎁",
+      "html": "<p>Most machines need something to work on. The names inside the parentheses are <strong>parameters</strong> — little boxes that wait to be filled. The real values you hand over when you call the function are the <strong>arguments</strong>.</p><p>In <code class=\"inline\">greet(\"Sam\")</code>, the parameter is <code class=\"inline\">name</code> and the argument is <code class=\"inline\">\"Sam\"</code>.</p>"
     },
     {
       "type": "code",
-      "caption": "Safe division — no crash!",
-      "code": "def safe_divide(a, b):\n    try:\n        return a / b\n    except ZeroDivisionError:\n        return \"Oops! You can't divide by zero. 🙂\"\n\nprint(safe_divide(10, 2))\nprint(safe_divide(10, 0))",
-      "explain": "When b is 0, the try block raises ZeroDivisionError. Python skips to the except block and returns a friendly message instead of crashing the whole program."
-    },
-    {
-      "type": "code",
-      "caption": "Catching a specific error: safe int conversion",
-      "code": "def to_number(text):\n    try:\n        return int(text)\n    except ValueError:\n        return \"That doesn't look like a whole number. 🤔\"\n\nprint(to_number(\"42\"))\nprint(to_number(\"cat\"))",
-      "explain": "int(\"cat\") raises a ValueError because 'cat' isn't a number. We catch ONLY ValueError, so other kinds of problems would still be noticed. Catching specific errors is the polite, careful way."
-    },
-    {
-      "type": "tip",
-      "html": "<strong>Be specific!</strong> Try to catch the exact error you expect (like <code class=\"inline\">except KeyError</code>). A bare <code class=\"inline\">except:</code> catches <em>everything</em> and can hide real bugs.",
-      "variant": "warn"
-    },
-    {
-      "type": "text",
-      "heading": "else and finally ✅",
-      "html": "<p>You can add two optional helpers:</p><ul><li><strong>else</strong> runs only if the <code class=\"inline\">try</code> block had <em>no</em> error.</li><li><strong>finally</strong> runs <em>no matter what</em> — error or not. It's great for cleanup or a goodbye message.</li></ul>"
-    },
-    {
-      "type": "code",
-      "caption": "Looking up a missing dictionary key",
-      "code": "ages = {\"Sam\": 9, \"Mia\": 11}\n\ndef look_up(name):\n    try:\n        age = ages[name]\n    except KeyError:\n        print(name + \" is not in our list. 🔍\")\n    else:\n        print(name + \" is \" + str(age) + \" years old.\")\n    finally:\n        print(\"(done looking)\")\n\nlook_up(\"Mia\")\nlook_up(\"Alex\")",
-      "explain": "For 'Mia' the key exists, so the else block runs. For 'Alex' there's no key, so KeyError fires and the except block runs. The finally block prints '(done looking)' every single time."
-    },
-    {
-      "type": "text",
-      "heading": "raise: make your own error 🚨",
-      "html": "<p>Sometimes <em>you</em> want to stop and say “that's not allowed.” The <code class=\"inline\">raise</code> keyword lets you create your own error with a clear message — and you can even catch it yourself.</p>"
-    },
-    {
-      "type": "code",
-      "caption": "Raising and catching your own error",
-      "code": "def set_age(age):\n    if age < 0:\n        raise ValueError(\"Age can't be negative!\")\n    return \"Age set to \" + str(age)\n\ntry:\n    print(set_age(-5))\nexcept ValueError as oops:\n    print(\"Caught it:\", oops)",
-      "explain": "raise ValueError(...) makes an error on purpose with a helpful message. We catch it with 'except ValueError as oops', and 'oops' holds the message so we can print it. No crash!"
+      "caption": "A function with one input",
+      "code": "def greet(name):\n    print(\"Hi \" + name + \"! Nice to see you. 😊\")\n\ngreet(\"Sam\")\ngreet(\"Maya\")",
+      "explain": "name is the parameter. When we call greet(\"Sam\"), the value \"Sam\" gets put into name. Same machine, different inputs, different greetings!"
     },
     {
       "type": "quiz",
-      "question": "When you read a traceback, which line tells you the kind of error?",
+      "question": "Which word do we use to create a function?",
       "options": [
-        "The very first line",
-        "The last (bottom) line",
-        "The middle line",
-        "There is no such line"
+        "def",
+        "print",
+        "func",
+        "make"
+      ],
+      "answerIndex": 0,
+      "explain": "We use def (short for define) to create a function, like def say_hello():."
+    },
+    {
+      "type": "text",
+      "heading": "return: sending a value back 📦",
+      "html": "<p>Here's the big idea of the day. <code class=\"inline\">return</code> sends a value <strong>back out</strong> of the function so the rest of your program can use it — store it, do math with it, print it later.</p><p><code class=\"inline\">print</code> just <strong>shows</strong> something on the screen and then it's gone. <code class=\"inline\">return</code> hands you a real value you can keep. Big difference!</p>"
+    },
+    {
+      "type": "code",
+      "caption": "return gives you a value to keep",
+      "code": "def add(a, b):\n    return a + b\n\nresult = add(3, 5)\nprint(\"3 + 5 =\", result)\nprint(\"Double that is\", add(3, 5) * 2)",
+      "explain": "add() takes two inputs and RETURNS their sum. Because it returns a value, we can save it in result AND even do more math with it (× 2). print could never do that — it only shows things."
+    },
+    {
+      "type": "tip",
+      "variant": "warn",
+      "html": "<strong>return is not print!</strong> A function that only does <code class=\"inline\">print()</code> shows text but hands back nothing you can use. If you want to keep or reuse the answer, you need <code class=\"inline\">return</code>."
+    },
+    {
+      "type": "code",
+      "caption": "A docstring describes what the function does",
+      "code": "def area_of_circle(r):\n    \"\"\"Return the area of a circle with radius r.\"\"\"\n    return 3.14159 * r * r\n\nprint(\"Area for radius 2:\", area_of_circle(2))\nprint(\"Area for radius 5:\", area_of_circle(5))",
+      "explain": "The triple-quoted line right under def is a docstring — a friendly note that explains what the function does. Python ignores it when running, but it helps humans understand your machine."
+    },
+    {
+      "type": "text",
+      "heading": "Why functions? Less repeating! ♻️",
+      "html": "<p>Imagine writing the same 5 lines 10 times. Yuck! With a function you write the recipe <strong>once</strong> and call it whenever you need it. Coders call this <strong>DRY</strong> — <em>Don't Repeat Yourself</em>.</p><p>Functions make your code shorter, tidier, and way easier to fix — change the recipe in one place and every call gets the update. ✨</p>"
+    },
+    {
+      "type": "code",
+      "caption": "A function that returns True or False",
+      "code": "def is_even(n):\n    \"\"\"Return True if n is an even number.\"\"\"\n    return n % 2 == 0\n\nprint(\"Is 4 even?\", is_even(4))\nprint(\"Is 7 even?\", is_even(7))",
+      "explain": "is_even returns True or False. The % gives the remainder; if dividing by 2 leaves 0, the number is even. We reuse the same check for any number we want!"
+    },
+    {
+      "type": "quiz",
+      "question": "What is the difference between return and print?",
+      "options": [
+        "There is no difference, they are the same",
+        "print shows a value on screen; return hands a value back so you can keep and reuse it",
+        "return is faster than print",
+        "print can only be used inside functions"
       ],
       "answerIndex": 1,
-      "explain": "Read tracebacks from the bottom up — the last line names the error type and gives a short hint."
+      "explain": "print just displays something. return sends a real value back out of the function so you can store it, do math with it, or print it later."
     },
     {
       "type": "quiz",
-      "question": "Which error happens when you ask a dictionary for a key it doesn't have?",
+      "question": "In greet(\"Maya\"), what is \"Maya\" called?",
       "options": [
-        "IndexError",
-        "ValueError",
-        "KeyError",
-        "SyntaxError"
+        "A parameter",
+        "A docstring",
+        "An argument (the value you pass in)",
+        "A return value"
       ],
       "answerIndex": 2,
-      "explain": "A missing dictionary key raises a KeyError. A missing list spot raises an IndexError."
-    },
-    {
-      "type": "quiz",
-      "question": "What does the finally block do?",
-      "options": [
-        "Runs only when there is an error",
-        "Runs only when there is NO error",
-        "Runs no matter what — error or not",
-        "Never runs"
-      ],
-      "answerIndex": 2,
-      "explain": "finally always runs, whether or not an error happened. It's perfect for cleanup."
+      "explain": "The value you actually pass in when calling is the argument. The name waiting inside the def (like name) is the parameter."
     },
     {
       "type": "tryit",
-      "title": "Catch the divide-by-zero",
-      "instructions": "Wrap the risky division in a try/except so the program prints a friendly message instead of crashing. Catch ZeroDivisionError and print something kind. Then press Check.",
-      "starter": "a = 8\nb = 0\n# wrap this in try/except so it doesn't crash:\nprint(a / b)\n",
-      "check": {
-        "code_includes": [
-          "try",
-          "except",
-          "ZeroDivisionError"
-        ]
-      },
-      "solution": "a = 8\nb = 0\ntry:\n    print(a / b)\nexcept ZeroDivisionError:\n    print(\"You can't divide by zero! 🙂\")",
-      "passMsg": "Nice — your program now stays calm instead of crashing. 🛟",
-      "failMsg": "Make sure you use try:, except ZeroDivisionError:, and keep the division inside the try block."
+      "title": "Make a greet function",
+      "instructions": "Finish the function so it greets the name it is given, then call it with your own name. Press Check when the output greets someone.",
+      "starter": "def greet(name):\n    print(\"Hello \" + name + \"!\")\n\n# call greet with a name below\n",
+      "check": { "stdout_includes": "Hello", "code_includes": "def greet" },
+      "solution": "def greet(name):\n    print(\"Hello \" + name + \"!\")\n\ngreet(\"Thanvish\")",
+      "passMsg": "Your machine works — one recipe, any name you like!",
+      "failMsg": "Keep the def greet(name): line and add a call like greet(\"Sam\") at the bottom."
     },
     {
       "type": "tryit",
-      "title": "Safe number reader",
-      "instructions": "The variable user_text holds something a user typed. Use try/except to turn it into a number with int(), but catch ValueError and print a friendly message if it isn't a number. Use try, except, and ValueError.",
-      "starter": "user_text = \"banana\"  # pretend the user typed this\n# turn it into a number safely:\n",
-      "check": {
-        "code_includes": [
-          "try",
-          "except",
-          "ValueError",
-          "int("
-        ]
-      },
-      "solution": "user_text = \"banana\"\ntry:\n    number = int(user_text)\n    print(\"Your number doubled is\", number * 2)\nexcept ValueError:\n    print(\"That's not a whole number — try again! 🤔\")",
-      "passMsg": "Perfect — bad input can't crash you anymore. 💪",
-      "failMsg": "Use int(user_text) inside a try block and catch ValueError in the except block."
-    },
-    {
-      "type": "surprise",
-      "title": "Surprise Quiz! Days 11–15",
-      "intro": "Pop quiz! Let's see what stuck from the last 5 days. No grades, just fun 🎉",
-      "questions": [
-        {
-          "question": "Day 11: What makes a tuple different from a list?",
-          "options": [
-            "A tuple can hold only numbers",
-            "A tuple cannot be changed once it is made",
-            "A tuple can only hold one item",
-            "A tuple prints in a different color"
-          ],
-          "answerIndex": 1,
-          "explain": "A tuple is locked (immutable) — once you create it, its contents can't change. Lists can be edited."
-        },
-        {
-          "question": "Day 12: How do you get the value stored under the key \"name\" in a dictionary d?",
-          "options": [
-            "d(\"name\")",
-            "d[\"name\"]",
-            "d.name()",
-            "name[d]"
-          ],
-          "answerIndex": 1,
-          "explain": "You look up a value with square brackets and the key: d[\"name\"]."
-        },
-        {
-          "question": "Day 13: What is the difference between return and print?",
-          "options": [
-            "There is no difference",
-            "print shows a value on screen; return hands a value back so you can keep and reuse it",
-            "return is just a faster print",
-            "print only works inside functions"
-          ],
-          "answerIndex": 1,
-          "explain": "print just displays something. return sends a real value back out so you can store it, do math with it, or print it later."
-        },
-        {
-          "question": "Day 14: Inside a function, what does *args collect the extra arguments into?",
-          "options": [
-            "A dictionary",
-            "A tuple",
-            "A single string",
-            "A global variable"
-          ],
-          "answerIndex": 1,
-          "explain": "One star (*args) gathers extra positional arguments into a tuple. Two stars (**kwargs) make a dictionary."
-        },
-        {
-          "question": "Day 15: When you read a traceback, which line names the kind of error?",
-          "options": [
-            "The very first line",
-            "The last (bottom) line",
-            "The middle line",
-            "There is no such line"
-          ],
-          "answerIndex": 1,
-          "explain": "Read tracebacks from the bottom up — the last line names the error type and gives a short hint."
-        }
-      ]
-    },
-    {
-      "type": "example",
-      "title": "Real-life example: safe student score lookup",
-      "scenario": "<p>A teacher app needs to look up scores safely. This combines dictionaries, functions, default arguments, and try/except so missing names do not crash the program.</p>",
-      "caption": "Real app: look up student data safely",
-      "code": "scores = {\"Ana\": 91, \"Ben\": 76, \"Cara\": 88}\n\ndef get_grade(name):\n    try:\n        score = scores[name]\n    except KeyError:\n        return f\"No score found for {name}\"\n\n    if score >= 90:\n        return \"A\"\n    if score >= 80:\n        return \"B\"\n    return \"Keep practicing\"\n\nprint(get_grade(\"Ana\"))\nprint(get_grade(\"Dev\"))",
-      "explain": "Real apps look up data all the time. try/except keeps the program friendly when the data is missing."
-    },
-    {
-      "type": "assessment",
-      "title": "Days 11–15 Assessment: Data, Functions, and Errors",
-      "intro": "This checkpoint tests the tools that make your code organized and crash-resistant.",
-      "passPct": 70,
-      "questions": [
-        {
-          "question": "What makes a tuple different from a list?",
-          "options": [
-            "A tuple cannot be changed after creation",
-            "A tuple can only store numbers",
-            "A tuple is always empty",
-            "A tuple is a loop"
-          ],
-          "answerIndex": 0,
-          "explain": "Tuples are immutable: once created, their items do not change."
-        },
-        {
-          "question": "How do you access the value for key \"name\" in dictionary d?",
-          "options": [
-            "d(\"name\")",
-            "d[\"name\"]",
-            "name[d]",
-            "d.name"
-          ],
-          "answerIndex": 1,
-          "explain": "Dictionary lookup uses square brackets with the key."
-        },
-        {
-          "question": "What is the main difference between print and return?",
-          "options": [
-            "print displays; return sends a value back",
-            "return only works with strings",
-            "print stores data",
-            "There is no difference"
-          ],
-          "answerIndex": 0,
-          "explain": "return gives a result back to the caller so it can be reused."
-        },
-        {
-          "question": "What does *args collect extra positional arguments into?",
-          "options": [
-            "A dictionary",
-            "A tuple",
-            "A string",
-            "A file"
-          ],
-          "answerIndex": 1,
-          "explain": "*args collects extra positional arguments into a tuple."
-        },
-        {
-          "question": "Which error happens when a dictionary key is missing?",
-          "options": [
-            "IndexError",
-            "ValueError",
-            "KeyError",
-            "SyntaxError"
-          ],
-          "answerIndex": 2,
-          "explain": "A missing dictionary key raises KeyError."
-        }
-      ]
+      "title": "Add with return",
+      "instructions": "Write a function called add that takes two numbers and RETURNS their sum (not print!). Then print the result of adding 10 and 4.",
+      "starter": "def add(a, b):\n    # use return to send back the sum\n    return ___\n\nprint(add(10, 4))\n",
+      "check": { "stdout_includes": "14", "code_includes": "return" },
+      "solution": "def add(a, b):\n    return a + b\n\nprint(add(10, 4))",
+      "passMsg": "Nice — you returned a real value and printed it. That's the power of return!",
+      "failMsg": "Make sure you use return a + b inside the function, then print(add(10, 4))."
     }
   ],
   "challenge": {
-    "title": "Build a crash-proof calculator",
-    "instructions": "Write a function called safe_calc(a, b) that returns a / b. Use try/except so it NEVER crashes: catch ZeroDivisionError and return a friendly message like \"Can't divide by zero!\" when b is 0. Then call it twice — once with normal numbers and once dividing by zero — and print both results.",
-    "starter": "def safe_calc(a, b):\n    # use try/except here\n    pass\n\n# call it twice and print the results\n",
-    "check": {
-      "code_includes": [
-        "def safe_calc",
-        "try",
-        "except",
-        "ZeroDivisionError"
-      ],
-      "stdout_includes": [
-        "Can't divide by zero"
-      ]
-    },
-    "solution": "def safe_calc(a, b):\n    try:\n        return a / b\n    except ZeroDivisionError:\n        return \"Can't divide by zero!\"\n\nprint(safe_calc(20, 4))\nprint(safe_calc(20, 0))",
-    "hint": "Put 'return a / b' inside a try block. In the except ZeroDivisionError block, return your friendly message. Then print safe_calc(20, 4) and safe_calc(20, 0).",
-    "passMsg": "🏆 You built a calculator that refuses to crash! That's exactly how real software handles surprises. Day 15 complete!"
+    "title": "Build a square machine",
+    "instructions": "Write a function called square that takes one number and RETURNS that number multiplied by itself. Give it a docstring. Then print the square of 6 and the square of 9 so we can see it works.",
+    "starter": "def square(n):\n    \"\"\"Return n multiplied by itself.\"\"\"\n    # return the answer here\n    return ___\n\nprint(\"6 squared is\", square(6))\nprint(\"9 squared is\", square(9))",
+    "check": { "stdout_includes": ["36", "81"], "code_includes": "return" },
+    "solution": "def square(n):\n    \"\"\"Return n multiplied by itself.\"\"\"\n    return n * n\n\nprint(\"6 squared is\", square(6))\nprint(\"9 squared is\", square(9))",
+    "hint": "Squaring means multiplying a number by itself: n * n. Use return so the answer comes back out.",
+    "passMsg": "🏆 You built a real number machine! Day 13 done — functions are now in your toolbox."
   }
 }

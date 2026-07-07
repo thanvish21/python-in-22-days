@@ -2,8 +2,8 @@
 (function () {
   "use strict";
 
-  const TOTAL_DAYS = 22;
-  const STORE_KEY = "py22_progress_v1";
+  const TOTAL_DAYS = 25;
+  const STORE_KEY = "py25_progress_v1";
   const app = document.getElementById("app");
 
   // ---- progress state (localStorage) ----
@@ -75,12 +75,12 @@
     hero.className = "view-enter";
     hero.innerHTML =
       '<section class="hero">' +
-        "<h1>Learn <span class=\"accent\">Python</span> in 22 Days 🐍</h1>" +
+        "<h1>Learn <span class=\"accent\">Python</span> in 25 Days 🐍</h1>" +
         "<p>Friendly bite-sized lessons with real code you run right here. Simple enough for a curious kid, deep enough to take you from zero to pro.</p>" +
         '<button class="hero-cta" id="startBtn">' + (done > 0 ? "▶ Continue Day " + (Number(progress.lastDay) || 1) : "🚀 Start Day 1") + "</button>" +
         '<div class="progress-wrap">' +
           '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
-          '<div class="progress-label">' + done + " of 22 days done · " + pct + "% to pro</div>" +
+          '<div class="progress-label">' + done + " of 25 days done · " + pct + "% to pro</div>" +
         "</div>" +
       "</section>";
 
@@ -104,7 +104,7 @@
     app.appendChild(hero);
     const h = document.createElement("h2");
     h.className = "section-title";
-    h.textContent = "🗺️ Your 22-Day Map";
+    h.textContent = "🗺️ Your 25-Day Map";
     app.appendChild(h);
     app.appendChild(grid);
 
@@ -197,7 +197,7 @@
     7: ["🔥", "One Week Strong!", "A full week of Python down."],
     14: ["⚡", "Two Weeks!", "You're officially dangerous now."],
     21: ["🧠", "Almost a Pro!", "21 days. One to go!"],
-    22: ["🏆", "PYTHON PRO!", "You finished all 22 days. Incredible!"],
+    25: ["🏆", "PYTHON PRO!", "You finished all 25 days. Incredible!"],
   };
   function celebrate(day) {
     const badge = BADGES[day] || ["🎉", "Day " + day + " done!", "On to the next one!"];
@@ -221,7 +221,7 @@
 
   // ---- expose state for the course/sidebar module ----
   const listeners = [];
-  window.Py22 = {
+  window.Py25 = {
     TOTAL_DAYS,
     isDone, isUnlocked, completedCount,
     lastDay: () => progress.lastDay,
@@ -230,7 +230,7 @@
     notify: () => listeners.forEach((fn) => { try { fn(); } catch (e) {} }),
   };
   const origMarkDone = markDone;
-  markDone = function (d) { origMarkDone(d); window.Py22.notify(); };
+  markDone = function (d) { origMarkDone(d); window.Py25.notify(); };
 
   // ---- router ----
   function route() {
@@ -257,7 +257,7 @@
   });
 
   // ---- theme toggle ----
-  const THEME_KEY = "py22_theme";
+  const THEME_KEY = "py25_theme";
   const themeBtn = document.getElementById("themeToggle");
   function applyTheme(theme) {
     document.documentElement.setAttribute("data-theme", theme);
