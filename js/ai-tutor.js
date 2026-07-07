@@ -2,7 +2,7 @@
 (function () {
   "use strict";
 
-  var API_URL = "/api/ai";
+  var API_URL = "https://openrouter.ai/api/v1/chat/completions";
   var MAX_MSG = 2000;
 
   // ---- State ----
