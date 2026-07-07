@@ -145,6 +145,36 @@
         }
       ],
       "tip": "For OOP problems: identify the state, then the operations."
+    },
+    {
+      "type": "flashcards",
+      "title": "OOP flashcards",
+      "cards": [
+        {
+          "front": "class Dog:",
+          "back": "Defines a blueprint for Dog objects"
+        },
+        {
+          "front": "__init__",
+          "back": "Constructor: runs when you create an object"
+        },
+        {
+          "front": "self",
+          "back": "Refers to the current object instance"
+        },
+        {
+          "front": "obj.method()",
+          "back": "Calls a method on that object"
+        },
+        {
+          "front": "isinstance(x, T)",
+          "back": "Checks if x is type T"
+        },
+        {
+          "front": "__str__",
+          "back": "Custom print() representation"
+        }
+      ]
     }
   ],
   "challenge": {

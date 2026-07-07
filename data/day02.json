@@ -180,6 +180,36 @@
         }
       ],
       "tip": "Pro tip: Read the constraints first — they hint at what data type to use."
+    },
+    {
+      "type": "flashcards",
+      "title": "Variables & Types flashcards",
+      "cards": [
+        {
+          "front": "int",
+          "back": "Whole number (5, -3, 100)"
+        },
+        {
+          "front": "float",
+          "back": "Decimal number (3.14, 2.5)"
+        },
+        {
+          "front": "str",
+          "back": "Text in quotes (\"hello\")"
+        },
+        {
+          "front": "bool",
+          "back": "True or False"
+        },
+        {
+          "front": "type(x)",
+          "back": "Returns the type of x"
+        },
+        {
+          "front": "=",
+          "back": "Assignment: put value in variable"
+        }
+      ]
     }
   ],
   "challenge": {

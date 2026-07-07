@@ -167,6 +167,36 @@
         }
       ],
       "tip": "Focus on brute force first, then optimize. Interviewers love seeing improvement."
+    },
+    {
+      "type": "flashcards",
+      "title": "List operations flashcards",
+      "cards": [
+        {
+          "front": "lst.append(x)",
+          "back": "Adds x to end of list"
+        },
+        {
+          "front": "lst.pop()",
+          "back": "Removes & returns last item"
+        },
+        {
+          "front": "lst[0]",
+          "back": "First item (index starts at 0)"
+        },
+        {
+          "front": "lst[-1]",
+          "back": "Last item"
+        },
+        {
+          "front": "len(lst)",
+          "back": "Counts items"
+        },
+        {
+          "front": "lst[1:4]",
+          "back": "Slice: items 1, 2, 3"
+        }
+      ]
     }
   ],
   "challenge": {
