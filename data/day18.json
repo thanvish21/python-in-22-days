@@ -1,123 +1,123 @@
 {
   "day": 18,
-  "emoji": "🧱",
-  "title": "Classes & Objects",
-  "subtitle": "Build your own blueprints — and stamp out objects from them like cookies!",
-  "goal": "Understand what a class and an object are, write a class with __init__, give it attributes and methods, and create instances you can use.",
+  "emoji": "📁",
+  "title": "Files",
+  "subtitle": "Teach Python to save your work so it remembers things even after the program stops.",
+  "goal": "Use the with open(...) as f: pattern to write, append, and read text files, and build a tiny notes saver and score logger.",
   "estMinutes": 180,
-  "tags": ["oop", "classes", "intermediate"],
+  "tags": ["files", "intermediate"],
   "blocks": [
     {
       "type": "text",
-      "heading": "A class is a blueprint 🧱",
-      "html": "<p>Today we learn <strong>Object-Oriented Programming</strong> (OOP for short). Don't let the big name scare you — the idea is simple and cozy.</p><p>Imagine a <strong>cookie cutter</strong> 🍪. The cutter itself is not a cookie. It's a <em>shape</em> — a plan for making cookies. In Python, that plan is called a <strong>class</strong>.</p><p>When you press the cutter into dough, you get a real cookie you can eat. That real cookie is called an <strong>object</strong> (or an <strong>instance</strong>). One cutter can make a hundred cookies, and each cookie is its own thing.</p><p>So remember: <strong>class = blueprint</strong>, <strong>object = the thing built from it</strong>.</p>"
-    },
-    {
-      "type": "text",
-      "heading": "Writing your first class",
-      "html": "<p>We make a class with the word <code class=\"inline\">class</code> and a name that starts with a Capital letter. Inside it we put a special setup function called <code class=\"inline\">__init__</code> (that's two underscores on each side).</p><p><code class=\"inline\">__init__</code> runs automatically every time we make a new object. It's where we say what each object should remember — those remembered values are called <strong>attributes</strong>.</p>"
-    },
-    {
-      "type": "code",
-      "caption": "A Dog blueprint, and one real dog",
-      "code": "class Dog:\n    def __init__(self, name):\n        self.name = name\n\n    def bark(self):\n        print(self.name + \" says Woof! 🐶\")\n\n# Press the cookie cutter: make a real dog object\nmy_dog = Dog(\"Rex\")\nmy_dog.bark()",
-      "explain": "Dog is the blueprint. my_dog = Dog(\"Rex\") stamps out one real dog. __init__ stored the name as an attribute (self.name). bark() is a method — a function that belongs to the dog — and we call it with my_dog.bark()."
-    },
-    {
-      "type": "text",
-      "heading": "What is this 'self' thing? 🤔",
-      "html": "<p>You'll see <code class=\"inline\">self</code> everywhere inside a class. Here's the gentle truth: <strong>self means \"this particular object.\"</strong></p><p>When you write <code class=\"inline\">my_dog.bark()</code>, Python quietly passes <code class=\"inline\">my_dog</code> in as <code class=\"inline\">self</code>. So inside the method, <code class=\"inline\">self.name</code> means \"<em>this</em> dog's name.\" If you had a second dog, its <code class=\"inline\">self.name</code> would be different. Each object keeps its own attributes.</p>"
+      "heading": "Why files? 📁",
+      "html": "<p>So far, everything your programs made disappeared the second they stopped running. Variables live in memory, and memory gets wiped clean each time. 😴</p><p>A <strong>file</strong> is how Python <em>remembers</em>. You can save a high score, a to-do list, or a diary entry into a file, and it will still be there tomorrow. Today you'll teach Python to write things down and read them back. ✍️</p>"
     },
     {
       "type": "tip",
-      "html": "<strong>Two dogs, two names.</strong> Make as many objects as you like from one class. <code class=\"inline\">a = Dog(\"Rex\")</code> and <code class=\"inline\">b = Dog(\"Bella\")</code> are totally separate — changing one never touches the other."
-    },
-    {
-      "type": "code",
-      "caption": "Many objects from one blueprint",
-      "code": "class Dog:\n    def __init__(self, name):\n        self.name = name\n\n    def bark(self):\n        print(self.name + \" says Woof!\")\n\nrex = Dog(\"Rex\")\nbella = Dog(\"Bella\")\n\nrex.bark()\nbella.bark()\nprint(\"Their names:\", rex.name, \"and\", bella.name)",
-      "explain": "One class, two objects. rex and bella each remember their own name, so they bark differently. That's the power of a blueprint."
-    },
-    {
-      "type": "quiz",
-      "question": "In the cookie analogy, which one is the class?",
-      "options": [
-        "The cookie you eat",
-        "The cookie cutter (the shape/plan)",
-        "The oven",
-        "The flour"
-      ],
-      "answerIndex": 1,
-      "explain": "The class is the blueprint — the cookie cutter. The actual cookie you make from it is the object (instance)."
+      "html": "<strong>Heads up about this website!</strong> The Python here runs inside your browser, and its file storage resets every time you press Run. So in every example we <em>write</em> a file and <em>read</em> it back in the <strong>same</strong> program. On your own computer, the file stays saved for real! 💾"
     },
     {
       "type": "text",
-      "heading": "Methods that change attributes",
-      "html": "<p>Methods aren't just for printing. They can <strong>change</strong> an object's attributes too. Let's build a <code class=\"inline\">Player</code> who starts with a score of 0 and can earn points.</p>"
+      "heading": "The magic words: with open(...) as f",
+      "html": "<p>To use a file, you <strong>open</strong> it. The friendliest way is:</p><p><code class=\"inline\">with open(\"notes.txt\", \"w\") as f:</code></p><p>This opens a file called <code class=\"inline\">notes.txt</code>, gives it the nickname <code class=\"inline\">f</code>, and — best of all — automatically <strong>closes</strong> it for you when the indented block ends. Closing matters: it makes sure your words are really saved. The <code class=\"inline\">with</code> word does that cleanup so you never forget. 🧹</p>"
+    },
+    {
+      "type": "text",
+      "heading": "Three modes: w, a, r",
+      "html": "<p>That little letter after the filename is the <strong>mode</strong> — it tells Python what you want to do:</p><ul><li><code class=\"inline\">\"w\"</code> = <strong>write</strong> (start fresh — erases anything already there!)</li><li><code class=\"inline\">\"a\"</code> = <strong>append</strong> (add to the end, keep what's there)</li><li><code class=\"inline\">\"r\"</code> = <strong>read</strong> (look at what's inside)</li></ul>"
     },
     {
       "type": "code",
-      "caption": "A Player who gains points",
-      "code": "class Player:\n    def __init__(self, name):\n        self.name = name\n        self.score = 0\n\n    def add_points(self, points):\n        self.score = self.score + points\n        print(self.name + \" now has \" + str(self.score) + \" points!\")\n\nhero = Player(\"Maya\")\nhero.add_points(10)\nhero.add_points(5)\nprint(\"Final score:\", hero.score)",
-      "explain": "__init__ gave every new Player a name and a starting score of 0. The add_points method updates self.score, so the player remembers their points between calls."
+      "caption": "Write a file, then read it back",
+      "code": "# Write some text into a file (mode \"w\")\nwith open(\"hello.txt\", \"w\") as f:\n    f.write(\"Hello from a file!\\n\")\n    f.write(\"Python saved this for me.\\n\")\n\n# Now read the whole file back (mode \"r\")\nwith open(\"hello.txt\", \"r\") as f:\n    contents = f.read()\n\nprint(contents)",
+      "explain": "f.write() puts text into the file. The \\n means 'new line' so each line sits on its own row. f.read() gives back EVERYTHING in the file as one big string."
     },
     {
       "type": "tip",
-      "html": "<strong>Heads up:</strong> the first parameter of every method is almost always <code class=\"inline\">self</code>. You write it in the definition, but you do NOT pass it yourself when calling. <code class=\"inline\">hero.add_points(10)</code> sends only the 10 — Python adds <code class=\"inline\">self</code> for you.",
+      "html": "<strong>Watch out!</strong> Mode <code class=\"inline\">\"w\"</code> wipes the file clean before writing. If the file had old notes, they're gone! Use <code class=\"inline\">\"a\"</code> when you want to keep the old stuff and just add more.",
       "variant": "warn"
     },
     {
+      "type": "code",
+      "caption": "Append adds to the end (it keeps the old lines)",
+      "code": "# Start fresh with one line\nwith open(\"diary.txt\", \"w\") as f:\n    f.write(\"Monday: learned about files.\\n\")\n\n# Append two more days (mode \"a\" keeps the Monday line)\nwith open(\"diary.txt\", \"a\") as f:\n    f.write(\"Tuesday: wrote a notes saver.\\n\")\n    f.write(\"Wednesday: read files back.\\n\")\n\n# Read it all and show it\nwith open(\"diary.txt\", \"r\") as f:\n    print(f.read())",
+      "explain": "First we wrote Monday with \"w\". Then \"a\" added Tuesday and Wednesday to the END without erasing Monday. If we had used \"w\" again, Monday would have vanished!"
+    },
+    {
+      "type": "text",
+      "heading": "Reading line by line 📜",
+      "html": "<p><code class=\"inline\">f.read()</code> grabs everything at once. But sometimes you want the lines one at a time — like reading a list. Two handy ways:</p><ul><li><code class=\"inline\">f.readlines()</code> gives you a <strong>list</strong> of lines.</li><li>Looping <code class=\"inline\">for line in f:</code> walks through one line at a time.</li></ul>"
+    },
+    {
+      "type": "code",
+      "caption": "Loop through a file one line at a time",
+      "code": "# Save a little shopping list\nwith open(\"list.txt\", \"w\") as f:\n    f.write(\"apples\\n\")\n    f.write(\"bananas\\n\")\n    f.write(\"cookies\\n\")\n\n# Read it back line by line and number each item\nwith open(\"list.txt\", \"r\") as f:\n    number = 1\n    for line in f:\n        item = line.strip()\n        print(str(number) + \". \" + item)\n        number = number + 1",
+      "explain": "Looping over f gives each line in turn. line.strip() removes the leftover newline (\\n) so things print neatly. We add a number in front of each item."
+    },
+    {
       "type": "quiz",
-      "question": "What does __init__ do?",
+      "question": "What does the mode \"w\" do when you open a file that already has text in it?",
       "options": [
-        "It deletes the object",
-        "It runs automatically when you create an object, to set up its attributes",
-        "It prints the object",
-        "Nothing — it's just decoration"
+        "Adds your new text to the end",
+        "Erases the old text and starts fresh",
+        "Reads the file out loud",
+        "Refuses to open the file"
       ],
       "answerIndex": 1,
-      "explain": "__init__ is the constructor. It runs the moment you make a new object and sets up its starting attributes like self.name."
+      "explain": "\"w\" means write-from-scratch. It clears the file first, so any old text is erased. Use \"a\" to keep the old text and add more."
     },
     {
       "type": "quiz",
-      "question": "Inside a method, what does self.score mean?",
+      "question": "Why do people like using 'with open(...) as f:' instead of just open()?",
       "options": [
-        "The score of every object at once",
-        "A score that all objects share",
-        "This particular object's own score",
-        "An error"
+        "It makes the file bigger",
+        "It automatically closes the file when the block ends",
+        "It changes the file's color",
+        "It prints the file to the screen"
+      ],
+      "answerIndex": 1,
+      "explain": "The 'with' block closes the file for you automatically, which makes sure everything is saved safely. One less thing to forget!"
+    },
+    {
+      "type": "quiz",
+      "question": "Which method gives you back ALL the text in the file as one big string?",
+      "options": [
+        "f.write()",
+        "f.append()",
+        "f.read()",
+        "f.delete()"
       ],
       "answerIndex": 2,
-      "explain": "self means 'this object', so self.score is the score belonging to the specific object the method was called on."
+      "explain": "f.read() returns everything in the file as a single string. f.readlines() gives a list of lines instead."
     },
     {
       "type": "tryit",
-      "title": "Make a Cat that meows",
-      "instructions": "Fill in the blanks so the Cat class stores a name and has a meow() method that prints the cat's name followed by ' says Meow!'. Then make a cat and call meow().",
-      "starter": "class Cat:\n    def __init__(self, name):\n        self.name = ___\n\n    def meow(self):\n        print(self.name + \" says Meow!\")\n\nkitty = Cat(\"Whiskers\")\nkitty.meow()",
-      "check": { "stdout_includes": "says Meow!", "code_includes": "self.name" },
-      "solution": "class Cat:\n    def __init__(self, name):\n        self.name = name\n\n    def meow(self):\n        print(self.name + \" says Meow!\")\n\nkitty = Cat(\"Whiskers\")\nkitty.meow()",
-      "passMsg": "Purr-fect! Your Cat blueprint works. 🐱",
-      "failMsg": "Set self.name = name inside __init__, then call kitty.meow() so it prints 'says Meow!'."
+      "title": "Save and show a secret message",
+      "instructions": "Write your own secret message into secret.txt using mode \"w\", then read it back and print it. Make the message say the word 'treasure' somewhere!",
+      "starter": "with open(\"secret.txt\", \"w\") as f:\n    f.write(\"___\\n\")\n\nwith open(\"secret.txt\", \"r\") as f:\n    print(f.read())",
+      "check": { "stdout_includes": "treasure", "code_includes": "f.write" },
+      "solution": "with open(\"secret.txt\", \"w\") as f:\n    f.write(\"The treasure is under the old oak tree.\\n\")\n\nwith open(\"secret.txt\", \"r\") as f:\n    print(f.read())",
+      "passMsg": "Secret saved and read back — you're a file wizard! 🪄",
+      "failMsg": "Make sure you use f.write(\"...\") and include the word treasure in your message."
     },
     {
       "type": "tryit",
-      "title": "Give the Player a method to lose points",
-      "instructions": "The Player class below can add points. Add a lose_points method that subtracts points from self.score, then call it. Make the final score print out.",
-      "starter": "class Player:\n    def __init__(self, name):\n        self.name = name\n        self.score = 20\n\n    def add_points(self, points):\n        self.score = self.score + points\n\n    # write lose_points(self, points) below\n\np = Player(\"Sam\")\np.add_points(10)\n# call lose_points here\nprint(\"Score:\", p.score)",
-      "check": { "stdout_includes": "Score:", "code_includes": "self.score" },
-      "solution": "class Player:\n    def __init__(self, name):\n        self.name = name\n        self.score = 20\n\n    def add_points(self, points):\n        self.score = self.score + points\n\n    def lose_points(self, points):\n        self.score = self.score - points\n\np = Player(\"Sam\")\np.add_points(10)\np.lose_points(5)\nprint(\"Score:\", p.score)",
-      "passMsg": "Nice — your method updates the object's own score. That's real OOP!",
-      "failMsg": "Add a method lose_points(self, points) that does self.score = self.score - points, then call p.lose_points(5)."
+      "title": "A tiny notes saver",
+      "instructions": "Write the first note with mode \"w\", then APPEND two more notes with mode \"a\" so none get erased. Finally read the whole file and print it. You should end up with three notes.",
+      "starter": "with open(\"notes.txt\", \"w\") as f:\n    f.write(\"Note 1: ___\\n\")\n\n# append two more notes below using mode \"a\"\n\n\nwith open(\"notes.txt\", \"r\") as f:\n    print(f.read())",
+      "check": { "code_includes": "\"a\"", "regex": ".*\\n.*\\n.*" },
+      "solution": "with open(\"notes.txt\", \"w\") as f:\n    f.write(\"Note 1: feed the cat\\n\")\n\nwith open(\"notes.txt\", \"a\") as f:\n    f.write(\"Note 2: do homework\\n\")\n    f.write(\"Note 3: play outside\\n\")\n\nwith open(\"notes.txt\", \"r\") as f:\n    print(f.read())",
+      "passMsg": "Three notes saved without erasing any — that's exactly how append works! 📝",
+      "failMsg": "Open the file a second time with mode \"a\" to add more notes without erasing the first one."
     }
   ],
   "challenge": {
-    "title": "Build a BankAccount class",
-    "instructions": "Make a class called BankAccount. In __init__, store an owner name and start the balance at 0. Add a deposit(amount) method that adds to the balance, and a withdraw(amount) method that subtracts from it. After each action, print the new balance. Then create an account, deposit some money, withdraw some, and show the final balance.",
-    "starter": "class BankAccount:\n    def __init__(self, owner):\n        self.owner = owner\n        self.balance = 0\n\n    def deposit(self, amount):\n        # add amount to self.balance, then print the balance\n        pass\n\n    # add a withdraw(self, amount) method too\n\nacc = BankAccount(\"Alex\")\nacc.deposit(100)\n# withdraw some money below\nprint(\"Final balance:\", acc.balance)",
-    "check": { "stdout_includes": "Final balance:", "code_includes": "self.balance" },
-    "solution": "class BankAccount:\n    def __init__(self, owner):\n        self.owner = owner\n        self.balance = 0\n\n    def deposit(self, amount):\n        self.balance = self.balance + amount\n        print(self.owner + \"'s balance: \" + str(self.balance))\n\n    def withdraw(self, amount):\n        self.balance = self.balance - amount\n        print(self.owner + \"'s balance: \" + str(self.balance))\n\nacc = BankAccount(\"Alex\")\nacc.deposit(100)\nacc.withdraw(30)\nprint(\"Final balance:\", acc.balance)",
-    "hint": "deposit should do self.balance = self.balance + amount. withdraw is the same but with a minus. Both should print the balance after changing it.",
-    "passMsg": "🏆 Incredible! You built a working bank with your own class. You now understand classes, objects, attributes, and methods — the heart of OOP. Day 18 complete!"
+    "title": "Build a score logger 🏆",
+    "instructions": "Pretend you just played three rounds of a game. Save each score on its own line in scores.txt (use \"w\" for the first, then \"a\" for the rest, OR write all three in one \"w\" block). Then read the file back, add up all the scores, and print the total. Hint: turn each line into a number with int(line.strip()).",
+    "starter": "# Save three scores, one per line\nwith open(\"scores.txt\", \"w\") as f:\n    f.write(\"___\\n\")\n\n# Read them back, add them up, and print the total\ntotal = 0\nwith open(\"scores.txt\", \"r\") as f:\n    for line in f:\n        total = total + int(line.strip())\n\nprint(\"Total score:\", total)",
+    "check": { "stdout_includes": "Total score:", "code_includes": "int(" },
+    "solution": "with open(\"scores.txt\", \"w\") as f:\n    f.write(\"10\\n\")\n    f.write(\"25\\n\")\n    f.write(\"7\\n\")\n\ntotal = 0\nwith open(\"scores.txt\", \"r\") as f:\n    for line in f:\n        total = total + int(line.strip())\n\nprint(\"Total score:\", total)",
+    "hint": "Each line in the file is text like \"10\\n\". Use int(line.strip()) to turn it into a number you can add.",
+    "passMsg": "🏆 You saved scores AND added them back up — that's a real save system! Day 16 complete. You can make programs that remember things now. 💾"
   }
 }

@@ -1,12 +1,12 @@
-# 🐍 Python in 22 Days
+# 🐍 Python Pro
 
-A friendly, **kid-simple** course that takes you from absolute beginner to confident Python programmer in 22 days (about 3 hours a day). Every lesson runs **real Python right in your browser** — no installs, no setup. Just open it and start coding.
+A friendly, **kid-simple** course that takes you from absolute beginner to confident Python programmer in the Pro path (about 3 hours a day). Every lesson runs **real Python right in your browser** — no installs, no setup. Just open it and start coding.
 
 > Inspired by playful learn-to-code sites like Coddy: colorful, bite-sized, and hands-on.
 
 ## ✨ What's inside
 
-- **22 days, beginner → pro** — from `print()` to classes, files, and a capstone project.
+- **the Pro path, beginner → pro** — from `print()` to classes, files, and a capstone project.
 - **Run real Python in the browser** — powered by [Pyodide](https://pyodide.org). Click **Run**, see output instantly.
 - **🤖 AI Python Tutor (PyBuddy)** — a built-in AI assistant that understands your current lesson and code. Ask questions, get explanations, debug your code, or request practice problems. Powered by free models via [OpenRouter](https://openrouter.ai).
 - **Interactive exercises** — fill-in-the-blank "try it" boxes with auto-checking, quizzes, and a daily challenge.
