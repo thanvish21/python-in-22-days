@@ -1,10 +1,10 @@
 {
   "tier": 3,
   "language": "python",
-  "emoji": "🪝",
+  "emoji": "\ud83e\ude9d",
   "title": "Advanced Metaprogramming & Hooks",
-  "subtitle": "Bend the interpreter at runtime — descriptors, decorators, metaclasses, and context managers that build and police your types for you.",
-  "goal": "Reach under attribute access and class creation: write data descriptors that validate, class decorators and metaclasses that synthesize and register types, and context managers that guarantee cleanup and rollback — the machinery behind ORMs, dataclasses, and trading-system guard rails.",
+  "subtitle": "Bend the interpreter at runtime \u2014 descriptors, decorators, metaclasses, and context managers that build and police your types for you.",
+  "goal": "Reach under attribute access and class creation: write data descriptors that validate, class decorators and metaclasses that synthesize and register types, and context managers that guarantee cleanup and rollback \u2014 the machinery behind ORMs, dataclasses, and trading-system guard rails.",
   "estMinutes": 250,
   "tags": [
     "descriptors",
@@ -19,12 +19,12 @@
     {
       "type": "text",
       "heading": "Attribute access is a protocol you can intercept",
-      "html": "<p><code class=\\\"inline\\\">obj.x</code> is not a dictionary lookup — it is a <em>protocol</em>. When the class defines <code class=\\\"inline\\\">x</code> as a <strong>descriptor</strong> (an object implementing <code class=\\\"inline\\\">__get__</code>/<code class=\\\"inline\\\">__set__</code>/<code class=\\\"inline\\\">__delete__</code>), every read and write of <code class=\\\"inline\\\">obj.x</code> is routed through that descriptor. This is the mechanism behind <code class=\\\"inline\\\">property</code>, <code class=\\\"inline\\\">classmethod</code>, <code class=\\\"inline\\\">staticmethod</code>, ORM columns, and typed fields.</p><p>A <strong>data descriptor</strong> (defines <code class=\\\"inline\\\">__set__</code> or <code class=\\\"inline\\\">__delete__</code>) takes precedence over the instance <code class=\\\"inline\\\">__dict__</code>; a <strong>non-data descriptor</strong> (only <code class=\\\"inline\\\">__get__</code>) is shadowed by an instance attribute of the same name. That precedence rule is the single most important thing to know here.</p>"
+      "html": "<p><code class=\\\"inline\\\">obj.x</code> is not a dictionary lookup \u2014 it is a <em>protocol</em>. When the class defines <code class=\\\"inline\\\">x</code> as a <strong>descriptor</strong> (an object implementing <code class=\\\"inline\\\">__get__</code>/<code class=\\\"inline\\\">__set__</code>/<code class=\\\"inline\\\">__delete__</code>), every read and write of <code class=\\\"inline\\\">obj.x</code> is routed through that descriptor. This is the mechanism behind <code class=\\\"inline\\\">property</code>, <code class=\\\"inline\\\">classmethod</code>, <code class=\\\"inline\\\">staticmethod</code>, ORM columns, and typed fields.</p><p>A <strong>data descriptor</strong> (defines <code class=\\\"inline\\\">__set__</code> or <code class=\\\"inline\\\">__delete__</code>) takes precedence over the instance <code class=\\\"inline\\\">__dict__</code>; a <strong>non-data descriptor</strong> (only <code class=\\\"inline\\\">__get__</code>) is shadowed by an instance attribute of the same name. That precedence rule is the single most important thing to know here.</p>"
     },
     {
       "type": "code",
       "caption": "A validating data descriptor with __set_name__",
-      "code": "class Positive:\\n    def __set_name__(self, owner, name):\\n        self.slot = '_' + name          # learn our own attribute name\\n    def __get__(self, obj, owner=None):\\n        if obj is None:\\n            return self                  # access on the class, not an instance\\n        return getattr(obj, self.slot, None)\\n    def __set__(self, obj, value):\\n        if value <= 0:\\n            raise ValueError(value)\\n        setattr(obj, self.slot, value)\\n\\nclass Account:\\n    balance = Positive()\\n\\na = Account()\\na.balance = 100\\nprint(a.balance)                         # 100\\ntry:\\n    a.balance = -1\\nexcept ValueError:\\n    print('rejected')",
+      "code": "class Positive:\n    def __set_name__(self, owner, name):\n        self.slot = '_' + name          # learn our own attribute name\n    def __get__(self, obj, owner=None):\n        if obj is None:\n            return self                  # access on the class, not an instance\n        return getattr(obj, self.slot, None)\n    def __set__(self, obj, value):\n        if value <= 0:\n            raise ValueError(value)\n        setattr(obj, self.slot, value)\n\nclass Account:\n    balance = Positive()\n\na = Account()\na.balance = 100\nprint(a.balance)                         # 100\ntry:\n    a.balance = -1\nexcept ValueError:\n    print('rejected')",
       "explain": "__set_name__ fires once at class-creation time and tells the descriptor the attribute name it was bound to, so it can pick a private slot. Because __set__ is defined, this is a data descriptor: it intercepts EVERY write to a.balance, even though balance lives on the class, not the instance.",
       "editable": true
     },
@@ -34,25 +34,25 @@
     },
     {
       "type": "text",
-      "heading": "property is just a descriptor — and so is every method",
+      "heading": "property is just a descriptor \u2014 and so is every method",
       "html": "<p><code class=\\\"inline\\\">property</code> is a built-in data descriptor whose <code class=\\\"inline\\\">__get__</code> calls your getter. Functions are non-data descriptors: <code class=\\\"inline\\\">obj.method</code> triggers the function's <code class=\\\"inline\\\">__get__</code>, which returns a <em>bound method</em> with <code class=\\\"inline\\\">self</code> pre-filled. Understanding this collapses a dozen 'magic' behaviors into one rule.</p>"
     },
     {
       "type": "code",
       "caption": "A class decorator that synthesizes __init__ and __repr__",
-      "code": "def model(cls):\\n    fields = list(cls.__annotations__)\\n    def __init__(self, *args):\\n        for name, val in zip(fields, args):\\n            setattr(self, name, val)\\n    def __repr__(self):\\n        inner = ', '.join(f'{n}={getattr(self, n)!r}' for n in fields)\\n        return f'{cls.__name__}({inner})'\\n    cls.__init__ = __init__\\n    cls.__repr__ = __repr__\\n    return cls\\n\\n@model\\nclass Point:\\n    x: int\\n    y: int\\n\\nprint(Point(1, 2))                       # Point(x=1, y=2)",
-      "explain": "A class decorator receives the fully-built class and returns a (usually mutated) class. Reading __annotations__ lets you generate boilerplate from a declarative spec — this is a miniature version of how dataclasses works.",
+      "code": "def model(cls):\n    fields = list(cls.__annotations__)\n    def __init__(self, *args):\n        for name, val in zip(fields, args):\n            setattr(self, name, val)\n    def __repr__(self):\n        inner = ', '.join(f'{n}={getattr(self, n)!r}' for n in fields)\n        return f'{cls.__name__}({inner})'\n    cls.__init__ = __init__\n    cls.__repr__ = __repr__\n    return cls\n\n@model\nclass Point:\n    x: int\n    y: int\n\nprint(Point(1, 2))                       # Point(x=1, y=2)",
+      "explain": "A class decorator receives the fully-built class and returns a (usually mutated) class. Reading __annotations__ lets you generate boilerplate from a declarative spec \u2014 this is a miniature version of how dataclasses works.",
       "editable": true
     },
     {
       "type": "text",
       "heading": "Metaclasses: the class of a class",
-      "html": "<p>If a class is an object, what is its type? By default, <code class=\\\"inline\\\">type</code>. A <strong>metaclass</strong> subclasses <code class=\\\"inline\\\">type</code> and customizes class <em>creation</em> (<code class=\\\"inline\\\">__new__</code>/<code class=\\\"inline\\\">__init__</code>) and class <em>calls</em> (<code class=\\\"inline\\\">__call__</code>, which runs when you instantiate). Use them when you must affect every subclass uniformly — registration, validation of method signatures, automatic IDs. For most jobs a class decorator or <code class=\\\"inline\\\">__init_subclass__</code> is lighter; reach for a metaclass when you need to intercept instantiation itself.</p>"
+      "html": "<p>If a class is an object, what is its type? By default, <code class=\\\"inline\\\">type</code>. A <strong>metaclass</strong> subclasses <code class=\\\"inline\\\">type</code> and customizes class <em>creation</em> (<code class=\\\"inline\\\">__new__</code>/<code class=\\\"inline\\\">__init__</code>) and class <em>calls</em> (<code class=\\\"inline\\\">__call__</code>, which runs when you instantiate). Use them when you must affect every subclass uniformly \u2014 registration, validation of method signatures, automatic IDs. For most jobs a class decorator or <code class=\\\"inline\\\">__init_subclass__</code> is lighter; reach for a metaclass when you need to intercept instantiation itself.</p>"
     },
     {
       "type": "code",
       "caption": "A metaclass that stamps every instance with an auto ID",
-      "code": "class AutoID(type):\\n    def __init__(cls, name, bases, ns):\\n        super().__init__(name, bases, ns)\\n        cls._next = 0                    # per-class counter\\n    def __call__(cls, *a, **k):\\n        obj = super().__call__(*a, **k)  # normal construction\\n        obj.id = cls._next\\n        cls._next += 1\\n        return obj\\n\\nclass Order(metaclass=AutoID):\\n    pass\\n\\nprint(Order().id, Order().id)            # 0 1",
+      "code": "class AutoID(type):\n    def __init__(cls, name, bases, ns):\n        super().__init__(name, bases, ns)\n        cls._next = 0                    # per-class counter\n    def __call__(cls, *a, **k):\n        obj = super().__call__(*a, **k)  # normal construction\n        obj.id = cls._next\n        cls._next += 1\n        return obj\n\nclass Order(metaclass=AutoID):\n    pass\n\nprint(Order().id, Order().id)            # 0 1",
       "explain": "metaclass __call__ wraps instantiation: it runs type.__call__ (which calls __new__ then __init__) and then post-processes the object. Each class gets its own _next because __init__ runs once per class definition.",
       "editable": true
     },
@@ -60,8 +60,8 @@
       "type": "quiz",
       "question": "A class defines `x = D()` where D implements only __get__ (a non-data descriptor). You then run `obj.x = 5`. What does `obj.x` return afterward?",
       "options": [
-        "5 — the instance attribute shadows the non-data descriptor",
-        "Calls D.__get__ — descriptors always win",
+        "5 \u2014 the instance attribute shadows the non-data descriptor",
+        "Calls D.__get__ \u2014 descriptors always win",
         "Raises AttributeError",
         "Calls D.__set__ with 5"
       ],
@@ -71,30 +71,30 @@
     {
       "type": "text",
       "heading": "Context managers guarantee the exit runs",
-      "html": "<p>A context manager pairs setup with teardown that is <strong>guaranteed</strong> to run — on normal exit and on exception. The protocol is two dunders: <code class=\\\"inline\\\">__enter__</code> (returns the value bound by <code class=\\\"inline\\\">as</code>) and <code class=\\\"inline\\\">__exit__(exc_type, exc, tb)</code>. If <code class=\\\"inline\\\">__exit__</code> returns a truthy value, the exception is <em>suppressed</em>. That single return value is how you implement rollback, retries, and 'swallow and log'.</p><p><code class=\\\"inline\\\">contextlib.contextmanager</code> lets you write the same thing as a generator: everything before <code class=\\\"inline\\\">yield</code> is enter, everything after (in a <code class=\\\"inline\\\">finally</code>) is exit.</p>"
+      "html": "<p>A context manager pairs setup with teardown that is <strong>guaranteed</strong> to run \u2014 on normal exit and on exception. The protocol is two dunders: <code class=\\\"inline\\\">__enter__</code> (returns the value bound by <code class=\\\"inline\\\">as</code>) and <code class=\\\"inline\\\">__exit__(exc_type, exc, tb)</code>. If <code class=\\\"inline\\\">__exit__</code> returns a truthy value, the exception is <em>suppressed</em>. That single return value is how you implement rollback, retries, and 'swallow and log'.</p><p><code class=\\\"inline\\\">contextlib.contextmanager</code> lets you write the same thing as a generator: everything before <code class=\\\"inline\\\">yield</code> is enter, everything after (in a <code class=\\\"inline\\\">finally</code>) is exit.</p>"
     },
     {
       "type": "code",
       "caption": "A transactional context manager with rollback",
-      "code": "class Transaction:\\n    def __init__(self, target):\\n        self.target = target\\n    def __enter__(self):\\n        self._snap = list(self.target)   # snapshot\\n        return self.target\\n    def __exit__(self, et, e, tb):\\n        if et is not None:\\n            self.target[:] = self._snap  # rollback\\n            return True                  # suppress the error\\n        return False                     # commit\\n\\nlog = []\\nwith Transaction(log) as L:\\n    L.append(1); L.append(2)\\nwith Transaction(log) as L:\\n    L.append(99)\\n    raise ValueError('boom')             # rolled back + suppressed\\nprint(log)                               # [1, 2]",
+      "code": "class Transaction:\n    def __init__(self, target):\n        self.target = target\n    def __enter__(self):\n        self._snap = list(self.target)   # snapshot\n        return self.target\n    def __exit__(self, et, e, tb):\n        if et is not None:\n            self.target[:] = self._snap  # rollback\n            return True                  # suppress the error\n        return False                     # commit\n\nlog = []\nwith Transaction(log) as L:\n    L.append(1); L.append(2)\nwith Transaction(log) as L:\n    L.append(99)\n    raise ValueError('boom')             # rolled back + suppressed\nprint(log)                               # [1, 2]",
       "explain": "The second block appends 99 then raises; __exit__ sees the exception, restores the snapshot (dropping 99), and returns True so the ValueError never escapes. This is the exact shape of a DB transaction or an order-batch that must be all-or-nothing.",
       "editable": true
     },
     {
       "type": "tip",
       "variant": "warn",
-      "html": "<strong>__getattr__ vs __getattribute__.</strong> <code class=\\\"inline\\\">__getattr__</code> is a fallback called <em>only</em> when normal lookup fails — cheap and safe. <code class=\\\"inline\\\">__getattribute__</code> intercepts <em>every</em> access and is a loaded footgun: touch <code class=\\\"inline\\\">self.anything</code> inside it without delegating to <code class=\\\"inline\\\">super().__getattribute__</code> and you get infinite recursion."
+      "html": "<strong>__getattr__ vs __getattribute__.</strong> <code class=\\\"inline\\\">__getattr__</code> is a fallback called <em>only</em> when normal lookup fails \u2014 cheap and safe. <code class=\\\"inline\\\">__getattribute__</code> intercepts <em>every</em> access and is a loaded footgun: touch <code class=\\\"inline\\\">self.anything</code> inside it without delegating to <code class=\\\"inline\\\">super().__getattribute__</code> and you get infinite recursion."
     },
     {
       "type": "tryit",
       "title": "Write a timer context manager",
       "instructions": "Make a class-based context manager `Tag` whose __enter__ prints `start` and __exit__ prints `end`. Use it in a `with` block.",
-      "starter": "class Tag:\\n    def __enter__(self):\\n        # TODO print 'start' and return self\\n        pass\\n    def __exit__(self, *a):\\n        # TODO print 'end'\\n        return False\\n\\nwith Tag():\\n    pass",
+      "starter": "class Tag:\n    def __enter__(self):\n        # TODO print 'start' and return self\n        pass\n    def __exit__(self, *a):\n        # TODO print 'end'\n        return False\n\nwith Tag():\n    pass",
       "check": {
         "stdout_includes": "start"
       },
-      "solution": "class Tag:\\n    def __enter__(self):\\n        print('start'); return self\\n    def __exit__(self, *a):\\n        print('end'); return False\\n\\nwith Tag():\\n    pass",
-      "passMsg": "That's the protocol — enter sets up, exit always runs.",
+      "solution": "class Tag:\n    def __enter__(self):\n        print('start'); return self\n    def __exit__(self, *a):\n        print('end'); return False\n\nwith Tag():\n    pass",
+      "passMsg": "That's the protocol \u2014 enter sets up, exit always runs.",
       "failMsg": "Make __enter__ print 'start' (and return self)."
     }
   ],

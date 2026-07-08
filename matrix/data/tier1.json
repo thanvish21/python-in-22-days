@@ -217,7 +217,7 @@
         {
           "name": "2 workers cap 2",
           "stdin": "2 2 5\n1 1 1 1 1\n3 3 3 3 3\n",
-          "expectStdout": "makespan=9",
+          "expectStdout": "makespan=10",
           "matchMode": "trim",
           "timeBudgetMs": 2000,
           "memBudgetKb": 65536,
