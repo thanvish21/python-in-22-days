@@ -226,61 +226,154 @@
       } catch (e) { /* day not written yet */ }
     }
 
+    const coding = mod.coding || [];
+    const testMinutes = c.testMinutes || 30;
     const root = el("div", "test-view");
     root.appendChild(el("div", "crumbs", '<a href="#/modules">📚 Modules</a> &nbsp;›&nbsp; Module ' + mod.id + " Test"));
     root.appendChild(el("h1", null, "📝 Module " + mod.id + " Test"));
-    root.appendChild(el("p", "lead", mod.title + " — " + questions.length + " questions drawn from this module. Score " + PASS_PCT + "% or higher to pass."));
 
-    if (!questions.length) {
-      root.appendChild(el("p", null, "No questions available yet for this module."));
+    let isGating = false;
+    if (window.Py22 && window.Py22.GATES) {
+      isGating = Object.values(window.Py22.GATES).includes(mod.id);
+    }
+
+    root.appendChild(el("p", "lead", mod.title + " — " +
+      (coding.length ? coding.length + " coding tasks" : "No coding tasks available.") +
+      ". ⏱️ " + testMinutes + " minutes. Score " + PASS_PCT + "% or higher to pass" +
+      (isGating ? " and unlock the next days." : ".")));
+
+    // ---- 30-min countdown; auto-submits on zero ----
+    const timer = el("div", "test-timer", "⏱️ " + testMinutes + ":00");
+    timer.style.cssText = "position:sticky;top:8px;z-index:5;display:inline-block;padding:6px 14px;border-radius:20px;background:var(--brand,#7c4dff);color:#fff;font-weight:700;";
+    root.appendChild(timer);
+    let secsLeft = testMinutes * 60;
+    let submitted = false;
+    let tick;
+
+    function updateTimer() {
+      if (submitted) return;
+      secsLeft--;
+      const m = Math.floor(secsLeft / 60), s = secsLeft % 60;
+      timer.textContent = "⏱️ " + m + ":" + String(s).padStart(2, "0");
+      if (secsLeft <= 60) timer.style.background = "#e53935";
+      if (secsLeft <= 0) { clearInterval(tick); if (!submitted) doSubmit(true); }
+    }
+
+    tick = setInterval(updateTimer, 1000);
+    window.addEventListener("hashchange", () => clearInterval(tick), { once: true });
+
+    if (!coding.length) {
+      root.appendChild(el("p", null, "No coding tasks available yet for this module."));
       app.innerHTML = ""; app.appendChild(root); return;
     }
 
     const form = el("div", "test-form");
-    const picked = new Array(questions.length).fill(-1);
-    questions.forEach((q, qi) => {
-      const card = el("div", "quiz");
-      card.appendChild(el("h3", null, "Q" + (qi + 1) + ". " + escapeHtml(q.question) + ' <span class="q-src">(Day ' + q.day + ")</span>"));
-      const opts = el("div", "quiz-opts");
-      q.options.forEach((text, oi) => {
-        const b = el("button", "quiz-opt", escapeHtml(text));
-        b.addEventListener("click", () => {
-          picked[qi] = oi;
-          opts.querySelectorAll(".quiz-opt").forEach((x) => x.classList.remove("chosen"));
-          b.classList.add("chosen");
-        });
-        opts.appendChild(b);
+
+    // ---- render coding challenges ----
+    const codingState = coding.map(() => ({ pass: false, out: "" }));
+    coding.forEach((task, ci) => {
+      const card = el("div", "quiz coding-task");
+      card.appendChild(el("h3", null, "C" + (ci + 1) + ". " + escapeHtml(task.prompt)));
+
+      const editorArea = el("div", "try-box");
+      const ta = el("textarea", "try-code");
+      ta.value = task.starter || "";
+      ta.spellcheck = false;
+      editorArea.appendChild(ta);
+
+      const controls = el("div", "try-controls");
+      const runBtn = el("button", "run-btn", "▶ Run");
+      controls.appendChild(runBtn);
+      editorArea.appendChild(controls);
+
+      const outWrap = el("div", "try-out");
+      const outText = el("pre", "out-text");
+      outWrap.appendChild(outText);
+      editorArea.appendChild(outWrap);
+
+      card.appendChild(editorArea);
+
+      // We need a local stdin capture because test uses standard pyrunner which pops up `prompt()` by default.
+      // For automated tests we want to feed `task.stdin` programmatically without blocking on prompt.
+      // But we can patch pyrunner right before we run.
+      runBtn.addEventListener("click", async () => {
+        if (submitted) return;
+        runBtn.textContent = "Running…";
+        runBtn.disabled = true;
+
+        let inputs = [...(task.stdin || [])];
+        let pyRunnerModded = false;
+        if (window.PyRunner && window.PyRunner._origRun) {} // already modded
+
+        // Temporarily patch window.prompt so input() reads from our array
+        const origPrompt = window.prompt;
+        window.prompt = () => {
+          if (inputs.length) return inputs.shift();
+          return "";
+        };
+
+        try {
+          const res = await window.PyRunner.run(ta.value);
+          const outStr = (res.stdout + (res.error ? "\n" + res.error : "")).trim();
+          outText.textContent = outStr;
+
+          if (task.expected) {
+             const cleanExpected = String(task.expected).trim();
+             const cleanActual = outStr;
+             const isCorrect = cleanActual.includes(cleanExpected) || cleanActual === cleanExpected;
+             codingState[ci].pass = isCorrect;
+
+             if (isCorrect) outText.innerHTML += '\n<span style="color:#4caf50;font-weight:bold">✓ Passed</span>';
+             else outText.innerHTML += '\n<span style="color:#f44336;font-weight:bold">✗ Output does not match expected</span>';
+          }
+        } finally {
+          window.prompt = origPrompt;
+          runBtn.textContent = "▶ Run";
+          runBtn.disabled = false;
+        }
       });
-      card.appendChild(opts);
+
       form.appendChild(card);
     });
+
     root.appendChild(form);
 
     const submit = el("button", "complete-btn", "✅ Submit test");
     const result = el("div", "test-result");
-    submit.addEventListener("click", () => {
+
+    function doSubmit(isTimeout) {
+      if (submitted) return;
+      submitted = true;
+      clearInterval(tick);
+      submit.disabled = true;
+
       let correct = 0;
-      questions.forEach((q, qi) => {
-        const card = form.children[qi];
-        const opts = card.querySelectorAll(".quiz-opt");
-        opts.forEach((o, oi) => {
-          o.disabled = true;
-          if (oi === q.answerIndex) o.classList.add("correct");
-          else if (oi === picked[qi]) o.classList.add("wrong");
-        });
-        if (picked[qi] === q.answerIndex) correct++;
-        if (!card.querySelector(".quiz-explain")) {
-          const ex = el("div", "quiz-explain show", q.explain || "");
-          card.appendChild(ex);
-        }
+
+      // check coding
+      coding.forEach((task, ci) => {
+         if (codingState[ci].pass) correct++;
+         const ta = form.querySelectorAll(".coding-task textarea")[ci];
+         if (ta) ta.disabled = true;
+         const runB = form.querySelectorAll(".coding-task .run-btn")[ci];
+         if (runB) runB.disabled = true;
       });
-      const pct = Math.round((correct / questions.length) * 100);
+
+      const pct = coding.length > 0 ? Math.round((correct / coding.length) * 100) : 100;
       const pass = pct >= PASS_PCT;
+
       result.className = "test-result show " + (pass ? "pass" : "fail");
-      result.innerHTML = (pass ? "🎉 " : "📚 ") + "You scored <strong>" + correct + "/" + questions.length +
+      result.innerHTML = (isTimeout ? "⏰ Time's up! " : "") + (pass ? "🎉 " : "📚 ") + "You scored <strong>" + correct + "/" + coding.length +
         " (" + pct + "%)</strong>. " + (pass ? "Passed — nice work!" : "Keep going — review the days above and retry.");
+
+      if (pass && isGating && window.Py22 && window.Py22.markTestPassed) {
+         window.Py22.markTestPassed(mod.id);
+         window.Py22.notify(); // refresh sidebar / unlock UI
+      }
+
       result.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
+    }
+
+    submit.addEventListener("click", () => doSubmit(false));
     root.appendChild(submit);
     root.appendChild(result);
 
