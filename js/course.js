@@ -248,7 +248,7 @@
     root.appendChild(timer);
     let secsLeft = testMinutes * 60;
     let submitted = false;
-    let tick;
+    let tick; if (window.__testTick) clearInterval(window.__testTick);
 
     function updateTimer() {
       if (submitted) return;
@@ -259,10 +259,11 @@
       if (secsLeft <= 0) { clearInterval(tick); if (!submitted) doSubmit(true); }
     }
 
-    tick = setInterval(updateTimer, 1000);
+    window.__testTick = tick = setInterval(updateTimer, 1000);
     window.addEventListener("hashchange", () => clearInterval(tick), { once: true });
 
     if (!coding.length) {
+      clearInterval(tick);
       root.appendChild(el("p", null, "No coding tasks available yet for this module."));
       app.innerHTML = ""; app.appendChild(root); return;
     }
@@ -341,7 +342,10 @@
 
         try {
           window.__TEST_MODE_FAST = true;
-          const res = await window.PyRunner.run(ta.value);
+          if (window.__isEvaluating) return;
+          window.__isEvaluating = true;
+          let res;
+          try { res = await window.PyRunner.run(ta.value); } finally { window.__isEvaluating = false; }
           const outStr = (res.stdout + (res.error ? "\n" + res.error : "")).trim();
           outText.textContent = outStr;
 
