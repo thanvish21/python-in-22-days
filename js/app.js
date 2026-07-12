@@ -28,8 +28,30 @@
 
   const isDone = (d) => !!progress.completed[d];
   const completedCount = () => Object.keys(progress.completed).filter((k) => progress.completed[k]).length;
-  // Day 1 is always open; day N opens once day N-1 is done.
-  const isUnlocked = (d) => d === 1 || isDone(d - 1);
+
+  // ---- timed module-test gates: day -> module test that must be PASSED first ----
+  const TESTS_KEY = "py25_tests_v1";
+  const GATES = { 6: 2, 11: 3, 16: 4, 22: 5 }; // ponytail: mirrors data/modules.json boundaries
+  function testPassed(moduleId) {
+    try {
+      const t = JSON.parse(localStorage.getItem(TESTS_KEY) || "{}");
+      return !!t[moduleId];
+    } catch (e) { return false; }
+  }
+  function markTestPassed(moduleId) {
+    try {
+      const t = JSON.parse(localStorage.getItem(TESTS_KEY) || "{}");
+      t[moduleId] = true;
+      localStorage.setItem(TESTS_KEY, JSON.stringify(t));
+    } catch (e) { /* private mode */ }
+  }
+
+  // Day 1 always open; day N opens once day N-1 done AND any gating module test is passed.
+  const isUnlocked = (d) => {
+    if (d === 1) return true;
+    if (!isDone(d - 1)) return false;
+    return GATES[d] ? testPassed(GATES[d]) : true;
+  };
 
   function markDone(d) {
     progress.completed[d] = true;
@@ -117,8 +139,14 @@
     day = Number(day);
     if (!day || day < 1 || day > TOTAL_DAYS) return viewHome();
     if (!isUnlocked(day)) {
-      app.innerHTML = '<div class="center-msg">🔒 Finish Day ' + (day - 1) +
-        ' first to unlock this one!<br><br><a class="hero-cta" href="#/day/' + (day - 1) + '">Go to Day ' + (day - 1) + "</a></div>";
+      if (isDone(day - 1) && GATES[day] && !testPassed(GATES[day])) {
+        app.innerHTML = '<div class="center-msg">📝 Pass the <strong>Module ' + GATES[day] +
+          ' Test</strong> (30-min exam) to unlock Day ' + day +
+          '!<br><br><a class="hero-cta" href="#/test/' + GATES[day] + '">Take Module ' + GATES[day] + " Test</a></div>";
+      } else {
+        app.innerHTML = '<div class="center-msg">🔒 Finish Day ' + (day - 1) +
+          ' first to unlock this one!<br><br><a class="hero-cta" href="#/day/' + (day - 1) + '">Go to Day ' + (day - 1) + "</a></div>";
+      }
       window.scrollTo(0, 0);
       return;
     }
@@ -226,9 +254,11 @@
     isDone, isUnlocked, completedCount,
     lastDay: () => progress.lastDay,
     getManifest, getLesson,
+    GATES, testPassed, markTestPassed,
     onChange: (fn) => listeners.push(fn),
     notify: () => listeners.forEach((fn) => { try { fn(); } catch (e) {} }),
   };
+  window.Py22 = window.Py25; // course.js uses Py22
   const origMarkDone = markDone;
   markDone = function (d) { origMarkDone(d); window.Py25.notify(); };
 
