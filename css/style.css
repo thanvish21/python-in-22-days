@@ -1,0 +1,6 @@
+/* Coding task overrides */
+.coding-task .try-box { margin-top: 15px; border-radius: 8px; border: 1px solid #e0e0e0; overflow: hidden; }
+.coding-task textarea { width: 100%; min-height: 120px; padding: 12px; font-family: monospace; border: none; outline: none; background: #fafafa; resize: vertical; box-sizing: border-box; }
+.coding-task .try-controls { background: #f0f0f0; padding: 8px; border-top: 1px solid #e0e0e0; text-align: right; }
+.coding-task .try-out { background: #263238; color: #fff; margin: 0; padding: 12px; font-family: monospace; overflow-x: auto; font-size: 14px; display: empty ? none : block; }
+.coding-task .out-text:empty { display: none; }
