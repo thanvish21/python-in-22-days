@@ -314,6 +314,7 @@
         };
 
         try {
+          window.__TEST_MODE_FAST = true;
           const res = await window.PyRunner.run(ta.value);
           const outStr = (res.stdout + (res.error ? "\n" + res.error : "")).trim();
           outText.textContent = outStr;
@@ -329,6 +330,7 @@
              else outText.innerHTML += '\n<span style="color:#f44336;font-weight:bold">✗ Output does not match expected</span>';
           }
         } finally {
+          window.__TEST_MODE_FAST = false;
           window.prompt = origPrompt;
           runBtn.textContent = "▶ Run";
           runBtn.disabled = false;

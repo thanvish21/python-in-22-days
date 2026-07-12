@@ -48,7 +48,12 @@
       // Run the user's code through a wall-clock watchdog so a runaway loop
       // self-terminates (~12s) instead of freezing the page forever.
       py.globals.set("__USER_SRC__", code);
-      await py.runPythonAsync(WATCHDOG);
+      if (window.__TEST_MODE_FAST) { await py.runPythonAsync(code); return { ok: true, stdout: captured.out, error: "" }; }
+      if (window.__TEST_MODE_FAST) {
+        await py.runPythonAsync(_src + "\n"); 
+      } else {
+        await py.runPythonAsync(WATCHDOG);
+      }
       return { ok: true, stdout: captured.out, error: "" };
     } catch (err) {
       // Pyodide surfaces Python tracebacks as the error message.
