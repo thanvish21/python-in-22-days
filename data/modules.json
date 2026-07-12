@@ -13,6 +13,14 @@
    "summary": "What programming is, how Python runs your code, and your very first program.",
    "days": [
     1
+   ],
+   "coding": [
+    {
+     "prompt": "Write a Python program that prints exactly: Hello, Python!",
+     "starter": "# your code here\n",
+     "stdin": [],
+     "expected": "Hello, Python!"
+    }
    ]
   },
   {
