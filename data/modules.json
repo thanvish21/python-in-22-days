@@ -19,7 +19,9 @@
      "prompt": "Write a Python program that prints exactly: Hello, Python!",
      "starter": "# your code here\n",
      "stdin": [],
-     "expected": "Hello, Python!"
+     "expected": "Hello, Python!",
+     "hint": "Use the print() function.",
+     "solution": "print(\"Hello, Python!\")"
     }
    ]
   },
@@ -40,7 +42,9 @@
      "stdin": [
       "2,3"
      ],
-     "expected": "Addition: 5\nSubtraction: -1"
+     "expected": "Addition: 5\nSubtraction: -1",
+     "hint": "Remember to cast x and y to int() before adding and subtracting them.",
+     "solution": "x, y = input(\"Enter a and b: \").split(\",\")\nprint(\"Addition:\", int(x) + int(y))\nprint(\"Subtraction:\", int(x) - int(y))"
     },
     {
      "prompt": "Ask for a name with input() and print: Hello, NAME!",
@@ -48,7 +52,9 @@
      "stdin": [
       "Ada"
      ],
-     "expected": "Hello, Ada!"
+     "expected": "Hello, Ada!",
+     "hint": "Pass the prompt string directly to input(). Then use print() to glue 'Hello, ' and the name.",
+     "solution": "name = input(\"Name? \")\nprint(\"Hello, \" + name + \"!\")"
     }
    ]
   },

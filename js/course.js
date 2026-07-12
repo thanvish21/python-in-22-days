@@ -286,12 +286,38 @@
       controls.appendChild(runBtn);
       editorArea.appendChild(controls);
 
+
       const outWrap = el("div", "try-out");
       const outText = el("pre", "out-text");
       outWrap.appendChild(outText);
       editorArea.appendChild(outWrap);
 
       card.appendChild(editorArea);
+
+      if (task.hint || task.solution) {
+        const hWrap = el("div", "hint-wrap");
+        hWrap.style.marginTop = "12px";
+        
+        if (task.hint) {
+          const hBtn = el("button", "navbtn", "💡 Hint");
+          hBtn.style.marginRight = "8px";
+          const hBox = el("div", "quiz-explain");
+          hBox.innerHTML = "<strong>Hint:</strong> " + escapeHtml(task.hint);
+          hBtn.addEventListener("click", () => hBox.classList.toggle("show"));
+          hWrap.appendChild(hBtn);
+          hWrap.appendChild(hBox);
+        }
+        if (task.solution) {
+          const sBtn = el("button", "navbtn", "✅ Solution");
+          const sBox = el("div", "quiz-explain");
+          sBox.innerHTML = "<strong>Solution:</strong><br><pre style='background:#f0f0f0;padding:8px;border-radius:4px;margin-top:8px;'>" + escapeHtml(task.solution) + "</pre>";
+          sBtn.addEventListener("click", () => sBox.classList.toggle("show"));
+          hWrap.appendChild(sBtn);
+          hWrap.appendChild(sBox);
+        }
+        card.appendChild(hWrap);
+      }
+
 
       // We need a local stdin capture because test uses standard pyrunner which pops up `prompt()` by default.
       // For automated tests we want to feed `task.stdin` programmatically without blocking on prompt.
