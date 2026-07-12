@@ -233,8 +233,8 @@
     root.appendChild(el("h1", null, "📝 Module " + mod.id + " Test"));
 
     let isGating = false;
-    if (window.Py22 && window.Py22.GATES) {
-      isGating = Object.values(window.Py22.GATES).includes(mod.id);
+    if (window.Py22 && (window.Py22 && window.Py22.GATES)) {
+      isGating = Object.values((window.Py22 && window.Py22.GATES)).includes(mod.id);
     }
 
     root.appendChild(el("p", "lead", mod.title + " — " +
@@ -322,6 +322,7 @@
              const cleanActual = outStr;
              const isCorrect = cleanActual.includes(cleanExpected) || cleanActual === cleanExpected;
              codingState[ci].pass = isCorrect;
+             const pct = coding.length > 0 ? Math.round((codingState.filter(x=>x.pass).length / coding.length) * 100) : 100;
 
              if (isCorrect) outText.innerHTML += '\n<span style="color:#4caf50;font-weight:bold">✓ Passed</span>';
              else outText.innerHTML += '\n<span style="color:#f44336;font-weight:bold">✗ Output does not match expected</span>';

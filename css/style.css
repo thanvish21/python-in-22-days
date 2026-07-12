@@ -1,6 +1,89 @@
 /* Coding task overrides */
-.coding-task .try-box { margin-top: 15px; border-radius: 8px; border: 1px solid #e0e0e0; overflow: hidden; }
-.coding-task textarea { width: 100%; min-height: 120px; padding: 12px; font-family: monospace; border: none; outline: none; background: #fafafa; resize: vertical; box-sizing: border-box; }
-.coding-task .try-controls { background: #f0f0f0; padding: 8px; border-top: 1px solid #e0e0e0; text-align: right; }
-.coding-task .try-out { background: #263238; color: #fff; margin: 0; padding: 12px; font-family: monospace; overflow-x: auto; font-size: 14px; display: empty ? none : block; }
-.coding-task .out-text:empty { display: none; }
+.coding-task {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+}
+.coding-task h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    color: #333;
+    line-height: 1.5;
+}
+.coding-task .try-box {
+    margin-top: 15px;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    overflow: hidden;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+}
+.coding-task .try-box:focus-within {
+    border-color: var(--brand, #7c4dff);
+}
+.coding-task textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 16px;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    border: none;
+    outline: none;
+    background: transparent;
+    resize: vertical;
+    box-sizing: border-box;
+    color: #333;
+}
+.coding-task .try-controls {
+    background: #fff;
+    padding: 12px 16px;
+    border-top: 1px solid #e0e0e0;
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+}
+.coding-task .run-btn {
+    background: var(--brand, #7c4dff);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    font-size: 14px;
+}
+.coding-task .run-btn:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+.coding-task .run-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+.coding-task .try-out {
+    background: #1e1e1e;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 16px;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    overflow-x: auto;
+    font-size: 14px;
+    display: none;
+    border-top: 1px solid #e0e0e0;
+}
+.coding-task .try-out:not(:empty) {
+    display: block;
+}
+.coding-task .out-text {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
