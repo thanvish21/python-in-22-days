@@ -301,6 +301,7 @@
         runBtn.textContent = "Running…";
         runBtn.disabled = true;
 
+        outText.textContent = "";
         let inputs = [...(task.stdin || [])];
         let pyRunnerModded = false;
         if (window.PyRunner && window.PyRunner._origRun) {} // already modded
