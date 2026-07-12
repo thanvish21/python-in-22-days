@@ -342,7 +342,10 @@
 
         try {
           window.__TEST_MODE_FAST = true;
-          const res = await window.PyRunner.run(ta.value);
+          if (window.__isEvaluating) return;
+          window.__isEvaluating = true;
+          let res;
+          try { res = await window.PyRunner.run(ta.value); } finally { window.__isEvaluating = false; }
           const outStr = (res.stdout + (res.error ? "\n" + res.error : "")).trim();
           outText.textContent = outStr;
 
