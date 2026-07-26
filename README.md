@@ -1,89 +1,118 @@
-# 🐍 Python Pro
+# python-in-22-days
 
-A friendly, **kid-simple** course that takes you from absolute beginner to confident Python programmer in the Pro path (about 3 hours a day). Every lesson runs **real Python right in your browser** — no installs, no setup. Just open it and start coding.
+**A zero-install Python course that runs real CPython in the browser via Pyodide — 25 daily lessons, every snippet verified against a local interpreter before it ships.**
 
-> Inspired by playful learn-to-code sites like Coddy: colorful, bite-sized, and hands-on.
+![JavaScript](https://img.shields.io/badge/frontend-vanilla%20JS-f7df1e)
+![Pyodide](https://img.shields.io/badge/runtime-Pyodide%200.26-3776ab)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue)
+[![Repository Baseline](https://github.com/thanvish21/python-in-22-days/actions/workflows/repository-baseline.yml/badge.svg)](https://github.com/thanvish21/python-in-22-days/actions/workflows/repository-baseline.yml)
 
-## ✨ What's inside
+## The problem
 
-- **the Pro path, beginner → pro** — from `print()` to classes, files, and a capstone project.
-- **Run real Python in the browser** — powered by [Pyodide](https://pyodide.org). Click **Run**, see output instantly.
-- **🤖 AI Python Tutor (PyBuddy)** — a built-in AI assistant that understands your current lesson and code. Ask questions, get explanations, debug your code, or request practice problems. Powered by free models via [OpenRouter](https://openrouter.ai).
-- **Interactive exercises** — fill-in-the-blank "try it" boxes with auto-checking, quizzes, and a daily challenge.
-- **Progress tracking & badges** — your progress is saved in the browser; days unlock as you finish, and you earn badges along the way.
-- **Safe to experiment** — a built-in watchdog stops runaway/infinite loops so the page never freezes.
+Learning Python usually stalls before line one: install an interpreter, pick an editor,
+fight `PATH`. Meanwhile the tutorials themselves are unverified — snippets rot and the
+learner ends up debugging the lesson.
 
-## 🗺️ Curriculum
+This project removes both obstacles. Lessons run **actual Python in the browser** through
+Pyodide (CPython compiled to WebAssembly), and `verify.py` compiles and executes every
+snippet in the repository so a broken example never reaches a learner.
 
-| Day | Topic | Day | Topic |
-|----|----|----|----|
-| 1 | Meet Python | 12 | Dictionaries |
-| 2 | Variables & Data Types | 13 | Functions |
-| 3 | Strings & f-strings | 14 | Scope & Arguments |
-| 4 | Numbers & Math | 15 | Errors & try/except |
-| 5 | Input & Conversion | 16 | Files |
-| 6 | Booleans & Logic | 17 | Modules & Stdlib |
-| 7 | if / elif / else | 18 | Classes & Objects |
-| 8 | Lists | 19 | Inheritance & Dunders |
-| 9 | for Loops | 20 | Comprehensions & Lambda |
-| 10 | while Loops | 21 | pip & Real Libraries |
-| 11 | Tuples & Sets | 22 | Capstone & Pro Roadmap |
+## Quickstart
 
-## 🚀 Run it locally
-
-It's a static site — any web server works. Because lessons are loaded with `fetch()`, open it via a server (not `file://`):
+Static site, no build step. Lessons load with `fetch`, so serve over HTTP — `file://`
+will not work.
 
 ```bash
-# from the project folder
+git clone https://github.com/thanvish21/python-in-22-days.git
+cd python-in-22-days
 python3 -m http.server 8000
-# then visit http://localhost:8000
+# open http://localhost:8000
 ```
 
-## 🤖 AI Tutor Setup
-
-The AI tutor (PyBuddy) uses [OpenRouter](https://openrouter.ai) for free AI model access.
-
-1. Sign up at [openrouter.ai](https://openrouter.ai) (free)
-2. Create an API key at [openrouter.ai/keys](https://openrouter.ai/keys)
-3. Add `OPENROUTER_API_KEY` to your Vercel project environment variables
-4. Deploy — the tutor will use `nvidia/nemotron-3-ultra-550b-a55b:free` (with Qwen3 Coder fallback), both 100% free
-
-The tutor automatically knows which lesson the student is on and can see their code editor contents.
-
-## ☁️ Deploy
-
-**Vercel** (recommended): import the GitHub repo at [vercel.com/new](https://vercel.com/new). No build step — it's static. `vercel.json` is already included.
-
-**GitHub Pages**: Settings → Pages → deploy from the `main` branch root.
-
-## 🧱 How it's built
-
-Plain HTML/CSS/JavaScript — no framework, no build step.
-
-```
-index.html          # app shell
-css/styles.css      # playful theme
-js/pyrunner.js      # loads Pyodide, runs code with a 12s safety watchdog
-js/render.js        # turns a lesson JSON into interactive DOM
-js/app.js           # router, progress, unlock, badges
-js/ai-tutor.js      # PyBuddy AI tutor chat panel
-data/manifest.json  # the day list
-data/dayNN.json     # one file per lesson
-verify.py           # checks every lesson: JSON schema + compiles/runs all snippets
-```
-
-### Lesson format
-
-Each `data/dayNN.json` is a lesson with `blocks` (`text`, `code`, `tryit`, `quiz`, `tip`) and a `challenge`. To verify all lessons still parse and every code snippet runs:
+Verify every lesson before publishing content:
 
 ```bash
-python3 verify.py
+python3 verify.py    # schema check + compile/run every snippet; exits non-zero on failure
 ```
 
-## 🤝 Contributing a lesson
+Deploy to Vercel (`vercel.json` is committed: clean URLs, `X-Content-Type-Options:
+nosniff`, always-revalidate on `/data/*`), or serve the folder from GitHub Pages — the
+core course needs no server-side code at all.
 
-Copy an existing `data/dayNN.json`, keep the same shape, and run `python3 verify.py` until it prints ✅. Code in `code`/`solution` blocks must run on the standard library only (that's all the browser has).
+## How it works
 
----
+- **Real execution, client-side.** `js/pyrunner.js` lazily loads Pyodide 0.26.2 from the
+  jsDelivr CDN on first Run (10-20s cold start), then reuses the instance. stdout and
+  stderr are captured per run and `input()` is wired to a browser prompt so input lessons
+  work live.
+- **Runaway-loop watchdog.** User code is executed under a `sys.settrace` guard with a
+  12-second wall-clock deadline, so an infinite loop raises a readable `TimeoutError`
+  instead of freezing the tab. Tracebacks are filtered down to the learner's own frames.
+- **Progress and gating.** State lives in `localStorage` (`py25_progress_v1`). Day 1 is
+  always open; day *N* unlocks when day *N-1* is done. Days 6, 11, 16 and 22 are gated
+  behind a timed module test that must be passed at 70% or better (`py25_tests_v1`).
+  Finishing a day fires a badge toast and increments the streak counter.
+- **Content pipeline.** One JSON file per lesson (`data/dayNN.json`) with typed `blocks`
+  (`text`, `code`, `tip`, `quiz`, `tryit`, `example`, …) and a closing `challenge`.
+  `verify.py` walks every file, schema-checks it, and runs each snippet — including
+  `tryit` starters and solutions — reporting input-driven snippets as warnings.
 
-Made with 💚 for curious minds. Happy coding!
+```
+index.html          app shell
+js/pyrunner.js      Pyodide loader, stdout capture, 12s watchdog, traceback cleanup
+js/render.js        lesson JSON -> interactive DOM
+js/app.js           hash router, progress, day unlock, badges
+js/course.js        module outline, timed module tests, PCEP exam-map page
+js/ai-tutor.js      "PyBuddy" chat panel (see Status below)
+api/run.js          Vercel function: run code via Judge0 (used by the advanced track)
+api/grade.js        Vercel function: hidden-test grading, never leaks expectations
+api/_judge0.js      shared Judge0 submit/poll/normalize helper
+data/manifest.json  the day list
+data/dayNN.json     one lesson per file, 25 files
+data/modules.json   PCEP module grouping + module-test question banks
+matrix/             advanced "1% HFT Matrix" track (own README + data/SCHEMA.md)
+test/headless.html  manual smoke page for the Pyodide runner
+verify.py           schema + compile/run check for every lesson
+```
+
+**Course shape.** 25 lessons from `print()` and variables through loops, collections,
+functions, error handling, files, modules, classes, comprehensions, `pip`, and a capstone.
+`data/modules.json` groups them into the module layout used by the PCEP-30-02 exam map,
+and the module tests use its question banks.
+
+**Advanced track.** `matrix/` is a separate four-tier systems-Python curriculum — async
+network foundations, memory management, metaprogramming and hooks, and GIL escape /
+native extensions — with 18 graded problems. Tiers 1-3 quick-runs work in Pyodide; tier-4
+native work and the profiling harness need the Judge0-backed serverless functions
+(`window.HFT_RUNNER_URL`, default `/api`).
+
+## Configuration
+
+| Variable | Used by | Notes |
+|---|---|---|
+| `JUDGE0_URL` | `api/run.js`, `api/grade.js` | Judge0 instance for the advanced track |
+| `JUDGE0_KEY`, `JUDGE0_HOST` | same | RapidAPI only |
+| `JUDGE0_LANG_PYTHON` | same | Judge0 language id, default `71` |
+
+## Tech stack
+
+Vanilla HTML/CSS/JavaScript with no framework, bundler or npm dependencies · Pyodide
+0.26.2 (CPython on WebAssembly) · Vercel Node serverless functions
+(`@vercel/node@3.2.0`) · Judge0 for the advanced track · Python 3 for the offline verifier.
+
+## Status and known gaps
+
+- The curriculum is **25 days**, not 22 — the repository name predates the expansion.
+- **The AI tutor panel is not functional as shipped.** `js/ai-tutor.js` posts a
+  proxy-shaped body straight to `https://openrouter.ai/api/v1/chat/completions` with no
+  credentials, and this repo contains no `api/tutor.js` to receive it. Wiring it up means
+  adding that serverless proxy (as done in the sibling Java repo) and pointing the client
+  at it.
+- Pyodide is fetched from a CDN, so the first Run needs a network connection and takes
+  10-20 seconds; only pure-Python standard-library code is guaranteed to work.
+- Progress is per-browser `localStorage` — no accounts or sync.
+- `test/headless.html` is a manual smoke page, not an automated test suite.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
